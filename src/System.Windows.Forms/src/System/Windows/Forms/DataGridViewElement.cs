@@ -11,7 +11,7 @@ namespace System.Windows.Forms
     /// </summary>
     public class DataGridViewElement
     {
-        private DataGridView _dataGridView;
+        private DataGridView? _dataGridView;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='DataGridViewElement'/> class.
@@ -43,7 +43,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public DataGridView DataGridView
+        public DataGridView? DataGridView
         {
             get => _dataGridView;
             internal set

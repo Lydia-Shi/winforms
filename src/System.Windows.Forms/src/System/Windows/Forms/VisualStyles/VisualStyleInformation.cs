@@ -3,16 +3,15 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms.VisualStyles
 {
     /// <summary>
     ///  Provides information about the current visual style.
-    ///  
+    ///
     ///  NOTE:
-    ///  
+    ///
     ///  1) These properties (except SupportByOS, which is always meaningful) are meaningful only
     ///  if visual styles are supported and have currently been applied by the user.
     ///  2) A subset of these use VisualStyleRenderer objects, so they are
@@ -20,9 +19,9 @@ namespace System.Windows.Forms.VisualStyles
     /// </summary>
     public static class VisualStyleInformation
     {
-        //Make this per-thread, so that different threads can safely use these methods.
+        // Make this per-thread, so that different threads can safely use these methods.
         [ThreadStatic]
-        private static VisualStyleRenderer visualStyleRenderer = null;
+        private static VisualStyleRenderer? t_visualStyleRenderer = null;
 
         /// <summary>
         ///  Used to find whether visual styles are supported by the current OS. Same as
@@ -220,16 +219,16 @@ namespace System.Windows.Forms.VisualStyles
             {
                 if (Application.RenderWithVisualStyles)
                 {
-                    if (visualStyleRenderer == null)
+                    if (t_visualStyleRenderer is null)
                     {
-                        visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.Window.Caption.Active);
+                        t_visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.Window.Caption.Active);
                     }
                     else
                     {
-                        visualStyleRenderer.SetParameters(VisualStyleElement.Window.Caption.Active);
+                        t_visualStyleRenderer.SetParameters(VisualStyleElement.Window.Caption.Active);
                     }
 
-                    return (SafeNativeMethods.GetThemeSysBool(new HandleRef(null, visualStyleRenderer.Handle), SafeNativeMethods.VisualStyleSystemProperty.SupportsFlatMenus));
+                    return UxTheme.GetThemeSysBool(t_visualStyleRenderer, UxTheme.TMT.FLATMENUS).IsTrue();
                 }
 
                 return false;
@@ -245,18 +244,18 @@ namespace System.Windows.Forms.VisualStyles
             {
                 if (Application.RenderWithVisualStyles)
                 {
-                    if (visualStyleRenderer == null)
+                    if (t_visualStyleRenderer is null)
                     {
-                        visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.Window.Caption.Active);
+                        t_visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.Window.Caption.Active);
                     }
                     else
                     {
-                        visualStyleRenderer.SetParameters(VisualStyleElement.Window.Caption.Active);
+                        t_visualStyleRenderer.SetParameters(VisualStyleElement.Window.Caption.Active);
                     }
 
                     int mcDepth = 0;
 
-                    SafeNativeMethods.GetThemeSysInt(new HandleRef(null, visualStyleRenderer.Handle), SafeNativeMethods.VisualStyleSystemProperty.MinimumColorDepth, ref mcDepth);
+                    UxTheme.GetThemeSysInt(t_visualStyleRenderer, UxTheme.TMT.MINCOLORDEPTH, ref mcDepth);
                     return mcDepth;
                 }
 
@@ -273,15 +272,15 @@ namespace System.Windows.Forms.VisualStyles
             {
                 if (Application.RenderWithVisualStyles)
                 {
-                    if (visualStyleRenderer == null)
+                    if (t_visualStyleRenderer is null)
                     {
-                        visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.TextBox.TextEdit.Normal);
+                        t_visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.TextBox.TextEdit.Normal);
                     }
                     else
                     {
-                        visualStyleRenderer.SetParameters(VisualStyleElement.TextBox.TextEdit.Normal);
+                        t_visualStyleRenderer.SetParameters(VisualStyleElement.TextBox.TextEdit.Normal);
                     }
-                    Color borderColor = visualStyleRenderer.GetColor(ColorProperty.BorderColor);
+                    Color borderColor = t_visualStyleRenderer.GetColor(ColorProperty.BorderColor);
                     return borderColor;
                 }
 
@@ -298,16 +297,15 @@ namespace System.Windows.Forms.VisualStyles
             {
                 if (Application.RenderWithVisualStyles)
                 {
-                    if (visualStyleRenderer == null)
+                    if (t_visualStyleRenderer is null)
                     {
-                        visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.Button.PushButton.Normal);
-
+                        t_visualStyleRenderer = new VisualStyleRenderer(VisualStyleElement.Button.PushButton.Normal);
                     }
                     else
                     {
-                        visualStyleRenderer.SetParameters(VisualStyleElement.Button.PushButton.Normal);
+                        t_visualStyleRenderer.SetParameters(VisualStyleElement.Button.PushButton.Normal);
                     }
-                    Color accentColor = visualStyleRenderer.GetColor(ColorProperty.AccentColorHint);
+                    Color accentColor = t_visualStyleRenderer.GetColor(ColorProperty.AccentColorHint);
                     return accentColor;
                 }
 

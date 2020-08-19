@@ -7,7 +7,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests.Serialization
 {
-    public class SerializableAttributeTests
+    // NB: doesn't require thread affinity
+    public class SerializableAttributeTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void EnsureSerializableAttribute()

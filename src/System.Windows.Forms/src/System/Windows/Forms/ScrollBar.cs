@@ -12,22 +12,20 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Implements the basic functionality of a scroll bar control.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(Value))]
     [DefaultEvent(nameof(Scroll))]
-    public abstract class ScrollBar : Control
+    public abstract partial class ScrollBar : Control
     {
         private static readonly object s_scrollEvent = new object();
         private static readonly object s_valueChangedEvent = new object();
 
-        private int _minimum = 0;
+        private int _minimum;
         private int _maximum = 100;
         private int _smallChange = 1;
         private int _largeChange = 10;
-        private int _value = 0;
+        private int _value;
         private readonly ScrollOrientation _scrollOrientation;
-        private int _wheelDelta = 0;
+        private int _wheelDelta;
         private bool _scaleScrollBarForDpiChange = true;
 
         /// <summary>
@@ -41,7 +39,7 @@ namespace System.Windows.Forms
 
             TabStop = false;
 
-            if ((CreateParams.Style & NativeMethods.SBS_VERT) != 0)
+            if ((CreateParams.Style & (int)User32.SBS.VERT) != 0)
             {
                 _scrollOrientation = ScrollOrientation.VerticalScroll;
             }
@@ -55,8 +53,8 @@ namespace System.Windows.Forms
         ///  Hide AutoSize: it doesn't make sense for this control
         /// </summary>
         [Browsable(false)]
-        [EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override bool AutoSize
         {
             get => base.AutoSize;
@@ -65,7 +63,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler AutoSizeChanged
+        public new event EventHandler? AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
             remove => base.AutoSizeChanged -= value;
@@ -81,7 +79,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler BackColorChanged
+        public new event EventHandler? BackColorChanged
         {
             add => base.BackColorChanged += value;
             remove => base.BackColorChanged -= value;
@@ -89,21 +87,15 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public override Image BackgroundImage
+        public override Image? BackgroundImage
         {
-            get
-            {
-                return base.BackgroundImage;
-            }
-            set
-            {
-                base.BackgroundImage = value;
-            }
+            get => base.BackgroundImage;
+            set => base.BackgroundImage = value;
         }
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler BackgroundImageChanged
+        public new event EventHandler? BackgroundImageChanged
         {
             add => base.BackgroundImageChanged += value;
             remove => base.BackgroundImageChanged -= value;
@@ -119,7 +111,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler BackgroundImageLayoutChanged
+        public new event EventHandler? BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
             remove => base.BackgroundImageLayoutChanged -= value;
@@ -130,7 +122,7 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = "SCROLLBAR";
+                cp.ClassName = ComCtl32.WindowClasses.WC_SCROLLBAR;
                 cp.Style &= ~(int)User32.WS.BORDER;
                 return cp;
             }
@@ -159,7 +151,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler ForeColorChanged
+        public new event EventHandler? ForeColorChanged
         {
             add => base.ForeColorChanged += value;
             remove => base.ForeColorChanged -= value;
@@ -175,7 +167,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler FontChanged
+        public new event EventHandler? FontChanged
         {
             add => base.FontChanged += value;
             remove => base.FontChanged -= value;
@@ -191,7 +183,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler ImeModeChanged
+        public new event EventHandler? ImeModeChanged
         {
             add => base.ImeModeChanged += value;
             remove => base.ImeModeChanged -= value;
@@ -219,7 +211,6 @@ namespace System.Windows.Forms
             {
                 if (_largeChange != value)
                 {
-
                     if (value < 0)
                     {
                         throw new ArgumentOutOfRangeException(nameof(value), string.Format(SR.InvalidLowBoundArgumentEx, nameof(LargeChange), value, 0));
@@ -339,7 +330,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler TextChanged
+        public new event EventHandler? TextChanged
         {
             add => base.TextChanged += value;
             remove => base.TextChanged -= value;
@@ -388,7 +379,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler Click
+        public new event EventHandler? Click
         {
             add => base.Click += value;
             remove => base.Click -= value;
@@ -396,7 +387,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event PaintEventHandler Paint
+        public new event PaintEventHandler? Paint
         {
             add => base.Paint += value;
             remove => base.Paint -= value;
@@ -404,7 +395,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler DoubleClick
+        public new event EventHandler? DoubleClick
         {
             add => base.DoubleClick += value;
             remove => base.DoubleClick -= value;
@@ -412,7 +403,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseClick
+        public new event MouseEventHandler? MouseClick
         {
             add => base.MouseClick += value;
             remove => base.MouseClick -= value;
@@ -420,7 +411,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseDoubleClick
+        public new event MouseEventHandler? MouseDoubleClick
         {
             add => base.MouseDoubleClick += value;
             remove => base.MouseDoubleClick -= value;
@@ -428,7 +419,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseDown
+        public new event MouseEventHandler? MouseDown
         {
             add => base.MouseDown += value;
             remove => base.MouseDown -= value;
@@ -436,7 +427,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseUp
+        public new event MouseEventHandler? MouseUp
         {
             add => base.MouseUp += value;
             remove => base.MouseUp -= value;
@@ -444,7 +435,7 @@ namespace System.Windows.Forms
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event MouseEventHandler MouseMove
+        public new event MouseEventHandler? MouseMove
         {
             add => base.MouseMove += value;
             remove => base.MouseMove -= value;
@@ -455,7 +446,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.ScrollBarOnScrollDescr))]
-        public event ScrollEventHandler Scroll
+        public event ScrollEventHandler? Scroll
         {
             add => Events.AddHandler(s_scrollEvent, value);
             remove => Events.RemoveHandler(s_scrollEvent, value);
@@ -468,7 +459,7 @@ namespace System.Windows.Forms
         /// </summary>
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.valueChangedEventDescr))]
-        public event EventHandler ValueChanged
+        public event EventHandler? ValueChanged
         {
             add => Events.AddHandler(s_valueChangedEvent, value);
             remove => Events.RemoveHandler(s_valueChangedEvent, value);
@@ -497,7 +488,7 @@ namespace System.Windows.Forms
             return base.GetScaledBounds(bounds, factor, specified);
         }
 
-        internal override IntPtr InitializeDCForWmCtlColor(IntPtr dc, int msg) => IntPtr.Zero;
+        internal override Gdi32.HBRUSH InitializeDCForWmCtlColor(Gdi32.HDC dc, User32.WM msg) => default;
 
         protected override void OnEnabledChanged(EventArgs e)
         {
@@ -522,10 +513,7 @@ namespace System.Windows.Forms
         ///  Raises the <see cref='ValueChanged'/> event.
         /// </summary>
         protected virtual void OnScroll(ScrollEventArgs se)
-        {
-            ScrollEventHandler handler = (ScrollEventHandler)Events[s_scrollEvent];
-            handler?.Invoke(this, se);
-        }
+            => ((ScrollEventHandler?)Events[s_scrollEvent])?.Invoke(this, se);
 
         /// <summary>
         ///  Converts mouse wheel movements into scrolling, when scrollbar has the focus.
@@ -579,10 +567,7 @@ namespace System.Windows.Forms
         ///  Raises the <see cref='ValueChanged'/> event.
         /// </summary>
         protected virtual void OnValueChanged(EventArgs e)
-        {
-            EventHandler handler = (EventHandler)Events[s_valueChangedEvent];
-            handler?.Invoke(this, e);
-        }
+            => ((EventHandler?)Events[s_valueChangedEvent])?.Invoke(this, e);
 
         private int ReflectPosition(int position)
         {
@@ -631,7 +616,7 @@ namespace System.Windows.Forms
 
         private void WmReflectScroll(ref Message m)
         {
-            ScrollEventType type = (ScrollEventType)NativeMethods.Util.LOWORD(m.WParam);
+            ScrollEventType type = (ScrollEventType)PARAM.LOWORD(m.WParam);
             DoScroll(type);
         }
 
@@ -728,23 +713,23 @@ namespace System.Windows.Forms
 
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_HSCROLL:
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_VSCROLL:
+                case User32.WM.REFLECT_HSCROLL:
+                case User32.WM.REFLECT_VSCROLL:
                     WmReflectScroll(ref m);
                     break;
 
-                case WindowMessages.WM_ERASEBKGND:
+                case User32.WM.ERASEBKGND:
                     break;
 
-                case WindowMessages.WM_SIZE:
+                case User32.WM.SIZE:
                     // Fixes the scrollbar focus rect
                     if (User32.GetFocus() == Handle)
                     {
                         DefWndProc(ref m);
-                        SendMessage(WindowMessages.WM_KILLFOCUS, 0, 0);
-                        SendMessage(WindowMessages.WM_SETFOCUS, 0, 0);
+                        User32.SendMessageW(this, User32.WM.KILLFOCUS);
+                        User32.SendMessageW(this, User32.WM.SETFOCUS);
                     }
                     break;
 
@@ -753,5 +738,15 @@ namespace System.Windows.Forms
                     break;
             }
         }
+
+        /// <summary>
+        ///  Creates a new AccessibleObject for this <see cref='ScrollBar'/> instance.
+        ///  The AccessibleObject instance returned by this method supports ControlType UIA property.
+        /// </summary>
+        /// <returns>
+        ///  AccessibleObject for this <see cref='ScrollBar'/> instance.
+        /// </returns>
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new ScrollBarAccessibleObject(this);
     }
 }

@@ -7,5 +7,5 @@ namespace System.Windows.Forms
     /// <summary>
     ///  A delegate for an updown event handler.
     /// </summary>
-    public delegate void UpDownEventHandler(object source, UpDownEventArgs e);
+    public delegate void UpDownEventHandler(object? source, UpDownEventArgs e);
 }

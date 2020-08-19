@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.Configuration;
@@ -25,11 +27,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (bool)this["IsDefault"];
+                return (bool)this[nameof(IsDefault)];
             }
             set
             {
-                this["IsDefault"] = value;
+                this[nameof(IsDefault)] = value;
             }
         }
 
@@ -38,11 +40,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return this["ItemOrder"] as string;
+                return this[nameof(ItemOrder)] as string;
             }
             set
             {
-                this["ItemOrder"] = value;
+                this[nameof(ItemOrder)] = value;
             }
         }
 
@@ -51,11 +53,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return this["Name"] as string;
+                return this[nameof(Name)] as string;
             }
             set
             {
-                this["Name"] = value;
+                this[nameof(Name)] = value;
             }
         }
 
@@ -65,11 +67,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (Point)this["Location"];
+                return (Point)this[nameof(Location)];
             }
             set
             {
-                this["Location"] = value;
+                this[nameof(Location)] = value;
             }
         }
 
@@ -79,11 +81,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (Size)this["Size"];
+                return (Size)this[nameof(Size)];
             }
             set
             {
-                this["Size"] = value;
+                this[nameof(Size)] = value;
             }
         }
 
@@ -92,11 +94,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return this["ToolStripPanelName"] as string;
+                return this[nameof(ToolStripPanelName)] as string;
             }
             set
             {
-                this["ToolStripPanelName"] = value;
+                this[nameof(ToolStripPanelName)] = value;
             }
         }
 
@@ -106,11 +108,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (bool)this["Visible"];
+                return (bool)this[nameof(Visible)];
             }
             set
             {
-                this["Visible"] = value;
+                this[nameof(Visible)] = value;
             }
         }
 
@@ -213,7 +215,7 @@ namespace System.Windows.Forms
             {
                 object destinationPanel = !string.IsNullOrEmpty(toolStripSettings.ToolStripPanelName) ? toolStripSettings.ToolStripPanelName : null;
 
-                if (destinationPanel == null)
+                if (destinationPanel is null)
                 {
                     // Not in a panel.
                     if (!string.IsNullOrEmpty(toolStripSettings.Name))
@@ -335,7 +337,7 @@ namespace System.Windows.Forms
 
         private ArrayList FindControls(Type baseType, bool searchAllChildren, Control.ControlCollection controlsToLookIn, ArrayList foundControls)
         {
-            if ((controlsToLookIn == null) || (foundControls == null))
+            if ((controlsToLookIn is null) || (foundControls is null))
             {
                 return null;
             }
@@ -347,7 +349,7 @@ namespace System.Windows.Forms
 
                 for (int i = 0; i < controlsToLookIn.Count; i++)
                 {
-                    if (controlsToLookIn[i] == null)
+                    if (controlsToLookIn[i] is null)
                     {
                         continue;
                     }
@@ -364,7 +366,7 @@ namespace System.Windows.Forms
                 {
                     for (int i = 0; i < controlsToLookIn.Count; i++)
                     {
-                        if (controlsToLookIn[i] == null || controlsToLookIn[i] is Form)
+                        if (controlsToLookIn[i] is null || controlsToLookIn[i] is Form)
                         {
                             continue;
                         }
@@ -465,7 +467,6 @@ namespace System.Windows.Forms
                 Location = toolStrip.Location;
                 Name = toolStrip.Name;
                 ItemOrder = GetItemOrder(toolStrip);
-
             }
             public SettingsStub(ToolStripSettings toolStripSettings)
             {

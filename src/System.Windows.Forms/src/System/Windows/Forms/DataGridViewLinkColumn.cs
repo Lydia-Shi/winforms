@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -12,23 +14,21 @@ namespace System.Windows.Forms
     [ToolboxBitmap(typeof(DataGridViewLinkColumn), "DataGridViewLinkColumn")]
     public class DataGridViewLinkColumn : DataGridViewColumn
     {
-        private static readonly Type columnType = typeof(DataGridViewLinkColumn);
+        private static readonly Type s_columnType = typeof(DataGridViewLinkColumn);
 
-        private string text;
+        private string _text;
 
         public DataGridViewLinkColumn() : base(new DataGridViewLinkCell())
         {
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_LinkColumnActiveLinkColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_LinkColumnActiveLinkColorDescr))]
         public Color ActiveLinkColor
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -67,16 +67,11 @@ namespace System.Windows.Forms
             return !ActiveLinkColor.Equals(LinkUtilities.IEActiveLinkColor);
         }
 
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override DataGridViewCell CellTemplate
         {
-            get
-            {
-                return base.CellTemplate;
-            }
+            get => base.CellTemplate;
             set
             {
                 if (value != null && !(value is DataGridViewLinkCell))
@@ -87,16 +82,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(LinkBehavior.SystemDefault),
-            SRCategory(nameof(SR.CatBehavior)),
-            SRDescription(nameof(SR.DataGridView_LinkColumnLinkBehaviorDescr))
-        ]
+        [DefaultValue(LinkBehavior.SystemDefault)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.DataGridView_LinkColumnLinkBehaviorDescr))]
         public LinkBehavior LinkBehavior
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -125,15 +118,13 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_LinkColumnLinkColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_LinkColumnLinkColorDescr))]
         public Color LinkColor
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -172,22 +163,20 @@ namespace System.Windows.Forms
             return !LinkColor.Equals(LinkUtilities.IELinkColor);
         }
 
-        [
-            DefaultValue(null),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_LinkColumnTextDescr))
-        ]
+        [DefaultValue(null)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_LinkColumnTextDescr))]
         public string Text
         {
             get
             {
-                return text;
+                return _text;
             }
             set
             {
-                if (!string.Equals(value, text, StringComparison.Ordinal))
+                if (!string.Equals(value, _text, StringComparison.Ordinal))
                 {
-                    text = value;
+                    _text = value;
                     if (DataGridView != null)
                     {
                         if (UseColumnTextForLinkValue)
@@ -214,16 +203,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(true),
-            SRCategory(nameof(SR.CatBehavior)),
-            SRDescription(nameof(SR.DataGridView_LinkColumnTrackVisitedStateDescr))
-        ]
+        [DefaultValue(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.DataGridView_LinkColumnTrackVisitedStateDescr))]
         public bool TrackVisitedState
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -252,16 +239,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(false),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_LinkColumnUseColumnTextForLinkValueDescr))
-        ]
+        [DefaultValue(false)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_LinkColumnUseColumnTextForLinkValueDescr))]
         public bool UseColumnTextForLinkValue
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -290,15 +275,13 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_LinkColumnVisitedLinkColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_LinkColumnVisitedLinkColorDescr))]
         public Color VisitedLinkColor
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -342,7 +325,7 @@ namespace System.Windows.Forms
             DataGridViewLinkColumn dataGridViewColumn;
             Type thisType = GetType();
 
-            if (thisType == columnType) //performance improvement
+            if (thisType == s_columnType) //performance improvement
             {
                 dataGridViewColumn = new DataGridViewLinkColumn();
             }
@@ -355,7 +338,7 @@ namespace System.Windows.Forms
             if (dataGridViewColumn != null)
             {
                 base.CloneInternal(dataGridViewColumn);
-                dataGridViewColumn.Text = text;
+                dataGridViewColumn.Text = _text;
             }
             return dataGridViewColumn;
         }

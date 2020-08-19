@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -50,7 +52,7 @@ namespace System.Windows.Forms
                 if (ShimManager != null)
                 {
                     HtmlWindowShim shim = ShimManager.GetWindowShim(this);
-                    if (shim == null)
+                    if (shim is null)
                     {
                         shimManager.AddWindowShim(this);
                         shim = ShimManager.GetWindowShim(this);
@@ -177,7 +179,7 @@ namespace System.Windows.Forms
             get
             {
                 IHTMLLocation iHtmlLocation = NativeHtmlWindow.GetLocation();
-                string stringLocation = (iHtmlLocation == null) ? "" : iHtmlLocation.GetHref();
+                string stringLocation = (iHtmlLocation is null) ? "" : iHtmlLocation.GetHref();
                 return string.IsNullOrEmpty(stringLocation) ? null : new Uri(stringLocation);
             }
         }
@@ -450,7 +452,7 @@ namespace System.Windows.Forms
             public void onafterprint(IHTMLEventObj evtObj) { }
         }
 
-        ///<summary>
+        /// <summary>
         ///  HtmlWindowShim - this is the glue between the DOM eventing mechanisms
         ///        and our CLR callbacks.
         ///
@@ -462,7 +464,7 @@ namespace System.Windows.Forms
         ///                       for a method named DISPID=0.  For each event that's subscribed, we create
         ///                       a new HtmlToClrEventProxy, detect the callback and fire the corresponding
         ///                       CLR event.
-        ///</summary>
+        /// </summary>
         internal class HtmlWindowShim : HtmlShim
         {
             private AxHost.ConnectionPointCookie cookie;
@@ -486,7 +488,6 @@ namespace System.Windows.Forms
             ///  Support IHtmlDocument3.AttachHandler
             public override void AttachEventHandler(string eventName, EventHandler eventHandler)
             {
-
                 // IE likes to call back on an IDispatch of DISPID=0 when it has an event,
                 // the HtmlToClrEventProxy helps us fake out the CLR so that we can call back on
                 // our EventHandler properly.
@@ -499,7 +500,7 @@ namespace System.Windows.Forms
             ///  Support HTMLWindowEvents2
             public override void ConnectToEvents()
             {
-                if (cookie == null || !cookie.Connected)
+                if (cookie is null || !cookie.Connected)
                 {
                     cookie = new AxHost.ConnectionPointCookie(NativeHtmlWindow,
                                                                               new HTMLWindowEvents2(htmlWindow),

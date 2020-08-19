@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Design;
@@ -86,7 +88,7 @@ namespace System.Windows.Forms
 
         public Binding Add(string propertyName, object dataSource, string dataMember, bool formattingEnabled, DataSourceUpdateMode updateMode, object nullValue, string formatString, IFormatProvider formatInfo)
         {
-            if (dataSource == null)
+            if (dataSource is null)
             {
                 throw new ArgumentNullException(nameof(dataSource));
             }
@@ -105,7 +107,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void AddCore(Binding dataBinding)
         {
-            if (dataBinding == null)
+            if (dataBinding is null)
             {
                 throw new ArgumentNullException(nameof(dataBinding));
             }
@@ -176,7 +178,7 @@ namespace System.Windows.Forms
 
         protected override void RemoveCore(Binding dataBinding)
         {
-            if (dataBinding == null)
+            if (dataBinding is null)
             {
                 throw new ArgumentNullException(nameof(dataBinding));
             }

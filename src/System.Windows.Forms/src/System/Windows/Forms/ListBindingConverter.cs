@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
@@ -13,8 +15,8 @@ namespace System.Windows.Forms
 {
     public class ListBindingConverter : TypeConverter
     {
-        private static Type[] ctorTypes = null;  // the list of type of our ctor parameters.
-        private static string[] ctorParamProps = null; // the name of each property to check to see if we need to init with a ctor.
+        private static Type[] ctorTypes;  // the list of type of our ctor parameters.
+        private static string[] ctorParamProps; // the name of each property to check to see if we need to init with a ctor.
 
         /// <summary>
         ///  Creates our array of types on demand.
@@ -23,7 +25,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (ctorTypes == null)
+                if (ctorTypes is null)
                 {
                     ctorTypes = new Type[] { typeof(string), typeof(object), typeof(string), typeof(bool), typeof(DataSourceUpdateMode), typeof(object), typeof(string), typeof(IFormatProvider) };
                 }
@@ -38,7 +40,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (ctorParamProps == null)
+                if (ctorParamProps is null)
                 {
                     ctorParamProps = new string[] { null, null, null, "FormattingEnabled", "DataSourceUpdateMode", "NullValue", "FormatString", "FormatInfo", };
                 }
@@ -68,7 +70,7 @@ namespace System.Windows.Forms
         /// </summary>
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (destinationType == null)
+            if (destinationType is null)
             {
                 throw new ArgumentNullException(nameof(destinationType));
             }
@@ -131,10 +133,9 @@ namespace System.Windows.Forms
 
             for (; lastItem >= 0; lastItem--)
             {
-
                 // null means no prop is available, we quit here.
                 //
-                if (ConstructorParameterProperties[lastItem] == null)
+                if (ConstructorParameterProperties[lastItem] is null)
                 {
                     break;
                 }
@@ -157,7 +158,7 @@ namespace System.Windows.Forms
             //
             ConstructorInfo ctor = typeof(Binding).GetConstructor(ctorParams);
             Debug.Assert(ctor != null, "Failed to find Binding ctor for types!");
-            if (ctor == null)
+            if (ctor is null)
             {
                 isComplete = false;
                 ctor = typeof(Binding).GetConstructor(new Type[] {

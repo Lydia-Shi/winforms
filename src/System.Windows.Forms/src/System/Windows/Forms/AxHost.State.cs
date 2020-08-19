@@ -1,6 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+#nullable disable
 
 using System.ComponentModel;
 using System.Diagnostics;
@@ -30,8 +32,8 @@ namespace System.Windows.Forms
             private MemoryStream ms;
             private Ole32.IStorage storage;
             private Ole32.ILockBytes iLockBytes;
-            private bool manualUpdate = false;
-            private string licenseKey = null;
+            private bool manualUpdate;
+            private string licenseKey;
 #pragma warning disable IDE1006
             private readonly PropertyBagStream PropertyBagBinary; // Do NOT rename (binary serialization).
 #pragma warning restore IDE1006
@@ -86,7 +88,7 @@ namespace System.Windows.Forms
             protected State(SerializationInfo info, StreamingContext context)
             {
                 SerializationInfoEnumerator sie = info.GetEnumerator();
-                if (sie == null)
+                if (sie is null)
                 {
                     return;
                 }
@@ -99,9 +101,9 @@ namespace System.Windows.Forms
                             byte[] dat = (byte[])sie.Value;
                             if (dat != null)
                             {
-                                InitializeFromStream(new MemoryStream(dat));
+                                using var datMemoryStream = new MemoryStream(dat);
+                                InitializeFromStream(datMemoryStream);
                             }
-
                         }
                         catch (Exception e)
                         {
@@ -117,9 +119,9 @@ namespace System.Windows.Forms
                             if (dat != null)
                             {
                                 PropertyBagBinary = new PropertyBagStream();
-                                PropertyBagBinary.Read(new MemoryStream(dat));
+                                using var datMemoryStream = new MemoryStream(dat);
+                                PropertyBagBinary.Read(datMemoryStream);
                             }
-
                         }
                         catch (Exception e)
                         {
@@ -153,7 +155,7 @@ namespace System.Windows.Forms
 
             private void CreateStorage()
             {
-                Debug.Assert(storage == null, "but we already have a storage!!!");
+                Debug.Assert(storage is null, "but we already have a storage!!!");
                 IntPtr hglobal = IntPtr.Zero;
                 if (buffer != null)
                 {
@@ -174,12 +176,12 @@ namespace System.Windows.Forms
 
                 try
                 {
-                    iLockBytes = Ole32.CreateILockBytesOnHGlobal(hglobal, true);
-                    if (buffer == null)
+                    iLockBytes = Ole32.CreateILockBytesOnHGlobal(hglobal, BOOL.TRUE);
+                    if (buffer is null)
                     {
                         storage = Ole32.StgCreateDocfileOnILockBytes(
                             iLockBytes,
-                            Ole32.STGM.STGM_CREATE | Ole32.STGM.STGM_READWRITE | Ole32.STGM.STGM_SHARE_EXCLUSIVE,
+                            Ole32.STGM.CREATE | Ole32.STGM.READWRITE | Ole32.STGM.SHARE_EXCLUSIVE,
                             0);
                     }
                     else
@@ -187,14 +189,14 @@ namespace System.Windows.Forms
                         storage = Ole32.StgOpenStorageOnILockBytes(
                             iLockBytes,
                             null,
-                            Ole32.STGM.STGM_READWRITE | Ole32.STGM.STGM_SHARE_EXCLUSIVE,
+                            Ole32.STGM.READWRITE | Ole32.STGM.SHARE_EXCLUSIVE,
                             IntPtr.Zero,
                             0);
                     }
                 }
                 catch (Exception)
                 {
-                    if (iLockBytes == null && hglobal != IntPtr.Zero)
+                    if (iLockBytes is null && hglobal != IntPtr.Zero)
                     {
                         Kernel32.GlobalFree(hglobal);
                     }
@@ -207,14 +209,14 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal Ole32.IPropertyBag GetPropBag()
+            internal Oleaut32.IPropertyBag GetPropBag()
             {
                 return PropertyBagBinary;
             }
 
             internal Ole32.IStorage GetStorage()
             {
-                if (storage == null)
+                if (storage is null)
                 {
                     CreateStorage();
                 }
@@ -224,10 +226,10 @@ namespace System.Windows.Forms
 
             internal Ole32.IStream GetStream()
             {
-                if (ms == null)
+                if (ms is null)
                 {
                     Debug.Assert(buffer != null, "gotta have the buffer already...");
-                    if (buffer == null)
+                    if (buffer is null)
                     {
                         return null;
                     }
@@ -243,7 +245,7 @@ namespace System.Windows.Forms
 
             private void InitializeFromStream(Stream ids)
             {
-                BinaryReader br = new BinaryReader(ids);
+                using var br = new BinaryReader(ids);
 
                 type = br.ReadInt32();
                 int version = br.ReadInt32();
@@ -268,7 +270,7 @@ namespace System.Windows.Forms
 
             private void InitializeBufferFromStream(Stream ids)
             {
-                BinaryReader br = new BinaryReader(ids);
+                using var br = new BinaryReader(ids);
 
                 length = br.ReadInt32();
                 if (length > 0)
@@ -281,7 +283,7 @@ namespace System.Windows.Forms
             {
                 Debug.Assert(storage != null, "how can we not have a storage object?");
                 Debug.Assert(iLockBytes != null, "how can we have a storage w/o ILockBytes?");
-                if (storage == null || iLockBytes == null)
+                if (storage is null || iLockBytes is null)
                 {
                     return null;
                 }
@@ -293,7 +295,7 @@ namespace System.Windows.Forms
                 {
                     buffer = null;
                     ms = null;
-                    iLockBytes.Stat(out Ole32.STATSTG stat, Ole32.STATFLAG.STATFLAG_NONAME);
+                    iLockBytes.Stat(out Ole32.STATSTG stat, Ole32.STATFLAG.NONAME);
                     length = (int)stat.cbSize;
                     buffer = new byte[length];
                     IntPtr hglobal = Ole32.GetHGlobalFromILockBytes(iLockBytes);
@@ -324,7 +326,7 @@ namespace System.Windows.Forms
 
             internal void Save(MemoryStream stream)
             {
-                BinaryWriter bw = new BinaryWriter(stream);
+                using var bw = new BinaryWriter(stream);
 
                 bw.Write(type);
                 bw.Write(VERSION);
@@ -360,7 +362,7 @@ namespace System.Windows.Forms
             /// </summary>
             void ISerializable.GetObjectData(SerializationInfo si, StreamingContext context)
             {
-                MemoryStream stream = new MemoryStream();
+                using var stream = new MemoryStream();
                 Save(stream);
 
                 si.AddValue("Data", stream.ToArray());
@@ -369,9 +371,9 @@ namespace System.Windows.Forms
                 {
                     try
                     {
-                        stream = new MemoryStream();
-                        PropertyBagBinary.Write(stream);
-                        si.AddValue(nameof(PropertyBagBinary), stream.ToArray());
+                        using var propertyBagBinaryStream = new MemoryStream();
+                        PropertyBagBinary.Write(propertyBagBinaryStream);
+                        si.AddValue(nameof(PropertyBagBinary), propertyBagBinaryStream.ToArray());
                     }
                     catch (Exception e)
                     {

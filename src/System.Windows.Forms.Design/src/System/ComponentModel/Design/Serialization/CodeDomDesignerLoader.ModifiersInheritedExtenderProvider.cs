@@ -54,12 +54,12 @@ namespace System.ComponentModel.Design.Serialization
             {
                 IComponent baseComponent = null;
 
-                if (c == null)
+                if (c is null)
                 {
                     return null;
                 }
 
-                if (_host == null)
+                if (_host is null)
                 {
                     ISite site = c.Site;
 
@@ -83,7 +83,11 @@ namespace System.ComponentModel.Design.Serialization
             ///  is an enum represneing the "public/protected/private" scope
             ///  of a component.
             /// </summary>
-            [DesignOnly(true), TypeConverter(typeof(ModifierConverter)), DefaultValue(MemberAttributes.Private), SRDescription(nameof(SR.CodeDomDesignerLoaderPropModifiers)), Category("Design")]
+            [DesignOnly(true)]
+            [TypeConverter(typeof(ModifierConverter))]
+            [DefaultValue(MemberAttributes.Private)]
+            [SRDescription(nameof(SR.CodeDomDesignerLoaderPropModifiers))]
+            [Category("Design")]
             [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public MemberAttributes GetModifiers(IComponent comp)
             {
@@ -92,20 +96,20 @@ namespace System.ComponentModel.Design.Serialization
                 Type baseType = baseComponent.GetType();
                 ISite site = comp.Site;
 
-                if (site == null)
+                if (site is null)
                 {
                     return MemberAttributes.Private;
                 }
 
                 string name = site.Name;
 
-                if (name == null)
+                if (name is null)
                 {
                     return MemberAttributes.Private;
                 }
 
                 FieldInfo field = TypeDescriptor.GetReflectionType(baseType).GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
-                
+
                 if (field != null)
                 {
                     if (field.IsPrivate)
@@ -127,17 +131,17 @@ namespace System.ComponentModel.Design.Serialization
                         return MemberAttributes.FamilyAndAssembly;
                 }
 
-                // Visual Basic uses a property called Foo and generates a field called _Foo. We need to check the 
+                // Visual Basic uses a property called Foo and generates a field called _Foo. We need to check the
                 // visibility of this accessor to fix the modifiers up.
                 PropertyInfo prop = TypeDescriptor.GetReflectionType(baseType).GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
                 MethodInfo[] accessors = prop?.GetAccessors(true);
-                if (accessors == null || accessors.Length == 0 || accessors[0] == null)
+                if (accessors is null || accessors.Length == 0 || accessors[0] is null)
                 {
                     return MemberAttributes.Private;
                 }
 
                 MethodInfo mi = accessors[0];
-                
+
                 if (mi.IsPrivate)
                     return MemberAttributes.Private;
 

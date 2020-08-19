@@ -2,14 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
-using System.Runtime.InteropServices;
 
 namespace System.Windows.Forms
 {
     public partial class TabControl
     {
-        [ComVisible(false)]
         public new class ControlCollection : Control.ControlCollection
         {
             private readonly TabControl _owner;
@@ -56,7 +56,7 @@ namespace System.Windows.Forms
                 if (site != null)
                 {
                     ISite siteTab = tabPage.Site;
-                    if (siteTab == null)
+                    if (siteTab is null)
                     {
                         site.Container?.Add(tabPage);
                     }

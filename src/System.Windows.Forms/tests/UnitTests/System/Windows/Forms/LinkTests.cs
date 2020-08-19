@@ -9,7 +9,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class LinkTests
+    // NB: doesn't require thread affinity
+    public class LinkTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void Link_Ctor_Default()

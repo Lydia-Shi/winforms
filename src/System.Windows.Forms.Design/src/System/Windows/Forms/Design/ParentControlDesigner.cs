@@ -6,7 +6,6 @@ using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Windows.Forms.Design.Behavior;
@@ -26,7 +25,7 @@ namespace System.Windows.Forms.Design
         private IComponentChangeService componentChangeSvc;
         private StatusCommandUI statusCommandUI; // UI for setting the StatusBar Information..
 
-        private int suspendChanging = 0;
+        private int suspendChanging;
 
         /// <summary>
         ///  This is called after the user selects a toolbox item (that has a ParentControlDesigner
@@ -69,7 +68,6 @@ namespace System.Windows.Forms.Design
         protected virtual bool DrawGrid
         {
             get => throw new NotImplementedException(SR.NotImplementedByDesign);
-
             set => throw new NotImplementedException(SR.NotImplementedByDesign);
         }
 
@@ -109,7 +107,7 @@ namespace System.Windows.Forms.Design
 
         internal OleDragDropHandler GetOleDragHandler()
         {
-            if (oleDragDropHandler == null)
+            if (oleDragDropHandler is null)
             {
                 oleDragDropHandler = new OleDragDropHandler(null, (IServiceProvider)GetService(typeof(IDesignerHost)), this);
             }
@@ -163,13 +161,13 @@ namespace System.Windows.Forms.Design
                     }
 
                     // If the resulting control that came back isn't sited, it's not part of the design surface and should not be used as a marker.
-                    if (selectedControl != null && selectedControl.Site == null)
+                    if (selectedControl != null && selectedControl.Site is null)
                     {
                         selectedControl = null;
                     }
 
                     // if the currently selected container is this parent control, default to 0,0
-                    if (primarySelection == Component || selectedControl == null)
+                    if (primarySelection == Component || selectedControl is null)
                     {
                         bounds.X = DefaultControlLocation.X;
                         bounds.Y = DefaultControlLocation.Y;
@@ -180,7 +178,6 @@ namespace System.Windows.Forms.Design
                         bounds.X = selectedControl.Location.X + GridSize.Width;
                         bounds.Y = selectedControl.Location.Y + GridSize.Height;
                     }
-
                 }
                 // If we were not given a size, ask the control for its default.  We also update the location here so the control is in the middle of the user's point, rather than at the edge.
                 if (hasSize)

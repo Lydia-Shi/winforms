@@ -21,12 +21,12 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets the ambient BackColor, or null if there is none.
         /// </summary>
-        public Cursor Cursor { get; set; }
+        public Cursor? Cursor { get; set; }
 
         /// <summary>
         ///  Gets the ambient Font, or null if there is none.
         /// </summary>
-        public Font Font { get; set; }
+        public Font? Font { get; set; }
 
         /// <summary>
         ///  Gets the ambient ForeColor, or Color.Empty if there is none.

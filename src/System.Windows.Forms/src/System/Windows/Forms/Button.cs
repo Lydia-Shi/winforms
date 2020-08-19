@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -16,18 +18,15 @@ namespace System.Windows.Forms
     ///  Represents a
     ///  Windows button.
     /// </summary>
-    [ComVisible(true),
-     ClassInterface(ClassInterfaceType.AutoDispatch),
-     SRDescription(nameof(SR.DescriptionButton)),
-     Designer("System.Windows.Forms.Design.ButtonBaseDesigner, " + AssemblyRef.SystemDesign)
-    ]
-    public class Button : ButtonBase, IButtonControl
+    [SRDescription(nameof(SR.DescriptionButton))]
+    [Designer("System.Windows.Forms.Design.ButtonBaseDesigner, " + AssemblyRef.SystemDesign)]
+    public partial class Button : ButtonBase, IButtonControl
     {
         /// <summary>
         ///  The dialog result that will be sent to the parent dialog form when
         ///  we are clicked.
         /// </summary>
-        private DialogResult dialogResult;
+        private DialogResult _dialogResult;
 
         private const int InvalidDimensionValue = int.MinValue;
 
@@ -35,7 +34,7 @@ namespace System.Windows.Forms
         ///  For buttons whose FaltStyle = FlatStyle.Flat, this property specifies the size, in pixels
         ///  of the border around the button.
         /// </summary>
-        private Size systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
+        private Size _systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='Button'/>
@@ -52,13 +51,11 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Allows the control to optionally shrink when AutoSize is true.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatLayout)),
-        Browsable(true),
-        DefaultValue(AutoSizeMode.GrowOnly),
-        Localizable(true),
-        SRDescription(nameof(SR.ControlAutoSizeModeDescr))
-        ]
+        [SRCategory(nameof(SR.CatLayout))]
+        [Browsable(true)]
+        [DefaultValue(AutoSizeMode.GrowOnly)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.ControlAutoSizeModeDescr))]
         public AutoSizeMode AutoSizeMode
         {
             get
@@ -67,7 +64,6 @@ namespace System.Windows.Forms
             }
             set
             {
-
                 if (!ClientUtils.IsEnumValid(value, (int)value, (int)AutoSizeMode.GrowAndShrink, (int)AutoSizeMode.GrowOnly))
                 {
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(AutoSizeMode));
@@ -90,6 +86,9 @@ namespace System.Windows.Forms
                 }
             }
         }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new ButtonAccessibleObject(this);
 
         internal override ButtonBaseAdapter CreateFlatAdapter()
         {
@@ -114,7 +113,7 @@ namespace System.Windows.Forms
                 return AutoSizeMode == AutoSizeMode.GrowAndShrink ? prefSize : LayoutUtils.UnionSizes(prefSize, Size);
             }
 
-            if (systemSize.Width == InvalidDimensionValue)
+            if (_systemSize.Width == InvalidDimensionValue)
             {
                 Size requiredSize;
                 // Note: The result from the BCM_GETIDEALSIZE message isn't accurate if the font has been
@@ -127,9 +126,9 @@ namespace System.Windows.Forms
                 // with an 8px font.
                 requiredSize.Width += 14;
                 requiredSize.Height += 9;
-                systemSize = requiredSize;
+                _systemSize = requiredSize;
             }
-            Size paddedSize = systemSize + Padding.Size;
+            Size paddedSize = _systemSize + Padding.Size;
             return AutoSizeMode == AutoSizeMode.GrowAndShrink ? paddedSize : LayoutUtils.UnionSizes(paddedSize, Size);
         }
 
@@ -144,17 +143,17 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = "BUTTON";
+                cp.ClassName = ComCtl32.WindowClasses.WC_BUTTON;
                 if (GetStyle(ControlStyles.UserPaint))
                 {
-                    cp.Style |= NativeMethods.BS_OWNERDRAW;
+                    cp.Style |= (int)User32.BS.OWNERDRAW;
                 }
                 else
                 {
-                    cp.Style |= NativeMethods.BS_PUSHBUTTON;
+                    cp.Style |= (int)User32.BS.PUSHBUTTON;
                     if (IsDefault)
                     {
-                        cp.Style |= NativeMethods.BS_DEFPUSHBUTTON;
+                        cp.Style |= (int)User32.BS.DEFPUSHBUTTON;
                     }
                 }
                 return cp;
@@ -166,16 +165,14 @@ namespace System.Windows.Forms
         ///  parent form when the button
         ///  is clicked.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(DialogResult.None),
-        SRDescription(nameof(SR.ButtonDialogResultDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(DialogResult.None)]
+        [SRDescription(nameof(SR.ButtonDialogResultDescr))]
         public virtual DialogResult DialogResult
         {
             get
             {
-                return dialogResult;
+                return _dialogResult;
             }
 
             set
@@ -184,9 +181,11 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(DialogResult));
                 }
-                dialogResult = value;
+                _dialogResult = value;
             }
         }
+
+        internal override bool SupportsUiaProviders => true;
 
         /// <summary>
         ///  Raises the <see cref='Control.OnMouseEnter'/> event.
@@ -205,7 +204,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public new event EventHandler DoubleClick
         {
             add => base.DoubleClick += value;
@@ -213,7 +213,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public new event MouseEventHandler MouseDoubleClick
         {
             add => base.MouseDoubleClick += value;
@@ -245,7 +246,7 @@ namespace System.Windows.Forms
             Form form = FindForm();
             if (form != null)
             {
-                form.DialogResult = dialogResult;
+                form.DialogResult = _dialogResult;
             }
 
             // accessibility stuff
@@ -253,12 +254,16 @@ namespace System.Windows.Forms
             AccessibilityNotifyClients(AccessibleEvents.StateChange, -1);
             AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
 
+            // UIA events:
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
+            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+
             base.OnClick(e);
         }
 
         protected override void OnFontChanged(EventArgs e)
         {
-            systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
+            _systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
             base.OnFontChanged(e);
         }
 
@@ -279,7 +284,7 @@ namespace System.Windows.Forms
                 if (isMouseDown)
                 {
                     Point pt = PointToScreen(new Point(mevent.X, mevent.Y));
-                    if (UnsafeNativeMethods.WindowFromPoint(pt) == Handle && !ValidationCancelled)
+                    if (User32.WindowFromPoint(pt) == Handle && !ValidationCancelled)
                     {
                         if (GetStyle(ControlStyles.UserPaint))
                         {
@@ -294,7 +299,7 @@ namespace System.Windows.Forms
 
         protected override void OnTextChanged(EventArgs e)
         {
-            systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
+            _systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
             base.OnTextChanged(e);
         }
 
@@ -313,7 +318,7 @@ namespace System.Windows.Forms
             if (DpiHelper.IsScalingRequirementMet)
             {
                 // reset cached boundary size - it needs to be recalculated for new DPI
-                systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
+                _systemSize = new Size(InvalidDimensionValue, InvalidDimensionValue);
             }
         }
 
@@ -369,19 +374,18 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_COMMAND:
-                    if (NativeMethods.Util.HIWORD(m.WParam) == NativeMethods.BN_CLICKED)
+                case User32.WM.REFLECT_COMMAND:
+                    if (PARAM.HIWORD(m.WParam) == (int)User32.BN.CLICKED)
                     {
-                        Debug.Assert(!GetStyle(ControlStyles.UserPaint), "Shouldn't get BN_CLICKED when UserPaint");
                         if (!ValidationCancelled)
                         {
                             OnClick(EventArgs.Empty);
                         }
                     }
                     break;
-                case WindowMessages.WM_ERASEBKGND:
+                case User32.WM.ERASEBKGND:
                     DefWndProc(ref m);
                     break;
                 default:
@@ -391,5 +395,3 @@ namespace System.Windows.Forms
         }
     }
 }
-
-

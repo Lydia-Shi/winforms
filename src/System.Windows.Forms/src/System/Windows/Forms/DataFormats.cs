@@ -2,8 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
-using System.Text;
 using System.Runtime.InteropServices;
 using static Interop;
 
@@ -147,7 +148,7 @@ namespace System.Windows.Forms
         public static readonly string Serializable = Application.WindowsFormsVersion + "PersistentObject";
 
         private static Format[] s_formatList;
-        private static int s_formatCount = 0;
+        private static int s_formatCount;
 
         private static readonly object s_internalSyncObject = new object();
 
@@ -157,6 +158,11 @@ namespace System.Windows.Forms
         /// </summary>
         public static Format GetFormat(string format)
         {
+            if (string.IsNullOrWhiteSpace(format))
+            {
+                throw new ArgumentException(nameof(format));
+            }
+
             lock (s_internalSyncObject)
             {
                 EnsurePredefined();
@@ -216,7 +222,7 @@ namespace System.Windows.Forms
                 }
 
                 string name = User32.GetClipboardFormatNameW(clampedId);
-                if (name == null)
+                if (name is null)
                 {
                     // This can happen if windows adds a standard format that we don't know about,
                     // so we should play it safe.
@@ -234,7 +240,7 @@ namespace System.Windows.Forms
         /// </summary>
         private static void EnsureFormatSpace(int size)
         {
-            if (s_formatList == null || s_formatList.Length <= s_formatCount + size)
+            if (s_formatList is null || s_formatList.Length <= s_formatCount + size)
             {
                 int newSize = s_formatCount + 20;
 
@@ -287,7 +293,7 @@ namespace System.Windows.Forms
         public class Format
         {
             /// <summary>
-            ///  Initializes a new instance of the <see cref='Format'/> class and 
+            ///  Initializes a new instance of the <see cref='Format'/> class and
             ///  specifies whether a Win32 handle is expected with this format.
             /// </summary>
             public Format(string name, int id)

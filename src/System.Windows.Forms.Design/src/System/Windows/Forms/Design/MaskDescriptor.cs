@@ -3,22 +3,21 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
 
 namespace System.Windows.Forms.Design
 {
     /// <summary>
-    /// MaskDescriptor abstract class defines the set of methods mask descriptors need to implement for the 
+    /// MaskDescriptor abstract class defines the set of methods mask descriptors need to implement for the
     /// MaskedTextBox.Mask UITypeEditor to include as options in the property editor. MaskDescriptor
-    /// types are discovered at designed time by querying the ITypeDiscoveryService service provider from 
+    /// types are discovered at designed time by querying the ITypeDiscoveryService service provider from
     /// the UITypeEditor object.
-    /// </summary> 
+    /// </summary>
     public abstract class MaskDescriptor
     {
         /// <summary>
-        /// The mask being described.  
+        /// The mask being described.
         /// </summary>
         public abstract string Mask { get; }
 
@@ -65,7 +64,7 @@ namespace System.Windows.Forms.Design
         {
             validationErrorDescription = string.Empty;
 
-            if (maskDescriptor == null)
+            if (maskDescriptor is null)
             {
                 validationErrorDescription = SR.MaskDescriptorNull;
                 return false;
@@ -92,7 +91,7 @@ namespace System.Windows.Forms.Design
             // Add sample. If it fails we are done.
             maskedTextBox.Text = maskDescriptor.Sample;
 
-            if (maskedTextBox.Tag == null) // Sample was added successfully (MaskInputRejected event handler did not change the maskedTextBox tag).
+            if (maskedTextBox.Tag is null) // Sample was added successfully (MaskInputRejected event handler did not change the maskedTextBox tag).
             {
                 if (maskDescriptor.ValidatingType != null)
                 {

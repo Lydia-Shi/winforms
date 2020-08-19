@@ -9,12 +9,16 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class ToolStripPanelTests
+    public class ToolStripPanelTests : IClassFixture<ThreadExceptionFixture>
     {
         [WinFormsFact]
-        public void Ctor_Default()
+        public void ToolStripPanel_Ctor_Default()
         {
             using var control = new SubToolStripPanel();
+            Assert.Null(control.AccessibleDefaultActionDescription);
+            Assert.Null(control.AccessibleDescription);
+            Assert.Null(control.AccessibleName);
+            Assert.Equal(AccessibleRole.Default, control.AccessibleRole);
             Assert.Null(control.ActiveControl);
             Assert.False(control.AllowDrop);
             Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
@@ -34,11 +38,15 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, control.Bottom);
             Assert.Equal(Rectangle.Empty, control.Bounds);
             Assert.False(control.CanEnableIme);
+            Assert.False(control.CanFocus);
             Assert.True(control.CanRaiseEvents);
+            Assert.False(control.CanSelect);
+            Assert.False(control.Capture);
             Assert.True(control.CausesValidation);
             Assert.Equal(Rectangle.Empty, control.ClientRectangle);
             Assert.Equal(Size.Empty, control.ClientSize);
             Assert.Null(control.Container);
+            Assert.False(control.ContainsFocus);
             Assert.Null(control.ContextMenuStrip);
             Assert.Empty(control.Controls);
             Assert.Same(control.Controls, control.Controls);
@@ -65,6 +73,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.Enabled);
             Assert.NotNull(control.Events);
             Assert.Same(control.Events, control.Events);
+            Assert.False(control.Focused);
             Assert.Equal(Control.DefaultFont, control.Font);
             Assert.Equal(control.Font.Height, control.FontHeight);
             Assert.Equal(Control.DefaultForeColor, control.ForeColor);
@@ -75,6 +84,8 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.HScroll);
             Assert.Equal(ImeMode.NoControl, control.ImeMode);
             Assert.Equal(ImeMode.NoControl, control.ImeModeBase);
+            Assert.False(control.IsAccessible);
+            Assert.False(control.IsMirrored);
             Assert.NotNull(control.LayoutEngine);
             Assert.Same(control.LayoutEngine, control.LayoutEngine);
             Assert.Equal(0, control.Left);
@@ -92,6 +103,8 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, control.Right);
             Assert.Equal(RightToLeft.No, control.RightToLeft);
             Assert.Equal(new Padding(3, 0, 0, 0), control.RowMargin);
+            Assert.True(control.ShowFocusCues);
+            Assert.True(control.ShowKeyboardCues);
             Assert.Null(control.Site);
             Assert.Equal(Size.Empty, control.Size);
             Assert.Equal(0, control.TabIndex);
@@ -99,6 +112,7 @@ namespace System.Windows.Forms.Tests
             Assert.Empty(control.Text);
             Assert.Equal(0, control.Top);
             Assert.Null(control.TopLevelControl);
+            Assert.False(control.UseWaitCursor);
             Assert.True(control.Visible);
             Assert.NotNull(control.VerticalScroll);
             Assert.Same(control.VerticalScroll, control.VerticalScroll);
@@ -149,11 +163,11 @@ namespace System.Windows.Forms.Tests
             Assert.False(panel.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void AutoScroll_Set_GetReturnsExpected(bool value)
         {
-            var panel = new ToolStripPanel
+            using var panel = new ToolStripPanel
             {
                 AutoScroll = value
             };
@@ -164,11 +178,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, panel.AutoScroll);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetSizeTheoryData), TestIncludeType.NoNegatives)]
         public void AutoScrollMargin_Set_GetReturnsExpected(Size value)
         {
-            var panel = new ToolStripPanel
+            using var panel = new ToolStripPanel
             {
                 AutoScrollMargin = value
             };
@@ -179,19 +193,19 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, panel.AutoScrollMargin);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetSizeTheoryData), TestIncludeType.NoPositives)]
         public void AutoScrollMargin_SetInvalid_ThrowsArgumentOutOfRangeException(Size value)
         {
-            var panel = new ToolStripPanel();
+            using var panel = new ToolStripPanel();
             Assert.Throws<ArgumentOutOfRangeException>("value", () => panel.AutoScrollMargin = value);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetSizeTheoryData))]
         public void AutoScrollMinSize_Set_GetReturnsExpected(Size value)
         {
-            var panel = new ToolStripPanel
+            using var panel = new ToolStripPanel
             {
                 AutoScrollMinSize = value
             };
@@ -204,68 +218,75 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value != Size.Empty, panel.AutoScroll);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
-        public void AutoSize_Set_GetReturnsExpected(bool value)
+        public void ToolStripPanel_AutoSize_Set_GetReturnsExpected(bool value)
         {
-            var panel = new ToolStripPanel
-            {
-                AutoSize = value
-            };
-            Assert.Equal(value, panel.AutoSize);
+            using var control = new ToolStripPanel();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.AutoSize = value;
+            Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
-            panel.AutoSize = value;
-            Assert.Equal(value, panel.AutoSize);
+            control.AutoSize = value;
+            Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Set different.
-            panel.AutoSize = !value;
-            Assert.Equal(!value, panel.AutoSize);
+            control.AutoSize = !value;
+            Assert.Equal(!value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
-        public void AutoSize_SetWithHandler_CallsAutoSizeChanged()
+        [WinFormsFact]
+        public void ToolStripPanel_AutoSize_SetWithHandler_CallsAutoSizeChanged()
         {
-            var panel = new ToolStripPanel
+            using var control = new ToolStripPanel
             {
                 AutoSize = true
             };
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
-                Assert.Same(panel, sender);
+                Assert.Same(control, sender);
                 Assert.Same(EventArgs.Empty, e);
                 callCount++;
             };
-            panel.AutoSizeChanged += handler;
+            control.AutoSizeChanged += handler;
 
             // Set different.
-            panel.AutoSize = false;
-            Assert.False(panel.AutoSize);
+            control.AutoSize = false;
+            Assert.False(control.AutoSize);
             Assert.Equal(1, callCount);
 
             // Set same.
-            panel.AutoSize = false;
-            Assert.False(panel.AutoSize);
+            control.AutoSize = false;
+            Assert.False(control.AutoSize);
             Assert.Equal(1, callCount);
 
             // Set different.
-            panel.AutoSize = true;
-            Assert.True(panel.AutoSize);
+            control.AutoSize = true;
+            Assert.True(control.AutoSize);
             Assert.Equal(2, callCount);
 
             // Remove handler.
-            panel.AutoSizeChanged -= handler;
-            panel.AutoSize = false;
-            Assert.False(panel.AutoSize);
+            control.AutoSizeChanged -= handler;
+            control.AutoSize = false;
+            Assert.False(control.AutoSize);
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetPaddingTheoryData))]
         public void RowMargin_Set_GetReturnsExpected(Padding value)
         {
-            var panel = new ToolStripPanel
+            using var panel = new ToolStripPanel
             {
                 RowMargin = value
             };
@@ -274,6 +295,49 @@ namespace System.Windows.Forms.Tests
             // Set same.
             panel.RowMargin = value;
             Assert.Equal(value, panel.RowMargin);
+        }
+        [WinFormsFact]
+        public void ToolStripPanel_GetAutoSizeMode_Invoke_ReturnsExpected()
+        {
+            using var control = new SubToolStripPanel();
+            Assert.Equal(AutoSizeMode.GrowOnly, control.GetAutoSizeMode());
+        }
+
+        [WinFormsTheory]
+        [InlineData(ControlStyles.ContainerControl, true)]
+        [InlineData(ControlStyles.UserPaint, true)]
+        [InlineData(ControlStyles.Opaque, false)]
+        [InlineData(ControlStyles.ResizeRedraw, true)]
+        [InlineData(ControlStyles.FixedWidth, false)]
+        [InlineData(ControlStyles.FixedHeight, false)]
+        [InlineData(ControlStyles.StandardClick, true)]
+        [InlineData(ControlStyles.Selectable, false)]
+        [InlineData(ControlStyles.UserMouse, false)]
+        [InlineData(ControlStyles.SupportsTransparentBackColor, true)]
+        [InlineData(ControlStyles.StandardDoubleClick, true)]
+        [InlineData(ControlStyles.AllPaintingInWmPaint, false)]
+        [InlineData(ControlStyles.CacheText, false)]
+        [InlineData(ControlStyles.EnableNotifyMessage, false)]
+        [InlineData(ControlStyles.DoubleBuffer, false)]
+        [InlineData(ControlStyles.OptimizedDoubleBuffer, true)]
+        [InlineData(ControlStyles.UseTextForAccessibility, true)]
+        [InlineData((ControlStyles)0, true)]
+        [InlineData((ControlStyles)int.MaxValue, false)]
+        [InlineData((ControlStyles)(-1), false)]
+        public void ToolStripPanel_GetStyle_Invoke_ReturnsExpected(ControlStyles flag, bool expected)
+        {
+            using var control = new SubToolStripPanel();
+            Assert.Equal(expected, control.GetStyle(flag));
+
+            // Call again to test caching.
+            Assert.Equal(expected, control.GetStyle(flag));
+        }
+
+        [WinFormsFact]
+        public void ToolStripPanel_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubToolStripPanel();
+            Assert.False(control.GetTopLevel());
         }
 
         private class SubToolStripPanel : ToolStripPanel
@@ -328,6 +392,10 @@ namespace System.Windows.Forms.Tests
                 set => base.ResizeRedraw = value;
             }
 
+            public new bool ShowFocusCues => base.ShowFocusCues;
+
+            public new bool ShowKeyboardCues => base.ShowKeyboardCues;
+
             public new bool HScroll
             {
                 get => base.HScroll;
@@ -339,6 +407,12 @@ namespace System.Windows.Forms.Tests
                 get => base.VScroll;
                 set => base.VScroll = value;
             }
+
+            public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
+
+            public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
         }
     }
 }

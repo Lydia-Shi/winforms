@@ -2,13 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
-    using System.Drawing;
-    using System.Windows.Forms.Layout;
     using System.Collections;
     using System.Diagnostics;
+    using System.Drawing;
     using System.Globalization;
+    using System.Windows.Forms.Layout;
 
     ///  this class is a container for toolstrips on a rafting row.
     ///  you can set layout styles on this container all day long and not
@@ -17,18 +19,19 @@ namespace System.Windows.Forms
     ///  set up for it.
     internal class ToolStripPanelCell : ArrangedElement
     {
-        private ToolStrip _wrappedToolStrip = null;
-        private ToolStripPanelRow parent = null;
-        private Size maxSize = LayoutUtils.MaxSize;
-        private bool currentlySizing = false;
-        private bool currentlyDragging = false;
-        private bool restoreOnVisibleChanged = false;
+        private ToolStrip _wrappedToolStrip;
+        private ToolStripPanelRow _parent;
+        private Size _maxSize = LayoutUtils.MaxSize;
+        private bool _currentlySizing;
+        private bool _currentlyDragging;
+        private bool _restoreOnVisibleChanged;
 
-        private Rectangle cachedBounds = Rectangle.Empty;
+        private Rectangle _cachedBounds = Rectangle.Empty;
 #if DEBUG
-        private readonly string cellID;
+        private readonly string _cellID;
+
         [ThreadStatic]
-        private static int cellCount;
+        private static int t_cellCount;
 #endif
 
         public ToolStripPanelCell(Control control) : this(null, control)
@@ -39,33 +42,32 @@ namespace System.Windows.Forms
 #if DEBUG
 
             // Ensure 1:1 Cell/ToolStripPanel mapping
-            cellID = string.Format(CultureInfo.CurrentCulture, "{0}.{1}", control.Name, ++cellCount);
-            Debug.Assert(cellCount <= ToolStripManager.ToolStrips.Count, "who is allocating an extra toolstrippanel cell?");
+            _cellID = string.Format(CultureInfo.CurrentCulture, "{0}.{1}", control.Name, ++t_cellCount);
+            Debug.Assert(t_cellCount <= ToolStripManager.ToolStrips.Count, "who is allocating an extra toolstrippanel cell?");
 #endif
 
             ToolStripPanelRow = parent;
             _wrappedToolStrip = control as ToolStrip;
-            if (control == null)
+            if (control is null)
             {
                 throw new ArgumentNullException(nameof(control));
             }
-            else if (_wrappedToolStrip == null)
+            else if (_wrappedToolStrip is null)
             {
                 throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, string.Format(SR.TypedControlCollectionShouldBeOfType, typeof(ToolStrip).Name)), control.GetType().Name);
             }
             CommonProperties.SetAutoSize(this, true);
             _wrappedToolStrip.LocationChanging += new ToolStripLocationCancelEventHandler(OnToolStripLocationChanging);
             _wrappedToolStrip.VisibleChanged += new EventHandler(OnToolStripVisibleChanged);
-
         }
 
         public Rectangle CachedBounds
         {
-            get { return cachedBounds; }
+            get { return _cachedBounds; }
             set
             {
-                cachedBounds = value;
-                Debug.Assert(cachedBounds.X >= 0 && cachedBounds.Y >= 0, "cached bounds are outside of the client area, investigate");
+                _cachedBounds = value;
+                Debug.Assert(_cachedBounds.X >= 0 && _cachedBounds.Y >= 0, "cached bounds are outside of the client area, investigate");
             }
         }
 
@@ -94,20 +96,18 @@ namespace System.Windows.Forms
 
         public ToolStripPanelRow ToolStripPanelRow
         {
-            get { return parent; }
+            get { return _parent; }
             set
             {
-                if (parent != value)
+                if (_parent != value)
                 {
-                    if (parent != null)
+                    if (_parent != null)
                     {
-                        ((IList)parent.Cells).Remove(this);
+                        ((IList)_parent.Cells).Remove(this);
                     }
-                    parent = value;
+                    _parent = value;
                     Margin = Padding.Empty;
-
                 }
-
             }
         }
 
@@ -129,7 +129,7 @@ namespace System.Windows.Forms
 
         public Size MaximumSize
         {
-            get { return maxSize; }
+            get { return _maxSize; }
         }
 
         public override LayoutEngine LayoutEngine
@@ -139,7 +139,7 @@ namespace System.Windows.Forms
 
         protected override IArrangedElement GetContainer()
         {
-            return parent;
+            return _parent;
         }
 
         public int Grow(int growBy)
@@ -152,7 +152,6 @@ namespace System.Windows.Forms
             {
                 return GrowHorizontal(growBy);
             }
-
         }
 
         private int GrowVertical(int growBy)
@@ -172,7 +171,7 @@ namespace System.Windows.Forms
             if (MaximumSize.Height + growBy >= Control.PreferredSize.Height)
             {
                 int freed = Control.PreferredSize.Height - MaximumSize.Height;
-                maxSize = LayoutUtils.MaxSize;
+                _maxSize = LayoutUtils.MaxSize;
                 return freed;
             }
 
@@ -181,11 +180,10 @@ namespace System.Windows.Forms
             // Max  [      ]
             if (MaximumSize.Height + growBy < Control.PreferredSize.Height)
             {
-                maxSize.Height += growBy;
+                _maxSize.Height += growBy;
                 return growBy;
             }
             return 0;
-
         }
 
         private int GrowHorizontal(int growBy)
@@ -205,7 +203,7 @@ namespace System.Windows.Forms
             if (MaximumSize.Width + growBy >= Control.PreferredSize.Width)
             {
                 int freed = Control.PreferredSize.Width - MaximumSize.Width;
-                maxSize = LayoutUtils.MaxSize;
+                _maxSize = LayoutUtils.MaxSize;
                 return freed;
             }
 
@@ -214,11 +212,10 @@ namespace System.Windows.Forms
             // Max  [      ]
             if (MaximumSize.Width + growBy < Control.PreferredSize.Width)
             {
-                maxSize.Width += growBy;
+                _maxSize.Width += growBy;
                 return growBy;
             }
             return 0;
-
         }
         protected override void Dispose(bool disposing)
         {
@@ -229,22 +226,22 @@ namespace System.Windows.Forms
                     if (_wrappedToolStrip != null)
                     {
 #if DEBUG
-                        cellCount--;
+                        t_cellCount--;
 #endif
                         _wrappedToolStrip.LocationChanging -= new ToolStripLocationCancelEventHandler(OnToolStripLocationChanging);
                         _wrappedToolStrip.VisibleChanged -= new EventHandler(OnToolStripVisibleChanged);
                     }
                     _wrappedToolStrip = null;
-                    if (parent != null)
+                    if (_parent != null)
                     {
-                        ((IList)parent.Cells).Remove(this);
+                        ((IList)_parent.Cells).Remove(this);
                     }
-                    parent = null;
+                    _parent = null;
                 }
 #if DEBUG
                 else
                 {
-                    cellCount--;
+                    t_cellCount--;
                 }
 #endif
 
@@ -291,7 +288,7 @@ namespace System.Windows.Forms
 
         protected override void SetBoundsCore(Rectangle bounds, BoundsSpecified specified)
         {
-            currentlySizing = true;
+            _currentlySizing = true;
             CachedBounds = bounds;
             try
             {
@@ -328,15 +325,12 @@ namespace System.Windows.Forms
                         Debug.WriteLineIf(ToolStripPanelRow.ToolStripPanelMouseDebug.TraceVerbose, "[CELL] NOT DRAGGING calling SetBounds " + bounds.ToString());
                         base.SetBoundsCore(bounds, specified);
                         InnerElement.SetBounds(bounds, specified);
-
                     }
-
                 }
-
             }
             finally
             {
-                currentlySizing = false;
+                _currentlySizing = false;
             }
         }
 
@@ -369,15 +363,15 @@ namespace System.Windows.Forms
         /// </summary>
         private void OnToolStripLocationChanging(object sender, ToolStripLocationCancelEventArgs e)
         {
-            if (ToolStripPanelRow == null)
+            if (ToolStripPanelRow is null)
             {
                 return;
             }
-            if (!currentlySizing && !currentlyDragging)
+            if (!_currentlySizing && !_currentlyDragging)
             {
                 try
                 {
-                    currentlyDragging = true;
+                    _currentlyDragging = true;
                     Point newloc = e.NewLocation;
                     // detect if we havent yet performed a layout - force one so we can
                     // properly join to the row.
@@ -392,7 +386,7 @@ namespace System.Windows.Forms
                 }
                 finally
                 {
-                    currentlyDragging = false;
+                    _currentlyDragging = false;
                     e.Cancel = true;
                 }
             }
@@ -407,16 +401,15 @@ namespace System.Windows.Forms
                 && !_wrappedToolStrip.IsDisposed      // ensure we have a live-runtime only toolstrip.
                 && !_wrappedToolStrip.Disposing)
             {
-
                 // Rejoin the row when visibility is toggled.
                 // we dont want to do this logic at DT, as the DropSourceBehavior
                 // will set the toolstrip visible = false.
                 if (!Control.Visible)
                 {
                     // if we are becoming visible = false, remember if we were in a toolstrippanelrow at the time.
-                    restoreOnVisibleChanged = (ToolStripPanelRow != null && ((IList)ToolStripPanelRow.Cells).Contains(this));
+                    _restoreOnVisibleChanged = (ToolStripPanelRow != null && ((IList)ToolStripPanelRow.Cells).Contains(this));
                 }
-                else if (restoreOnVisibleChanged)
+                else if (_restoreOnVisibleChanged)
                 {
                     try
                     {
@@ -428,11 +421,10 @@ namespace System.Windows.Forms
                     }
                     finally
                     {
-                        restoreOnVisibleChanged = false;
+                        _restoreOnVisibleChanged = false;
                     }
                 }
             }
         }
     }
 }
-

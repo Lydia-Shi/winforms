@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.ComponentModel;
+#nullable disable
+
 using System.Collections;
+using System.ComponentModel;
 
 namespace System.Windows.Forms
 {
@@ -38,7 +40,7 @@ namespace System.Windows.Forms
             if (_dataSource != null && !string.IsNullOrEmpty(_propName))
             {
                 _propInfo = TypeDescriptor.GetProperties(dataSource).Find(_propName, true);
-                if (_propInfo == null)
+                if (_propInfo is null)
                 {
                     throw new ArgumentException(string.Format(SR.PropertyManagerPropDoesNotExist, _propName, dataSource.ToString()));
                 }

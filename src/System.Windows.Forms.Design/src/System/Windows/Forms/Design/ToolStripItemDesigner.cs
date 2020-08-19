@@ -7,7 +7,6 @@ using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.Design.Behavior;
@@ -17,23 +16,21 @@ namespace System.Windows.Forms.Design
 {
     internal class ToolStripItemDesigner : ComponentDesigner
     {
-        private const int GLYPHBORDER = 1;
         private const int GLYPHINSET = 2;
         // Cached in value of the TemplateNode (which is the InSitu Editor)
         private ToolStripTemplateNode _editorNode;
         // Used by the ParentDesigner (ToolStripDesigner) to know whether there is any active Editor.
-        private bool isEditorActive = false;
+        private bool isEditorActive;
         // this property is used in the InitializeNewComponent not to set the text for the ToolstripItem
-        private bool internalCreate = false;
+        private bool internalCreate;
         //hook to SelectionService to listen to SelectionChanged
-        private ISelectionService selSvc = null;
+        private ISelectionService selSvc;
         //ToolStripItems Visibility needs to be WYSIWYG.
-        private bool currentVisible = false;
-        private Rectangle lastInsertionMarkRect = Rectangle.Empty;
-        // Required to remove Body Glyphs ....
-        internal ControlBodyGlyph bodyGlyph = null;
+        private bool currentVisible;
+        // Required to remove Body Glyphs...
+        internal ControlBodyGlyph bodyGlyph;
         //bool which is set if we Add Dummy Item
-        internal bool dummyItemAdded = false;
+        internal bool dummyItemAdded;
         //Needed to Store the DRAGDROP Rect from the ToolStripItemBehavior.
         internal Rectangle dragBoxFromMouseDown = Rectangle.Empty;
         //defaulted to invalid index. this will be set by the behaviour.
@@ -42,12 +39,12 @@ namespace System.Windows.Forms.Design
 
         internal bool AutoSize
         {
-            get => (bool)ShadowProperties["AutoSize"];
+            get => (bool)ShadowProperties[nameof(AutoSize)];
             set
             {
-                bool autoSize = (bool)ShadowProperties["AutoSize"];
+                bool autoSize = (bool)ShadowProperties[nameof(AutoSize)];
                 // always set this in regardless of whether the property changed. it can come back to bite later after in-situ editing if we dont.
-                ShadowProperties["AutoSize"] = value;
+                ShadowProperties[nameof(AutoSize)] = value;
                 if (value != autoSize)
                 {
                     ToolStripItem.AutoSize = value;
@@ -59,11 +56,11 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                return (string)ShadowProperties["AccessibleName"];
+                return (string)ShadowProperties[nameof(AccessibleName)];
             }
             set
             {
-                ShadowProperties["AccessibleName"] = value;
+                ShadowProperties[nameof(AccessibleName)] = value;
             }
         }
 
@@ -94,7 +91,7 @@ namespace System.Windows.Forms.Design
                     toolStripContextMenu.GroupOrdering.Clear();
                     toolStripContextMenu.GroupOrdering.AddRange(new string[] { StandardGroups.Code, StandardGroups.Custom, StandardGroups.Selection, StandardGroups.Edit, StandardGroups.Properties });
                     toolStripContextMenu.Text = "CustomContextMenu";
-                    if (toolStripItemCustomMenuItemCollection == null)
+                    if (toolStripItemCustomMenuItemCollection is null)
                     {
                         toolStripItemCustomMenuItemCollection = new ToolStripItemCustomMenuItemCollection(Component.Site, ToolStripItem);
                     }
@@ -169,7 +166,7 @@ namespace System.Windows.Forms.Design
 
         private ToolStripItemOverflow Overflow
         {
-            get => (ToolStripItemOverflow)ShadowProperties["Overflow"];
+            get => (ToolStripItemOverflow)ShadowProperties[nameof(Overflow)];
             set
             {
                 // first Hide the Overflow..
@@ -190,7 +187,7 @@ namespace System.Windows.Forms.Design
                 if (value != ToolStripItem.Overflow)
                 {
                     ToolStripItem.Overflow = value;
-                    ShadowProperties["Overflow"] = value;
+                    ShadowProperties[nameof(Overflow)] = value;
                 }
 
                 // Since this cause the whole Layout to Change ... Call SyncSelection to reset the glyphs...
@@ -238,17 +235,19 @@ namespace System.Windows.Forms.Design
 
         protected bool Visible
         {
-            get => (bool)ShadowProperties["Visible"];
+            get => (bool)ShadowProperties[nameof(Visible)];
             set
             {
-                ShadowProperties["Visible"] = value;
+                ShadowProperties[nameof(Visible)] = value;
                 currentVisible = value;
             }
         }
 
         /// <summary>
-        ///  This method adds the Parent Hierarchy to arraylist and returns that arraylist to the Base ContextMenu provider. This way the ToolStripItem can show the right parents in the contextMenu
-        /// <summary>
+        ///  This method adds the Parent Hierarchy to arraylist and returns that arraylist to the
+        ///  Base ContextMenu provider. This way the ToolStripItem can show the right parents in
+        ///  the contextMenu.
+        /// </summary>
         internal ArrayList AddParentTree()
         {
             ArrayList parentControls = new ArrayList();
@@ -591,7 +590,7 @@ namespace System.Windows.Forms.Design
                     if (ToolStripItem.IsOnDropDown)
                     {
                         ToolStrip parent = ToolStripItem.GetCurrentParent();
-                        if (parent == null)
+                        if (parent is null)
                         {
                             parent = ToolStripItem.Owner;
                         }
@@ -686,7 +685,7 @@ namespace System.Windows.Forms.Design
                 ISite site = Component.Site;
                 if (site != null && Component is ToolStripDropDownItem)
                 {
-                    if (defaultValues == null)
+                    if (defaultValues is null)
                     {
                         defaultValues = new Hashtable();
                     }
@@ -698,7 +697,7 @@ namespace System.Windows.Forms.Design
                     if (pd != null && pd.PropertyType.Equals(typeof(string)))
                     {
                         string current = (string)pd.GetValue(component);
-                        if (current == null || current.Length == 0)
+                        if (current is null || current.Length == 0)
                         {
                             pd.SetValue(component, site.Name);
                         }
@@ -724,7 +723,7 @@ namespace System.Windows.Forms.Design
         {
             ToolStripItem newItem = null;
             IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
-            if (host == null)
+            if (host is null)
             {
                 Debug.Fail("Couldn't get designer host!");
                 return newItem;
@@ -816,7 +815,7 @@ namespace System.Windows.Forms.Design
                     // Add the new Item...
                     newItem = (ToolStripItem)host.Container.Components[name];
                     //Set the Image property and DisplayStyle...
-                    if (newItem.Image == null && newItem is ToolStripButton)
+                    if (newItem.Image is null && newItem is ToolStripButton)
                     {
                         Image image = null;
                         try
@@ -851,7 +850,6 @@ namespace System.Windows.Forms.Design
                         {
                             imageTransProperty.SetValue(newItem, Color.Magenta);
                         }
-
                     }
 
                     parent.Items.Insert(dummyIndex, newItem);
@@ -953,7 +951,6 @@ namespace System.Windows.Forms.Design
                             //this will allow any Glyphs to re-paint
                             //after this control and its designer has painted
                             behaviorService.ProcessPaintMessage(r);
-
                         }
                     }
                 }
@@ -1089,7 +1086,7 @@ namespace System.Windows.Forms.Design
         {
             dummyItemAdded = false;
             IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
-            if (host == null)
+            if (host is null)
             {
                 Debug.Fail("Couldn't get designer host!");
                 return;
@@ -1104,40 +1101,40 @@ namespace System.Windows.Forms.Design
             host.DestroyComponent(ToolStripItem);
         }
 
-        // <summary>
-        // Resets the ToolStripItemAutoSize to be the default autosize
-        // <summary/>
-        private void ResetAutoSize() => ShadowProperties["AutoSize"] = false;
+        /// <summary>
+        /// Resets the ToolStripItemAutoSize to be the default autosize
+        /// </summary>
+        private void ResetAutoSize() => ShadowProperties[nameof(AutoSize)] = false;
 
-        // <summary>
-        //      Restores the AutoSize to be the value set in the property grid.
-        // <summary/>
-        private void RestoreAutoSize() => ToolStripItem.AutoSize = (bool)ShadowProperties["AutoSize"];
+        /// <summary>
+        ///      Restores the AutoSize to be the value set in the property grid.
+        /// </summary>
+        private void RestoreAutoSize() => ToolStripItem.AutoSize = (bool)ShadowProperties[nameof(AutoSize)];
 
-        // <summary>
-        // Resets the ToolStrip Visible to be the default value
-        // <summary/>
+        /// <summary>
+        /// Resets the ToolStrip Visible to be the default value
+        /// </summary>
         private void ResetVisible() => Visible = true;
 
-        // <summary>
-        //  Restore Overflow
-        // <summary/>
-        private void RestoreOverflow() => ToolStripItem.Overflow = (ToolStripItemOverflow)ShadowProperties["Overflow"];
+        /// <summary>
+        ///  Restore Overflow
+        /// </summary>
+        private void RestoreOverflow() => ToolStripItem.Overflow = (ToolStripItemOverflow)ShadowProperties[nameof(Overflow)];
 
-        // <summary>
-        //  Resets Overflow
-        // <summary/>
+        /// <summary>
+        ///  Resets Overflow
+        /// </summary>
         private void ResetOverflow() => ToolStripItem.Overflow = ToolStripItemOverflow.AsNeeded;
 
-        // <summary>
-        // Resets the ToolStripItem AccessibleName to the default
-        // <summary/>
-        private void ResetAccessibleName() => ShadowProperties["AccessibleName"] = null;
+        /// <summary>
+        /// Resets the ToolStripItem AccessibleName to the default
+        /// </summary>
+        private void ResetAccessibleName() => ShadowProperties[nameof(AccessibleName)] = null;
 
-        // <summary>
-        //      Restores the AutoSize to be the value set in the property grid.
-        // <summary/>
-        private void RestoreAccessibleName() => ToolStripItem.AccessibleName = (string)ShadowProperties["AccessibleName"];
+        /// <summary>
+        ///      Restores the AutoSize to be the value set in the property grid.
+        /// </summary>
+        private void RestoreAccessibleName() => ToolStripItem.AccessibleName = (string)ShadowProperties[nameof(AccessibleName)];
 
         // internal method called to select the next item from the current item.
         internal void SelectNextItem(ISelectionService service, bool enterKeyPressed, ToolStripDesigner designer)
@@ -1217,20 +1214,20 @@ namespace System.Windows.Forms.Design
 
         private bool ShouldSerializeVisible() => !Visible;
 
-        // <summary>
-        // Since we're shadowing autosize, we get called here to determine whether or not to serialize
-        // <summary/>
-        private bool ShouldSerializeAutoSize() => (ShadowProperties.Contains("AutoSize"));
+        /// <summary>
+        /// Since we're shadowing autosize, we get called here to determine whether or not to serialize
+        /// </summary>
+        private bool ShouldSerializeAutoSize() => (ShadowProperties.Contains(nameof(AutoSize)));
 
-        // <summary>
-        // Since we're shadowing autosize, we get called here to determine whether or not to serialize
-        // <summary/>
-        private bool ShouldSerializeAccessibleName() => (ShadowProperties["AccessibleName"] != null);
+        /// <summary>
+        /// Since we're shadowing autosize, we get called here to determine whether or not to serialize
+        /// </summary>
+        private bool ShouldSerializeAccessibleName() => (ShadowProperties[nameof(AccessibleName)] != null);
 
-        // <summary>
-        // Since we're Overflow Size, we get called here to determine whether or not to serialize
-        // <summary/>
-        private bool ShouldSerializeOverflow() => (ShadowProperties["Overflow"] != null);
+        /// <summary>
+        /// Since we're Overflow Size, we get called here to determine whether or not to serialize
+        /// </summary>
+        private bool ShouldSerializeOverflow() => (ShadowProperties[nameof(Overflow)] != null);
 
         /// <summary>
         ///  This Function is called thru the ToolStripEditorManager which is listening for the  F2 command.
@@ -1240,7 +1237,7 @@ namespace System.Windows.Forms.Design
             // ACTIVATION ONLY FOR TOOLSTRIPMENUITEMS
             if (ToolStripItem is ToolStripMenuItem)
             {
-                if (_editorNode == null)
+                if (_editorNode is null)
                 {
                     CreateDummyNode();
                 }

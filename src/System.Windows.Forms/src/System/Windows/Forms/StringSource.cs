@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Runtime.InteropServices.ComTypes;
+#nullable disable
+
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -37,7 +39,7 @@ namespace System.Windows.Forms
                 this.strings = strings;
             }
             current = 0;
-            size = (strings == null) ? 0 : strings.Length;
+            size = (strings is null) ? 0 : strings.Length;
 
             Guid iid_iunknown = typeof(Shell32.IAutoComplete2).GUID;
             HRESULT hr = Ole32.CoCreateInstance(
@@ -60,7 +62,7 @@ namespace System.Windows.Forms
         /// </summary>
         public bool Bind(HandleRef edit, Shell32.AUTOCOMPLETEOPTIONS options)
         {
-            if (_autoCompleteObject2 == null)
+            if (_autoCompleteObject2 is null)
             {
                 return false;
             }
@@ -92,7 +94,7 @@ namespace System.Windows.Forms
                 strings = newSource;
             }
             current = 0;
-            size = (strings == null) ? 0 : strings.Length;
+            size = (strings is null) ? 0 : strings.Length;
         }
 
         #region IEnumString Members
@@ -106,7 +108,7 @@ namespace System.Windows.Forms
         {
             if (celt < 0)
             {
-                return NativeMethods.E_INVALIDARG;
+                return (int)HRESULT.E_INVALIDARG;
             }
             int fetched = 0;
 
@@ -122,7 +124,7 @@ namespace System.Windows.Forms
             {
                 Marshal.WriteInt32(pceltFetched, fetched);
             }
-            return celt == 0 ? NativeMethods.S_OK : NativeMethods.S_FALSE;
+            return celt == 0 ? (int)HRESULT.S_OK : (int)HRESULT.S_FALSE;
         }
 
         void IEnumString.Reset()
@@ -135,12 +137,11 @@ namespace System.Windows.Forms
             current += celt;
             if (current >= size)
             {
-                return (NativeMethods.S_FALSE);
+                return (int)HRESULT.S_FALSE;
             }
-            return NativeMethods.S_OK;
+            return (int)HRESULT.S_OK;
         }
 
         #endregion
     }
 }
-

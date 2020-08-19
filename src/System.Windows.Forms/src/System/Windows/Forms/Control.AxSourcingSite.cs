@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using static Interop;
 
@@ -36,11 +38,10 @@ namespace System.Windows.Forms
             {
                 if (service == typeof(HtmlDocument))
                 {
-                    HRESULT hr = _clientSite.GetContainer(out Ole32.IOleContainer iOlecontainer);
-                    if (hr.Succeeded() && iOlecontainer is Mshtml.IHTMLDocument)
+                    if (_clientSite.GetContainer() is Mshtml.IHTMLDocument document)
                     {
                         _shimManager ??= new HtmlShimManager();
-                        return new HtmlDocument(_shimManager, iOlecontainer as Mshtml.IHTMLDocument);
+                        return new HtmlDocument(_shimManager, document);
                     }
                 }
                 else if (_clientSite.GetType().IsAssignableFrom(service))
@@ -64,7 +65,7 @@ namespace System.Windows.Forms
                 get => _name;
                 set
                 {
-                    if (value == null || _name == null)
+                    if (value is null || _name is null)
                     {
                         _name = value;
                     }

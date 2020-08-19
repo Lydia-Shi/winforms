@@ -4,10 +4,11 @@
 
 using WinForms.Common.Tests;
 using Xunit;
+using static Interop;
 
 namespace System.Windows.Forms.Design.Tests
 {
-    public class ControlDesignerTests
+    public class ControlDesignerTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void AccessibleObjectField()
@@ -131,7 +132,6 @@ namespace System.Windows.Forms.Design.Tests
             controlDesigner.Initialize(new Button());
             try
             {
-
                 controlDesigner.HookChildControlsMethod(new Control());
             }
             catch (Exception ex)
@@ -216,6 +216,22 @@ namespace System.Windows.Forms.Design.Tests
             {
                 Assert.True(false, "Expected no exception, but got: " + ex.Message);
             }
+        }
+
+        [WinFormsFact(Skip = "OleDragDropHandler.FrezePainting is not implemented. See https://github.com/dotnet/winforms/issues/2400")]
+        public void ControlDesigner_WndProc_InvokePaint_Success()
+        {
+            var designer = new SubControlDesigner();
+            var m = new Message
+            {
+                Msg = (int)User32.WM.PAINT
+            };
+            designer.WndProc(ref m);
+        }
+
+        private class SubControlDesigner : ControlDesigner
+        {
+            public new void WndProc(ref Message m) => base.WndProc(ref m);
         }
     }
 }

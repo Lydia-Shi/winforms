@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Windows.Forms.VisualStyles;
+#nullable disable
+
 using System.Drawing;
+using System.Windows.Forms.VisualStyles;
 
 namespace System.Windows.Forms
 {
@@ -35,7 +37,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (toolStripHighContrastRenderer == null)
+                if (toolStripHighContrastRenderer is null)
                 {
                     toolStripHighContrastRenderer = new ToolStripHighContrastRenderer(/*renderLikeSystem*/true);
                 }
@@ -52,7 +54,7 @@ namespace System.Windows.Forms
             {
                 if (Application.RenderWithVisualStyles)
                 {
-                    if (renderer == null && VisualStyleRenderer.IsElementDefined(VisualStyleElement.ToolBar.Button.Normal))
+                    if (renderer is null && VisualStyleRenderer.IsElementDefined(VisualStyleElement.ToolBar.Button.Normal))
                     {
                         renderer = new VisualStyleRenderer(VisualStyleElement.ToolBar.Button.Normal);
                     }
@@ -63,7 +65,6 @@ namespace System.Windows.Forms
                 }
                 return renderer;
             }
-
         }
 
         /// <summary>
@@ -72,35 +73,10 @@ namespace System.Windows.Forms
         private static void FillBackground(Graphics g, Rectangle bounds, Color backColor)
         {
             // Fill the background with the item's back color
-            if (backColor.IsSystemColor)
-            {
-                g.FillRectangle(SystemBrushes.FromSystemColor(backColor), bounds);
-            }
-            else
-            {
-                using (Brush backBrush = new SolidBrush(backColor))
-                {
-                    g.FillRectangle(backBrush, bounds);
-                }
-            }
+            using var backBrush = backColor.GetCachedSolidBrushScope();
+            g.FillRectangle(backBrush, bounds);
         }
 
-        /// <summary>
-        ///  returns true if you are required to dispose the pen
-        /// </summary>
-        private static bool GetPen(Color color, ref Pen pen)
-        {
-            if (color.IsSystemColor)
-            {
-                pen = SystemPens.FromSystemColor(color);
-                return false;
-            }
-            else
-            {
-                pen = new Pen(color);
-                return true;
-            }
-        }
         /// <summary>
         ///  translates the ToolStrip item state into a toolbar state, which is something the renderer understands
         /// </summary>
@@ -108,6 +84,7 @@ namespace System.Windows.Forms
         {
             return (int)GetToolBarState(item);
         }
+
         /// <summary>
         ///  translates the ToolStrip item state into a toolbar state, which is something the renderer understands
         /// </summary>
@@ -115,6 +92,7 @@ namespace System.Windows.Forms
         {
             return (int)GetSplitButtonToolBarState(item, true);
         }
+
         /// <summary>
         ///  translates the ToolStrip item state into a toolbar state, which is something the renderer understands
         /// </summary>
@@ -247,7 +225,6 @@ namespace System.Windows.Forms
                                                e.BackColor : SystemColors.MenuBar);
                 }
             }
-
         }
 
         /// <summary>
@@ -272,7 +249,7 @@ namespace System.Windows.Forms
                 {
                     bounds.Width -= 1;
                     bounds.Height -= 1;
-                    e.Graphics.DrawRectangle(new Pen(SystemColors.ControlDark), bounds);
+                    e.Graphics.DrawRectangle(SystemPens.ControlDark, bounds);
                 }
                 else
                 {
@@ -305,7 +282,6 @@ namespace System.Windows.Forms
 
             if (ToolStripManager.VisualStylesEnabled && VisualStyleRenderer.IsElementDefined(VisualStyleElement.Rebar.Gripper.Normal))
             {
-
                 VisualStyleRenderer vsRenderer = VisualStyleRenderer;
 
                 if (verticalGrip)
@@ -345,7 +321,6 @@ namespace System.Windows.Forms
                 }
 
                 RenderSmall3DBorderInternal(g, bounds, ToolBarState.Hot, (e.ToolStrip.RightToLeft == RightToLeft.Yes));
-
             }
         }
 
@@ -458,9 +433,8 @@ namespace System.Windows.Forms
 
                     if (item.Selected || item.Pressed)
                     {
-                        // Legacy behavior is to always paint the menu item background.
-                        // The correct behavior is to only paint the background if the menu item is
-                        // enabled.
+                        // Legacy behavior is to always paint the menu item background. The correct behavior is to only
+                        // paint the background if the menu item is enabled.
                         if (item.Enabled)
                         {
                             g.FillRectangle(SystemBrushes.Highlight, fillRect);
@@ -469,11 +443,9 @@ namespace System.Windows.Forms
                         Color borderColor = ToolStripManager.VisualStylesEnabled ?
                             SystemColors.Highlight : ProfessionalColors.MenuItemBorder;
 
-                        // draw selection border - always drawn regardless of Enabled.
-                        using (Pen p = new Pen(borderColor))
-                        {
-                            g.DrawRectangle(p, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
-                        }
+                        // Draw selection border - always drawn regardless of Enabled.
+                        using var pen = borderColor.GetCachedPenScope();
+                        g.DrawRectangle(pen, bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
                     }
                     else
                     {
@@ -487,9 +459,7 @@ namespace System.Windows.Forms
                         }
                     }
                 }
-
             }
-
         }
 
         /// <summary>
@@ -529,7 +499,6 @@ namespace System.Windows.Forms
                 && VisualStyleRenderer.IsElementDefined(splitButtonDropDownPart)
                 && VisualStyleRenderer.IsElementDefined(splitButtonPart))
             {
-
                 VisualStyleRenderer vsRenderer = VisualStyleRenderer;
 
                 // Draw the SplitButton Button portion of it.
@@ -575,7 +544,6 @@ namespace System.Windows.Forms
             }
             else
             {
-
                 // Draw the split button button
                 Rectangle splitButtonButtonRect = splitButton.ButtonBounds;
 
@@ -601,7 +569,7 @@ namespace System.Windows.Forms
                 Rectangle dropDownRect = splitButton.DropDownButtonBounds;
 
                 // fill the color in the dropdown button
-                if (splitButton.BackgroundImage == null)
+                if (splitButton.BackgroundImage is null)
                 {
                     FillBackground(g, dropDownRect, splitButton.BackColor);
                 }
@@ -614,9 +582,7 @@ namespace System.Windows.Forms
                 }
 
                 DrawArrow(new ToolStripArrowRenderEventArgs(g, splitButton, dropDownRect, arrowColor, ArrowDirection.Down));
-
             }
-
         }
 
         /// <summary>
@@ -639,7 +605,6 @@ namespace System.Windows.Forms
             if (ToolStripManager.VisualStylesEnabled
                 && (VisualStyleRenderer.IsElementDefined(toolBarElement)))
             {
-
                 VisualStyleRenderer vsRenderer = VisualStyleRenderer;
                 vsRenderer.SetParameters(toolBarElement.ClassName, toolBarElement.Part, (int)state);
                 vsRenderer.DrawBackground(g, new Rectangle(Point.Empty, item.Size));
@@ -663,14 +628,15 @@ namespace System.Windows.Forms
                     FillBackground(g, fillRect, item.BackColor);
                 }
             }
-
         }
 
         /// <summary>
         ///  </summary>
         private void RenderSeparatorInternal(Graphics g, ToolStripItem item, Rectangle bounds, bool vertical)
         {
-            VisualStyleElement separator = (vertical) ? VisualStyleElement.ToolBar.SeparatorHorizontal.Normal : VisualStyleElement.ToolBar.SeparatorVertical.Normal;
+            VisualStyleElement separator = (vertical)
+                ? VisualStyleElement.ToolBar.SeparatorHorizontal.Normal
+                : VisualStyleElement.ToolBar.SeparatorVertical.Normal;
 
             if (ToolStripManager.VisualStylesEnabled
                 && (VisualStyleRenderer.IsElementDefined(separator)))
@@ -682,60 +648,43 @@ namespace System.Windows.Forms
             }
             else
             {
+                using var foreColorPen = item.ForeColor.GetCachedPenScope();
 
-                Color foreColor = item.ForeColor;
-                Color backColor = item.BackColor;
-
-                Pen foreColorPen = SystemPens.ControlDark;
-                bool disposeForeColorPen = GetPen(foreColor, ref foreColorPen);
-
-                try
+                if (vertical)
                 {
-                    if (vertical)
+                    if (bounds.Height >= 4)
                     {
-                        if (bounds.Height >= 4)
-                        {
-                            bounds.Inflate(0, -2);     // scoot down 2PX and start drawing
-                        }
-
-                        bool rightToLeft = (item.RightToLeft == RightToLeft.Yes);
-                        Pen leftPen = (rightToLeft) ? SystemPens.ButtonHighlight : foreColorPen;
-                        Pen rightPen = (rightToLeft) ? foreColorPen : SystemPens.ButtonHighlight;
-
-                        // Draw dark line
-                        int startX = bounds.Width / 2;
-                        g.DrawLine(leftPen, startX, bounds.Top, startX, bounds.Bottom);
-
-                        // Draw highlight one pixel to the right
-                        startX++;
-                        g.DrawLine(rightPen, startX, bounds.Top, startX, bounds.Bottom);
-
-                    }
-                    else
-                    {
-                        //
-                        // horizontal separator
-                        if (bounds.Width >= 4)
-                        {
-                            bounds.Inflate(-2, 0);        // scoot over 2PX and start drawing
-                        }
-
-                        // Draw dark line
-                        int startY = bounds.Height / 2;
-                        g.DrawLine(foreColorPen, bounds.Left, startY, bounds.Right, startY);
-
-                        // Draw highlight one pixel to the right
-                        startY++;
-                        g.DrawLine(SystemPens.ButtonHighlight, bounds.Left, startY, bounds.Right, startY);
+                        bounds.Inflate(0, -2);     // scoot down 2PX and start drawing
                     }
 
+                    bool rightToLeft = (item.RightToLeft == RightToLeft.Yes);
+                    Pen leftPen = (rightToLeft) ? SystemPens.ButtonHighlight : foreColorPen;
+                    Pen rightPen = (rightToLeft) ? foreColorPen : SystemPens.ButtonHighlight;
+
+                    // Draw dark line
+                    int startX = bounds.Width / 2;
+                    g.DrawLine(leftPen, startX, bounds.Top, startX, bounds.Bottom);
+
+                    // Draw highlight one pixel to the right
+                    startX++;
+                    g.DrawLine(rightPen, startX, bounds.Top, startX, bounds.Bottom);
                 }
-                finally
+                else
                 {
-                    if (disposeForeColorPen && foreColorPen != null)
+                    //
+                    // horizontal separator
+                    if (bounds.Width >= 4)
                     {
-                        foreColorPen.Dispose();
+                        bounds.Inflate(-2, 0);        // scoot over 2PX and start drawing
                     }
+
+                    // Draw dark line
+                    int startY = bounds.Height / 2;
+                    g.DrawLine(foreColorPen, bounds.Left, startY, bounds.Right, startY);
+
+                    // Draw highlight one pixel to the right
+                    startY++;
+                    g.DrawLine(SystemPens.ButtonHighlight, bounds.Left, startY, bounds.Right, startY);
                 }
             }
         }
@@ -755,7 +704,6 @@ namespace System.Windows.Forms
                 g.DrawLine(leftPen, bounds.Left, bounds.Top, bounds.Left, bounds.Bottom - 1);
                 g.DrawLine(rightPen, bounds.Right - 1, bounds.Top, bounds.Right - 1, bounds.Bottom - 1);
                 g.DrawLine(bottomPen, bounds.Left, bounds.Bottom - 1, bounds.Right - 1, bounds.Bottom - 1);
-
             }
         }
 
@@ -800,7 +748,7 @@ namespace System.Windows.Forms
             {
                 VisualStyleRenderer vsRenderer = VisualStyleRenderer;
 
-                if (vsRenderer == null || (item.BackColor != SystemColors.Control))
+                if (vsRenderer is null || (item.BackColor != SystemColors.Control))
                 {
                     FillBackground(g, fillRect, item.BackColor);
                 }

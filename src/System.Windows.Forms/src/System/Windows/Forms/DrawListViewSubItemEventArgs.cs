@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 
 namespace System.Windows.Forms
@@ -18,18 +20,18 @@ namespace System.Windows.Forms
                         ListViewItem.ListViewSubItem subItem, int itemIndex, int columnIndex,
                         ColumnHeader header, ListViewItemStates itemState)
         {
-            if (graphics == null)
+            if (graphics is null)
             {
                 throw new ArgumentNullException(nameof(graphics));
             }
             if (itemIndex == -1)
             {
-                if (item == null)
+                if (item is null)
                 {
                     throw new ArgumentNullException(nameof(item));
                 }
             }
-            else if (subItem == null)
+            else if (subItem is null)
             {
                 throw new ArgumentNullException(nameof(subItem));
             }
@@ -95,10 +97,8 @@ namespace System.Windows.Forms
         public void DrawBackground()
         {
             Color backColor = (ItemIndex == -1) ? Item.BackColor : SubItem.BackColor;
-            using (var backBrush = new SolidBrush(backColor))
-            {
-                Graphics.FillRectangle(backBrush, Bounds);
-            }
+            using var backBrush = backColor.GetCachedSolidBrushScope();
+            Graphics.FillRectangle(backBrush, Bounds);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void DrawFocusRectangle(Rectangle bounds)
         {
-            if (Item == null)
+            if (Item is null)
             {
                 return;
             }

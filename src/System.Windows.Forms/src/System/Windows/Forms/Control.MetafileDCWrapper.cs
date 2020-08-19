@@ -2,6 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
+using System.Buffers;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -24,14 +27,14 @@ namespace System.Windows.Forms
         /// </summary>
         private class MetafileDCWrapper : IDisposable
         {
-            private IntPtr _hBitmap = IntPtr.Zero;
-            private IntPtr _hOriginalBmp = IntPtr.Zero;
-            private readonly IntPtr _hMetafileDC;
+            private Gdi32.HBITMAP _hBitmap;
+            private Gdi32.HBITMAP _hOriginalBmp;
+            private readonly Gdi32.HDC _hMetafileDC;
             private RECT _destRect;
 
-            internal MetafileDCWrapper(IntPtr hOriginalDC, Size size)
+            internal unsafe MetafileDCWrapper(Gdi32.HDC hOriginalDC, Size size)
             {
-                Debug.Assert(Gdi32.GetObjectType(hOriginalDC) == Gdi32.ObjectType.OBJ_ENHMETADC,
+                Debug.Assert(Gdi32.GetObjectType(hOriginalDC) == Gdi32.OBJ.ENHMETADC,
                     "Why wrap a non-Enhanced MetaFile DC?");
 
                 if (size.Width < 0 || size.Height < 0)
@@ -41,12 +44,12 @@ namespace System.Windows.Forms
 
                 _hMetafileDC = hOriginalDC;
                 _destRect = new RECT(0, 0, size.Width, size.Height);
-                HDC = Gdi32.CreateCompatibleDC(IntPtr.Zero);
+                HDC = Gdi32.CreateCompatibleDC((Gdi32.HDC)default);
 
                 int planes = Gdi32.GetDeviceCaps(HDC, Gdi32.DeviceCapability.PLANES);
                 int bitsPixel = Gdi32.GetDeviceCaps(HDC, Gdi32.DeviceCapability.BITSPIXEL);
-                _hBitmap = SafeNativeMethods.CreateBitmap(size.Width, size.Height, planes, bitsPixel, IntPtr.Zero);
-                _hOriginalBmp = Gdi32.SelectObject(HDC, _hBitmap);
+                _hBitmap = Gdi32.CreateBitmap(size.Width, size.Height, (uint)planes, (uint)bitsPixel, null);
+                _hOriginalBmp = (Gdi32.HBITMAP)Gdi32.SelectObject(HDC, _hBitmap);
             }
 
             ~MetafileDCWrapper()
@@ -56,7 +59,7 @@ namespace System.Windows.Forms
 
             void IDisposable.Dispose()
             {
-                if (HDC == IntPtr.Zero || _hMetafileDC == IntPtr.Zero || _hBitmap == IntPtr.Zero)
+                if (HDC.IsNull || _hMetafileDC.IsNull || _hBitmap.IsNull)
                 {
                     return;
                 }
@@ -70,38 +73,38 @@ namespace System.Windows.Forms
                     Gdi32.SelectObject(HDC, _hOriginalBmp);
                     success = Gdi32.DeleteObject(_hBitmap).IsTrue();
                     Debug.Assert(success, "DeleteObject() failed.");
-                    success = Gdi32.DeleteDC(HDC);
+                    success = Gdi32.DeleteDC(HDC).IsTrue();
                     Debug.Assert(success, "DeleteObject() failed.");
                 }
                 finally
                 {
                     // Dispose is done. Set all the handles to IntPtr.Zero so this way the Dispose method executes only once.
-                    HDC = IntPtr.Zero;
-                    _hBitmap = IntPtr.Zero;
-                    _hOriginalBmp = IntPtr.Zero;
+                    HDC = default;
+                    _hBitmap = default;
+                    _hOriginalBmp = default;
 
                     GC.SuppressFinalize(this);
                 }
             }
 
-            internal IntPtr HDC { get; private set; } = IntPtr.Zero;
+            internal Gdi32.HDC HDC { get; private set; }
 
             // ported form VB6 (Ctls\PortUtil\StdCtl.cpp:6176)
-            private unsafe bool DICopy(IntPtr hdcDest, IntPtr hdcSrc, RECT rect, bool bStretch)
+            private unsafe bool DICopy(Gdi32.HDC hdcDest, Gdi32.HDC hdcSrc, RECT rect, bool bStretch)
             {
                 long i;
 
                 // Get the bitmap from the DC by selecting in a 1x1 pixel temp bitmap
-                IntPtr hNullBitmap = SafeNativeMethods.CreateBitmap(1, 1, 1, 1, IntPtr.Zero);
-                if (hNullBitmap == IntPtr.Zero)
+                Gdi32.HBITMAP hNullBitmap = Gdi32.CreateBitmap(1, 1, 1, 1, null);
+                if (hNullBitmap.IsNull)
                 {
                     return false;
                 }
 
                 try
                 {
-                    IntPtr hBitmap = Gdi32.SelectObject(hdcSrc, hNullBitmap);
-                    if (hBitmap == IntPtr.Zero)
+                    Gdi32.HBITMAP hBitmap = (Gdi32.HBITMAP)Gdi32.SelectObject(hdcSrc, hNullBitmap);
+                    if (hBitmap.IsNull)
                     {
                         return false;
                     }
@@ -114,44 +117,49 @@ namespace System.Windows.Forms
                         return false;
                     }
 
-                    NativeMethods.BITMAPINFO_FLAT lpbmi = new NativeMethods.BITMAPINFO_FLAT
+                    var lpbmi = new Gdi32.BITMAPINFO
                     {
-                        bmiHeader_biSize = Marshal.SizeOf<NativeMethods.BITMAPINFOHEADER>(),
-                        bmiHeader_biWidth = bmp.bmWidth,
-                        bmiHeader_biHeight = bmp.bmHeight,
-                        bmiHeader_biPlanes = 1,
-                        bmiHeader_biBitCount = (short)bmp.bmBitsPixel,
-                        bmiHeader_biCompression = NativeMethods.BI_RGB,
-                        bmiHeader_biSizeImage = 0,               //Not needed since using BI_RGB
-                        bmiHeader_biXPelsPerMeter = 0,
-                        bmiHeader_biYPelsPerMeter = 0,
-                        bmiHeader_biClrUsed = 0,
-                        bmiHeader_biClrImportant = 0,
-                        bmiColors = new byte[NativeMethods.BITMAPINFO_MAX_COLORSIZE * 4]
+                        bmiHeader = new Gdi32.BITMAPINFOHEADER
+                        {
+                            biSize = (uint)sizeof(Gdi32.BITMAPINFOHEADER),
+                            biWidth = bmp.bmWidth,
+                            biHeight = bmp.bmHeight,
+                            biPlanes = 1,
+                            biBitCount = bmp.bmBitsPixel,
+                            biCompression = Gdi32.BI.RGB
+                        },
+                        bmiColors = new byte[Gdi32.BITMAPINFO.MaxColorSize * 4]
                     };
 
                     // Include the palette for 256 color bitmaps
                     long iColors = 1 << (bmp.bmBitsPixel * bmp.bmPlanes);
                     if (iColors <= 256)
                     {
-                        byte[] aj = new byte[sizeof(Gdi32.PALETTEENTRY) * 256];
-                        SafeNativeMethods.GetSystemPaletteEntries(hdcSrc, 0, (int)iColors, aj);
-
-                        fixed (byte* pcolors = lpbmi.bmiColors)
+                        byte[] aj = ArrayPool<byte>.Shared.Rent(sizeof(Gdi32.PALETTEENTRY) * 256);
+                        try
                         {
-                            fixed (byte* ppal = aj)
-                            {
-                                Gdi32.RGBQUAD* prgb = (Gdi32.RGBQUAD*)pcolors;
-                                Gdi32.PALETTEENTRY* lppe = (Gdi32.PALETTEENTRY*)ppal;
+                            Gdi32.GetSystemPaletteEntries(hdcSrc, 0, (uint)iColors, aj);
 
-                                // Convert the palette entries to RGB quad entries
-                                for (i = 0; i < (int)iColors; i++)
+                            fixed (byte* pcolors = lpbmi.bmiColors)
+                            {
+                                fixed (byte* ppal = aj)
                                 {
-                                    prgb[i].rgbRed = lppe[i].peRed;
-                                    prgb[i].rgbBlue = lppe[i].peBlue;
-                                    prgb[i].rgbGreen = lppe[i].peGreen;
+                                    Gdi32.RGBQUAD* prgb = (Gdi32.RGBQUAD*)pcolors;
+                                    Gdi32.PALETTEENTRY* lppe = (Gdi32.PALETTEENTRY*)ppal;
+
+                                    // Convert the palette entries to RGB quad entries
+                                    for (i = 0; i < (int)iColors; i++)
+                                    {
+                                        prgb[i].rgbRed = lppe[i].peRed;
+                                        prgb[i].rgbBlue = lppe[i].peBlue;
+                                        prgb[i].rgbGreen = lppe[i].peGreen;
+                                    }
                                 }
                             }
+                        }
+                        finally
+                        {
+                            ArrayPool<byte>.Shared.Return(aj);
                         }
                     }
 
@@ -162,8 +170,14 @@ namespace System.Windows.Forms
                     byte[] lpBits = new byte[totalBytesReqd];
 
                     // Get the bitmap bits
-                    int diRet = SafeNativeMethods.GetDIBits(hdcSrc, hBitmap, 0, bmp.bmHeight, lpBits,
-                            ref lpbmi, NativeMethods.DIB_RGB_COLORS);
+                    int diRet = Gdi32.GetDIBits(
+                        hdcSrc,
+                        hBitmap,
+                        0,
+                        (uint)bmp.bmHeight,
+                        lpBits,
+                        ref lpbmi,
+                        Gdi32.DIB.RGB_COLORS);
                     if (diRet == 0)
                     {
                         return false;
@@ -187,10 +201,20 @@ namespace System.Windows.Forms
                     }
 
                     // Paint the bitmap
-                    int iRet = SafeNativeMethods.StretchDIBits(hdcDest,
-                            xDest, yDest, cxDest, cyDest, 0, 0, bmp.bmWidth, bmp.bmHeight,
-                            lpBits, ref lpbmi, NativeMethods.DIB_RGB_COLORS, NativeMethods.SRCCOPY);
-
+                    int iRet = Gdi32.StretchDIBits(
+                        hdcDest,
+                        xDest,
+                        yDest,
+                        cxDest,
+                        cyDest,
+                        0,
+                        0,
+                        bmp.bmWidth,
+                        bmp.bmHeight,
+                        lpBits,
+                        ref lpbmi,
+                        Gdi32.DIB.RGB_COLORS,
+                        Gdi32.ROP.SRCCOPY);
                     if (iRet == NativeMethods.GDI_ERROR)
                     {
                         return false;

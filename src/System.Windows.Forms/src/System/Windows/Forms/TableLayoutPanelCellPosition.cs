@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
@@ -89,7 +91,7 @@ namespace System.Windows.Forms
                 }
 
                 // Parse 2 integer values.
-                if (culture == null)
+                if (culture is null)
                 {
                     culture = CultureInfo.CurrentCulture;
                 }
@@ -122,14 +124,13 @@ namespace System.Windows.Forms
                     typeof(TableLayoutPanelCellPosition).GetConstructor(new Type[] { typeof(int), typeof(int) }),
                     new object[] { cellPosition.Column, cellPosition.Row }
                 );
-
             }
             return base.ConvertTo(context, culture, value, destinationType);
         }
 
         public override object CreateInstance(ITypeDescriptorContext context, IDictionary propertyValues)
         {
-            if (propertyValues == null)
+            if (propertyValues is null)
             {
                 throw new ArgumentNullException(nameof(propertyValues));
             }

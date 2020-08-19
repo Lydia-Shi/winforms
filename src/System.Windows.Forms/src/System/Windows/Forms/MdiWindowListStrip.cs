@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Globalization;
 
@@ -12,7 +14,7 @@ namespace System.Windows.Forms
     /// </summary>
     internal class MdiWindowListStrip : MenuStrip
     {
-        private Form mdiParent = null;
+        private Form mdiParent;
         private ToolStripMenuItem mergeItem;
         private MenuStrip mergedMenu;
 
@@ -33,7 +35,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (mergeItem == null)
+                if (mergeItem is null)
                 {
                     mergeItem = new ToolStripMenuItem
                     {
@@ -41,7 +43,7 @@ namespace System.Windows.Forms
                     };
                 }
 
-                if (mergeItem.Owner == null)
+                if (mergeItem.Owner is null)
                 {
                     Items.Add(mergeItem);
                 }
@@ -68,7 +70,7 @@ namespace System.Windows.Forms
         ///  Based on similar code in MenuItem.cs::PopulateMdiList(), which is unfortunately just different
         ///  enough in its working environment that we can't readily combine the two.
         ///  But if you're fixing something here, chances are that the same issue will need scrutiny over there.
-        ///</summary>
+        /// </summary>
         public void PopulateItems(Form mdiParent, ToolStripMenuItem mdiMergeItem, bool includeSeparator)
         {
             this.mdiParent = mdiParent;
@@ -83,7 +85,6 @@ namespace System.Windows.Forms
                 Form[] forms = mdiParent.MdiChildren;
                 if (forms != null && forms.Length != 0)
                 {
-
                     if (includeSeparator)
                     {
                         ToolStripSeparator separator = new ToolStripSeparator
@@ -132,7 +133,7 @@ namespace System.Windows.Forms
                                 }
                                 accel++;
                                 formsAddedToMenu++;
-                                Debug.WriteLineIf(ToolStrip.MDIMergeDebug.TraceVerbose, "\tPopulateItems: Added " + windowListItem.Text);
+                                Debug.WriteLineIf(ToolStrip.s_mdiMergeDebug.TraceVerbose, "\tPopulateItems: Added " + windowListItem.Text);
                                 mergeItem.DropDownItems.Add(windowListItem);
                             }
                         }
@@ -145,7 +146,7 @@ namespace System.Windows.Forms
                         {
                             Text = SR.MDIMenuMoreWindows
                         };
-                        Debug.WriteLineIf(ToolStrip.MDIMergeDebug.TraceVerbose, "\tPopulateItems: Added " + moreWindowsMenuItem.Text);
+                        Debug.WriteLineIf(ToolStrip.s_mdiMergeDebug.TraceVerbose, "\tPopulateItems: Added " + moreWindowsMenuItem.Text);
                         moreWindowsMenuItem.Click += new EventHandler(OnMoreWindowsMenuItemClick);
                         moreWindowsMenuItem.MergeAction = MergeAction.Append;
                         mergeItem.DropDownItems.Add(moreWindowsMenuItem);
@@ -173,7 +174,6 @@ namespace System.Windows.Forms
                     DialogResult result = dialog.ShowDialog();
                     if (result == DialogResult.OK)
                     {
-
                         // AllWindows Assert above allows this...
                         //
                         dialog.ActiveChildForm.Activate();

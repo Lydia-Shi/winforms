@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.VisualStyles;
@@ -11,9 +13,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 {
     internal sealed class DropDownButton : Button
     {
-        private bool useComboBoxTheme = false;
-
-        private bool ignoreMouse;
+        private bool _useComboBoxTheme;
 
         public DropDownButton()
         {
@@ -23,17 +23,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         // when the holder is open, we don't fire clicks
         //
-        public bool IgnoreMouse
-        {
-            get
-            {
-                return ignoreMouse;
-            }
-            set
-            {
-                ignoreMouse = value;
-            }
-        }
+        public bool IgnoreMouse { get; set; }
 
         /// <summary>
         ///  Indicates whether or not the control supports UIA Providers via
@@ -45,9 +35,9 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             set
             {
-                if (useComboBoxTheme != value)
+                if (_useComboBoxTheme != value)
                 {
-                    useComboBoxTheme = value;
+                    _useComboBoxTheme = value;
                     SetAccessibleName();
 
                     Invalidate();
@@ -83,15 +73,15 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             base.OnPaint(pevent);
 
-            if (Application.RenderWithVisualStyles & useComboBoxTheme)
+            if (Application.RenderWithVisualStyles & _useComboBoxTheme)
             {
                 ComboBoxState cbState = ComboBoxState.Normal;
 
-                if (base.MouseIsDown)
+                if (MouseIsDown)
                 {
                     cbState = ComboBoxState.Pressed;
                 }
-                else if (base.MouseIsOver)
+                else if (MouseIsOver)
                 {
                     cbState = ComboBoxState.Hot;
                 }
@@ -101,13 +91,14 @@ namespace System.Windows.Forms.PropertyGridInternal
                 {
                     pevent.Graphics.FillRectangle(SystemBrushes.Window, dropDownButtonRect);
                 }
-                if (!DpiHelper.IsScalingRequirementMet)
+
+                using (var hdc = new DeviceContextHdcScope(pevent))
                 {
-                    ComboBoxRenderer.DrawDropDownButton(pevent.Graphics, dropDownButtonRect, cbState);
-                }
-                else
-                {
-                    ComboBoxRenderer.DrawDropDownButtonForHandle(pevent.Graphics, dropDownButtonRect, cbState, HandleInternal);
+                    ComboBoxRenderer.DrawDropDownButtonForHandle(
+                        hdc,
+                        dropDownButtonRect,
+                        cbState,
+                        DpiHelper.IsScalingRequirementMet ? HandleInternal : IntPtr.Zero);
                 }
 
                 // Redraw focus cues
@@ -131,7 +122,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         private void SetAccessibleName()
         {
-            if (useComboBoxTheme)
+            if (_useComboBoxTheme)
             {
                 AccessibleName = SR.PropertyGridDropDownButtonComboBoxAccessibleName;
             }
@@ -160,22 +151,23 @@ namespace System.Windows.Forms.PropertyGridInternal
     {
         internal DropDownButtonAdapter(ButtonBase control) : base(control) { }
 
-        private void DDB_Draw3DBorder(Graphics g, Rectangle r, bool raised)
+        private void DDB_Draw3DBorder(PaintEventArgs e, Rectangle r, bool raised)
         {
             if (Control.BackColor != SystemColors.Control && SystemInformation.HighContrast)
             {
                 if (raised)
                 {
                     Color c = ControlPaint.LightLight(Control.BackColor);
-                    ControlPaint.DrawBorder(g, r,
-                                            c, 1, ButtonBorderStyle.Outset,
-                                            c, 1, ButtonBorderStyle.Outset,
-                                            c, 2, ButtonBorderStyle.Inset,
-                                            c, 2, ButtonBorderStyle.Inset);
+                    ControlPaint.DrawBorder(
+                        e, r,
+                        c, 1, ButtonBorderStyle.Outset,
+                        c, 1, ButtonBorderStyle.Outset,
+                        c, 2, ButtonBorderStyle.Inset,
+                        c, 2, ButtonBorderStyle.Inset);
                 }
                 else
                 {
-                    ControlPaint.DrawBorder(g, r, ControlPaint.Dark(Control.BackColor), ButtonBorderStyle.Solid);
+                    ControlPaint.DrawBorderSimple(e, r, ControlPaint.Dark(Control.BackColor));
                 }
             }
             else
@@ -183,26 +175,28 @@ namespace System.Windows.Forms.PropertyGridInternal
                 if (raised)
                 {
                     Color c = ControlPaint.Light(Control.BackColor);
-                    ControlPaint.DrawBorder(g, r,
-                                            c, 1, ButtonBorderStyle.Solid,
-                                            c, 1, ButtonBorderStyle.Solid,
-                                            Control.BackColor, 2, ButtonBorderStyle.Outset,
-                                            Control.BackColor, 2, ButtonBorderStyle.Outset);
+                    ControlPaint.DrawBorder(
+                        e, r,
+                        c, 1, ButtonBorderStyle.Solid,
+                        c, 1, ButtonBorderStyle.Solid,
+                        Control.BackColor, 2, ButtonBorderStyle.Outset,
+                        Control.BackColor, 2, ButtonBorderStyle.Outset);
 
                     Rectangle inside = r;
                     inside.Offset(1, 1);
                     inside.Width -= 3;
                     inside.Height -= 3;
                     c = ControlPaint.LightLight(Control.BackColor);
-                    ControlPaint.DrawBorder(g, inside,
-                                            c, 1, ButtonBorderStyle.Solid,
-                                            c, 1, ButtonBorderStyle.Solid,
-                                            c, 1, ButtonBorderStyle.None,
-                                            c, 1, ButtonBorderStyle.None);
+                    ControlPaint.DrawBorder(
+                        e, inside,
+                        c, 1, ButtonBorderStyle.Solid,
+                        c, 1, ButtonBorderStyle.Solid,
+                        c, 1, ButtonBorderStyle.None,
+                        c, 1, ButtonBorderStyle.None);
                 }
                 else
                 {
-                    ControlPaint.DrawBorder(g, r, ControlPaint.Dark(Control.BackColor), ButtonBorderStyle.Solid);
+                    ControlPaint.DrawBorderSimple(e, r, ControlPaint.Dark(Control.BackColor));
                 }
             }
         }
@@ -212,24 +206,30 @@ namespace System.Windows.Forms.PropertyGridInternal
             base.PaintUp(pevent, state);
             if (!Application.RenderWithVisualStyles)
             {
-                DDB_Draw3DBorder(pevent.Graphics, Control.ClientRectangle, true);
+                DDB_Draw3DBorder(pevent, Control.ClientRectangle, raised: true);
             }
             else
             {
-                Color c = SystemColors.Window;
+                Color c = (ARGB)SystemColors.Window;
                 Rectangle rect = Control.ClientRectangle;
                 rect.Inflate(0, -1);
-                ControlPaint.DrawBorder(pevent.Graphics, rect,
-                                        c, 1, ButtonBorderStyle.None,
-                                        c, 1, ButtonBorderStyle.None,
-                                        c, 1, ButtonBorderStyle.Solid,
-                                        c, 1, ButtonBorderStyle.None);
+                ControlPaint.DrawBorder(
+                    pevent, rect,
+                    c, 1, ButtonBorderStyle.None,
+                    c, 1, ButtonBorderStyle.None,
+                    c, 1, ButtonBorderStyle.Solid,
+                    c, 1, ButtonBorderStyle.None);
             }
         }
 
         internal override void DrawImageCore(Graphics graphics, Image image, Rectangle imageBounds, Point imageStart, LayoutData layout)
         {
-            ControlPaint.DrawImageReplaceColor(graphics, image, imageBounds, Color.Black, IsHighContrastHighlighted() && !Control.MouseIsDown ? SystemColors.HighlightText : Control.ForeColor);
+            ControlPaint.DrawImageReplaceColor(
+                graphics,
+                image,
+                imageBounds,
+                Color.Black,
+                IsHighContrastHighlighted() && !Control.MouseIsDown ? SystemColors.HighlightText : Control.ForeColor);
         }
     }
 
@@ -237,7 +237,6 @@ namespace System.Windows.Forms.PropertyGridInternal
     ///  Represents the accessibility object for the PropertyGrid DropDown button.
     ///  This DropDownButtonAccessibleObject is available in Level3 only.
     /// </summary>
-    [Runtime.InteropServices.ComVisible(true)]
     internal class DropDownButtonAccessibleObject : Control.ControlAccessibleObject
     {
         private readonly DropDownButton _owningDropDownButton;
@@ -295,50 +294,21 @@ namespace System.Windows.Forms.PropertyGridInternal
         /// <summary>
         ///  Request value of specified property from an element.
         /// </summary>
-        /// <param name="propertyId">Identifier indicating the property to return</param>
+        /// <param name="propertyID">Identifier indicating the property to return</param>
         /// <returns>Returns a ValInfo indicating whether the element supports this property, or has no value for it.</returns>
-        internal override object GetPropertyValue(UiaCore.UIA propertyID)
+        internal override object GetPropertyValue(UiaCore.UIA propertyID) => propertyID switch
         {
-            switch (propertyID)
-            {
-                case UiaCore.UIA.ControlTypePropertyId:
-                    return UiaCore.UIA.ButtonControlTypeId;
-                case UiaCore.UIA.NamePropertyId:
-                    return Name;
-                case UiaCore.UIA.IsLegacyIAccessiblePatternAvailablePropertyId:
-                    return true;
-                case UiaCore.UIA.LegacyIAccessibleRolePropertyId:
-                    return Role;
-                default:
-                    return base.GetPropertyValue(propertyID);
-            }
-        }
-
-        /// <summary>
-        ///  Indicates whether the specified pattern is supported.
-        /// </summary>
-        /// <param name="patternId">The pattern ID.</param>
-        /// <returns>True if specified pattern is supported, otherwise false.</returns>
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
-        {
-            if (patternId == UiaCore.UIA.LegacyIAccessiblePatternId)
-            {
-                return true;
-            }
-
-            return base.IsPatternSupported(patternId);
-        }
+            UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ButtonControlTypeId,
+            UiaCore.UIA.NamePropertyId => Name,
+            UiaCore.UIA.IsLegacyIAccessiblePatternAvailablePropertyId => true,
+            UiaCore.UIA.LegacyIAccessibleRolePropertyId => Role,
+            _ => base.GetPropertyValue(propertyID),
+        };
 
         /// <summary>
         ///  Gets the accessible role.
         /// </summary>
-        public override AccessibleRole Role
-        {
-            get
-            {
-                return AccessibleRole.PushButton;
-            }
-        }
+        public override AccessibleRole Role => AccessibleRole.PushButton;
 
         /// <summary>
         ///  Request that focus is set to this item.
@@ -354,4 +324,3 @@ namespace System.Windows.Forms.PropertyGridInternal
         }
     }
 }
-

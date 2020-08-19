@@ -18,7 +18,6 @@ namespace WinformsControlsTest.UserControls
 {
     internal partial class CollectionEditors : Form
     {
-        private int[] _intArray = Enumerable.Range(1, 10).ToArray();
         private string[] _stringArray = new[] { "Lorem ipsum dolor sit amet", "id quo accusamus definitionem", "graeco salutandi sed te", "mei in solum primis definitionem." };
         private List<string> _stringList = new List<string> { "Lorem ipsum dolor sit amet", "id quo accusamus definitionem", "graeco salutandi sed te", "mei in solum primis definitionem." };
         private Collection<string> _stringCollection = new Collection<string> { "Lorem ipsum dolor sit amet", "id quo accusamus definitionem", "graeco salutandi sed te", "mei in solum primis definitionem." };
@@ -26,7 +25,6 @@ namespace WinformsControlsTest.UserControls
         public CollectionEditors()
         {
             InitializeComponent();
-
 
             var imageList = new ImageList();
             imageList.Images.Add("SmallA", Image.FromFile("Images\\SmallA.bmp"));

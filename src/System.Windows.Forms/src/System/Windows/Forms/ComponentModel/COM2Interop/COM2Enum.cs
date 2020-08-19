@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Globalization;
 
 namespace System.Windows.Forms.ComponentModel.Com2Interop
@@ -49,8 +51,8 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             this.allowUnknownValues = allowUnknownValues;
 
             // these have to be null and the same length
-            if (names == null ||
-                values == null ||
+            if (names is null ||
+                values is null ||
                 names.Length != values.Length)
             {
                 throw new ArgumentException(SR.COM2NamesAndValuesNotEqual);
@@ -130,7 +132,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             this.values = new object[names.Length];
             for (int i = 0; i < names.Length; i++)
             {
-                //Debug.WriteLine(names[i] + ": item " + i.ToString() + ",type=" + values[i].GetType().Name + ", value=" + values[i].ToString());
                 this.names[i] = names[i];
                 this.values[i] = values[i];
                 if (values[i] != null)
@@ -147,7 +148,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             if (v != null)
             {
-
                 // in case this is a real enum...try to convert it.
                 //
                 if (values.Length > 0 && v.GetType() != values[0].GetType())

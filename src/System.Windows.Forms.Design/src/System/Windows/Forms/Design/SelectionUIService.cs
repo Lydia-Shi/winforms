@@ -26,16 +26,16 @@ namespace System.Windows.Forms.Design
         private ISelectionUIHandler _dragHandler; // the current drag handler
         private object[] _dragComponents; // the controls being dragged
         private SelectionRules _dragRules; // movement constraints for the drag
-        private bool _dragMoved = false;
+        private bool _dragMoved;
         private object _containerDrag; // object being dragged during a container drag
         // These are used during a drag of a selection grab handle
-        private bool _ignoreCaptureChanged = false;
+        private bool _ignoreCaptureChanged;
         private int _mouseDragHitTest; // where the hit occurred that caused the drag
         private Point _mouseDragAnchor = s_invalidPoint; // anchor point of the drag
         private Rectangle _mouseDragOffset = Rectangle.Empty; // current drag offset
         private Point _lastMoveScreenCoord = Point.Empty;
-        private bool _ctrlSelect = false; // was the CTRL key down when the drag began
-        private bool _mouseDragging = false; // Are we actually doing a drag?
+        private bool _ctrlSelect; // was the CTRL key down when the drag began
+        private bool _mouseDragging; // Are we actually doing a drag?
         private ContainerSelectorActiveEventHandler _containerSelectorActive; // the event we fire when user interacts with container selector
         private Hashtable _selectionItems;
         private readonly Hashtable _selectionHandlers; // Component UI handlers
@@ -123,7 +123,7 @@ namespace System.Windows.Forms.Design
             else
             {
                 string message = e.Message;
-                if (message == null || message.Length == 0)
+                if (message is null || message.Length == 0)
                 {
                     message = e.ToString();
                 }
@@ -496,7 +496,7 @@ namespace System.Windows.Forms.Design
         // Standard 'catch all - rethrow critical' exception pattern
         protected override void OnMouseDown(MouseEventArgs me)
         {
-            if (_dragHandler == null && _selSvc != null)
+            if (_dragHandler is null && _selSvc != null)
             {
                 try
                 {
@@ -834,16 +834,16 @@ namespace System.Windows.Forms.Design
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_LBUTTONUP:
-                case WindowMessages.WM_RBUTTONUP:
+                case User32.WM.LBUTTONUP:
+                case User32.WM.RBUTTONUP:
                     if (_mouseDragAnchor != s_invalidPoint)
                     {
                         _ignoreCaptureChanged = true;
                     }
                     break;
-                case WindowMessages.WM_CAPTURECHANGED:
+                case User32.WM.CAPTURECHANGED:
                     if (!_ignoreCaptureChanged && _mouseDragAnchor != s_invalidPoint)
                     {
                         EndMouseDrag(MousePosition);
@@ -938,7 +938,7 @@ namespace System.Windows.Forms.Design
                 return false;
             }
 
-            if (_selSvc == null)
+            if (_selSvc is null)
             {
                 return false;
             }
@@ -961,7 +961,7 @@ namespace System.Windows.Forms.Design
             {
                 primaryHandler = GetHandler(primary);
             }
-            if (primaryHandler == null)
+            if (primaryHandler is null)
             {
                 return false; // no UI handler for selection
             }
@@ -1011,7 +1011,6 @@ namespace System.Windows.Forms.Design
             }
             finally
             {
-
                 if (!dragging)
                 {
                     _dragComponents = null;
@@ -1035,7 +1034,7 @@ namespace System.Windows.Forms.Design
         void ISelectionUIService.DragMoved(Rectangle offset)
         {
             Rectangle newOffset = Rectangle.Empty;
-            if (_dragHandler == null)
+            if (_dragHandler is null)
             {
                 throw new Exception(SR.DesignerBeginDragNotCalled);
             }
@@ -1080,7 +1079,7 @@ namespace System.Windows.Forms.Design
             _dragHandler = null;
             _dragComponents = null;
             _dragRules = SelectionRules.None;
-            if (handler == null)
+            if (handler is null)
             {
                 throw new InvalidOperationException();
             }
@@ -1090,7 +1089,7 @@ namespace System.Windows.Forms.Design
             try
             {
                 IComponent comp = components[0] as IComponent;
-                if (components.Length > 1 || (components.Length == 1 && comp != null && comp.Site == null))
+                if (components.Length > 1 || (components.Length == 1 && comp != null && comp.Site is null))
                 {
                     trans = _host.CreateTransaction(string.Format(SR.DragDropMoveComponents, components.Length));
                 }
@@ -1135,7 +1134,7 @@ namespace System.Windows.Forms.Design
         object[] ISelectionUIService.FilterSelection(object[] components, SelectionRules selectionRules)
         {
             object[] selection = null;
-            if (components == null)
+            if (components is null)
             {
                 return Array.Empty<object>();
             }
@@ -1191,7 +1190,7 @@ namespace System.Windows.Forms.Design
         SelectionRules ISelectionUIService.GetSelectionRules(object component)
         {
             SelectionUIItem sel = (SelectionUIItem)_selectionItems[component];
-            if (sel == null)
+            if (sel is null)
             {
                 Debug.Fail("The component is not currently selected.");
                 throw new InvalidOperationException();
@@ -1205,7 +1204,7 @@ namespace System.Windows.Forms.Design
         SelectionStyles ISelectionUIService.GetSelectionStyle(object component)
         {
             SelectionUIItem s = (SelectionUIItem)_selectionItems[component];
-            if (s == null)
+            if (s is null)
             {
                 return SelectionStyles.None;
             }
@@ -1240,7 +1239,7 @@ namespace System.Windows.Forms.Design
             else
             {
                 SelectionUIItem existingItem = (SelectionUIItem)_selectionItems[component];
-                if (existingItem == null || existingItem is ContainerSelectionUIItem)
+                if (existingItem is null || existingItem is ContainerSelectionUIItem)
                 {
                     _selectionItems.Remove(component);
                     if (existingItem != null)
@@ -1634,7 +1633,7 @@ namespace System.Windows.Forms.Design
             /// </summary>
             public virtual Region GetRegion()
             {
-                if (_region == null)
+                if (_region is null)
                 {
                     if ((GetRules() & SelectionRules.Visible) != SelectionRules.None && !_outerRect.IsEmpty)
                     {
@@ -1772,7 +1771,7 @@ namespace System.Windows.Forms.Design
             /// </summary>
             public void UpdateRules()
             {
-                if (_handler == null)
+                if (_handler is null)
                 {
                     _selectionRules = SelectionRules.None;
                 }
@@ -1795,7 +1794,7 @@ namespace System.Windows.Forms.Design
             {
                 bool sizeChanged = false;
                 // Short circuit common cases
-                if (_handler == null)
+                if (_handler is null)
                 {
                     return false;
                 }
@@ -1891,7 +1890,7 @@ namespace System.Windows.Forms.Design
 
             public override Region GetRegion()
             {
-                if (_region == null)
+                if (_region is null)
                 {
                     if ((GetRules() & SelectionRules.Visible) != SelectionRules.None && !_outerRect.IsEmpty)
                     {

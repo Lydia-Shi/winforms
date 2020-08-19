@@ -2,8 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.InteropServices;
+using static Interop;
+using static Interop.Shell32;
 
 namespace System.Windows.Forms
 {
@@ -13,8 +18,8 @@ namespace System.Windows.Forms
     ///  file. This class cannot be inherited.
     /// </summary>
     [
-    Designer("System.Windows.Forms.Design.SaveFileDialogDesigner, " + AssemblyRef.SystemDesign),
-    SRDescription(nameof(SR.DescriptionSaveFileDialog))
+    Designer("System.Windows.Forms.Design.SaveFileDialogDesigner, " + AssemblyRef.SystemDesign)]
+    [SRDescription(nameof(SR.DescriptionSaveFileDialog))
     ]
     public sealed class SaveFileDialog : FileDialog
     {
@@ -22,42 +27,26 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether the dialog box prompts the user for
         ///  permission to create a file if the user specifies a file that does not exist.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.SaveFileDialogCreatePrompt))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.SaveFileDialogCreatePrompt))]
         public bool CreatePrompt
         {
-            get
-            {
-                return GetOption(NativeMethods.OFN_CREATEPROMPT);
-            }
-            set
-            {
-                SetOption(NativeMethods.OFN_CREATEPROMPT, value);
-            }
+            get => GetOption((int)Comdlg32.OFN.CREATEPROMPT);
+            set => SetOption((int)Comdlg32.OFN.CREATEPROMPT, value);
         }
 
         /// <summary>
         ///  Gets or sets a value indicating whether the Save As dialog box displays a warning if the user specifies
         ///  a file name that already exists.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(true),
-        SRDescription(nameof(SR.SaveFileDialogOverWritePrompt))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.SaveFileDialogOverWritePrompt))]
         public bool OverwritePrompt
         {
-            get
-            {
-                return GetOption(NativeMethods.OFN_OVERWRITEPROMPT);
-            }
-            set
-            {
-                SetOption(NativeMethods.OFN_OVERWRITEPROMPT, value);
-            }
+            get => GetOption((int)Comdlg32.OFN.OVERWRITEPROMPT);
+            set => SetOption((int)Comdlg32.OFN.OVERWRITEPROMPT, value);
         }
 
         /// <summary>
@@ -110,7 +99,7 @@ namespace System.Windows.Forms
             }
 
             //Note: When we are using the Vista dialog mode we get two prompts (one from us and one from the OS) if we do this
-            if ((_options & NativeMethods.OFN_OVERWRITEPROMPT) != 0 && FileExists(fileName) && !UseVistaDialogInternal)
+            if ((_options & (int)Comdlg32.OFN.OVERWRITEPROMPT) != 0 && FileExists(fileName) && !UseVistaDialogInternal)
             {
                 if (!PromptFileOverwrite(fileName))
                 {
@@ -118,7 +107,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            if ((_options & NativeMethods.OFN_CREATEPROMPT) != 0 && !FileExists(fileName))
+            if ((_options & (int)Comdlg32.OFN.CREATEPROMPT) != 0 && !FileExists(fileName))
             {
                 if (!PromptFileCreate(fileName))
                 {
@@ -136,7 +125,7 @@ namespace System.Windows.Forms
         public override void Reset()
         {
             base.Reset();
-            SetOption(NativeMethods.OFN_OVERWRITEPROMPT, true);
+            SetOption((int)Comdlg32.OFN.OVERWRITEPROMPT, true);
         }
 
         private protected override bool RunFileDialog(NativeMethods.OPENFILENAME_I ofn)
@@ -146,11 +135,9 @@ namespace System.Windows.Forms
             if (!result)
             {
                 // Something may have gone wrong - check for error condition
-                //
-                int errorCode = SafeNativeMethods.CommDlgExtendedError();
-                switch (errorCode)
+                switch (Comdlg32.CommDlgExtendedError())
                 {
-                    case NativeMethods.FNERR_INVALIDFILENAME:
+                    case Comdlg32.FNERR.INVALIDFILENAME:
                         throw new InvalidOperationException(string.Format(SR.FileDialogInvalidFileName, FileName));
                 }
             }
@@ -158,16 +145,28 @@ namespace System.Windows.Forms
             return result;
         }
 
-        private protected override string[] ProcessVistaFiles(FileDialogNative.IFileDialog dialog)
+        private protected override string[] ProcessVistaFiles(IFileDialog dialog)
         {
-            FileDialogNative.IFileSaveDialog saveDialog = (FileDialogNative.IFileSaveDialog)dialog;
-            dialog.GetResult(out FileDialogNative.IShellItem item);
+            IFileSaveDialog saveDialog = (IFileSaveDialog)dialog;
+            dialog.GetResult(out IShellItem item);
             return new string[] { GetFilePathFromShellItem(item) };
         }
 
-        private protected override FileDialogNative.IFileDialog CreateVistaDialog()
+        private protected override IFileDialog CreateVistaDialog() => new NativeFileSaveDialog();
+
+        [ComImport]
+        [Guid("84bccd23-5fde-4cdb-aea4-af64b83d78ab")]
+        [CoClass(typeof(FileSaveDialogRCW))]
+        private interface NativeFileSaveDialog : IFileSaveDialog
         {
-            return new FileDialogNative.NativeFileSaveDialog();
+        }
+
+        [ComImport]
+        [ClassInterface(ClassInterfaceType.None)]
+        [TypeLibType(TypeLibTypeFlags.FCanCreate)]
+        [Guid("C0B4E2F3-BA21-4773-8DBA-335EC946EB8B")]
+        private class FileSaveDialogRCW
+        {
         }
     }
 }

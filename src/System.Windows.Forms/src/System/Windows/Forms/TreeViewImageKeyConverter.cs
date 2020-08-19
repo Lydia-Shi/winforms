@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     using System.ComponentModel;
@@ -22,12 +24,12 @@ namespace System.Windows.Forms
         /// </summary>
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (destinationType == null)
+            if (destinationType is null)
             {
                 throw new ArgumentNullException(nameof(destinationType));
             }
 
-            if (destinationType == typeof(string) && (value == null))
+            if (destinationType == typeof(string) && (value is null))
             {
                 return SR.toStringDefault;
             }
@@ -41,7 +43,5 @@ namespace System.Windows.Forms
 
             return base.ConvertTo(context, culture, value, destinationType);
         }
-
     }
 }
-

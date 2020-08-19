@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.Layout;
+using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -15,46 +17,37 @@ namespace System.Windows.Forms
     ///  Represents a Windows
     ///  check box.
     /// </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultProperty(nameof(Checked)),
-    DefaultEvent(nameof(CheckedChanged)),
-    DefaultBindingProperty(nameof(CheckState)),
-    ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign),
-    SRDescription(nameof(SR.DescriptionCheckBox))
-    ]
-    public class CheckBox : ButtonBase
+    [DefaultProperty(nameof(Checked))]
+    [DefaultEvent(nameof(CheckedChanged))]
+    [DefaultBindingProperty(nameof(CheckState))]
+    [ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign)]
+    [SRDescription(nameof(SR.DescriptionCheckBox))]
+    public partial class CheckBox : ButtonBase
     {
         private static readonly object EVENT_CHECKEDCHANGED = new object();
         private static readonly object EVENT_CHECKSTATECHANGED = new object();
         private static readonly object EVENT_APPEARANCECHANGED = new object();
-        static readonly ContentAlignment anyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
+        private const ContentAlignment AnyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
 
-        private bool autoCheck;
-        private bool threeState;
-        private bool accObjDoDefaultAction = false;
-
-        private ContentAlignment checkAlign = ContentAlignment.MiddleLeft;
-        private CheckState checkState;
-        private Appearance appearance;
+        private ContentAlignment _checkAlign = ContentAlignment.MiddleLeft;
+        private CheckState _checkState;
+        private Appearance _appearance;
 
         private const int FlatSystemStylePaddingWidth = 25;
         private const int FlatSystemStyleMinimumHeight = 13;
 
-        internal int flatSystemStylePaddingWidth = FlatSystemStylePaddingWidth;
-        internal int flatSystemStyleMinimumHeight = FlatSystemStyleMinimumHeight;
+        internal int _flatSystemStylePaddingWidth = FlatSystemStylePaddingWidth;
+        internal int _flatSystemStyleMinimumHeight = FlatSystemStyleMinimumHeight;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='CheckBox'/> class.
         /// </summary>
-        public CheckBox()
-        : base()
+        public CheckBox() : base()
         {
             if (DpiHelper.IsScalingRequirementMet)
             {
-                flatSystemStylePaddingWidth = LogicalToDeviceUnits(FlatSystemStylePaddingWidth);
-                flatSystemStyleMinimumHeight = LogicalToDeviceUnits(FlatSystemStyleMinimumHeight);
+                _flatSystemStylePaddingWidth = LogicalToDeviceUnits(FlatSystemStylePaddingWidth);
+                _flatSystemStyleMinimumHeight = LogicalToDeviceUnits(FlatSystemStyleMinimumHeight);
             }
 
             // Checkboxes shouldn't respond to right clicks, so we need to do all our own click logic
@@ -63,39 +56,26 @@ namespace System.Windows.Forms
 
             SetAutoSizeMode(AutoSizeMode.GrowAndShrink);
 
-            autoCheck = true;
+            AutoCheck = true;
             TextAlign = ContentAlignment.MiddleLeft;
-
         }
 
-        private bool AccObjDoDefaultAction
-        {
-            get
-            {
-                return accObjDoDefaultAction;
-            }
-            set
-            {
-                accObjDoDefaultAction = value;
-            }
-        }
+        private bool AccObjDoDefaultAction { get; set; }
 
         /// <summary>
         ///  Gets
         ///  or sets the value that determines the appearance of a
         ///  check box control.
         /// </summary>
-        [
-        DefaultValue(Appearance.Normal),
-        Localizable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.CheckBoxAppearanceDescr))
-        ]
+        [DefaultValue(Appearance.Normal)]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.CheckBoxAppearanceDescr))]
         public Appearance Appearance
         {
             get
             {
-                return appearance;
+                return _appearance;
             }
 
             set
@@ -106,11 +86,11 @@ namespace System.Windows.Forms
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(Appearance));
                 }
 
-                if (appearance != value)
+                if (_appearance != value)
                 {
                     using (LayoutTransaction.CreateTransactionIf(AutoSize, ParentInternal, this, PropertyNames.Appearance))
                     {
-                        appearance = value;
+                        _appearance = value;
                         if (OwnerDraw)
                         {
                             Refresh();
@@ -125,7 +105,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.CheckBoxOnAppearanceChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.CheckBoxOnAppearanceChangedDescr))]
         public event EventHandler AppearanceChanged
         {
             add => Events.AddHandler(EVENT_APPEARANCECHANGED, value);
@@ -137,41 +118,26 @@ namespace System.Windows.Forms
         ///  value and the check box's appearance are automatically
         ///  changed when it is clicked.
         /// </summary>
-        [
-        DefaultValue(true),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.CheckBoxAutoCheckDescr))
-        ]
-        public bool AutoCheck
-        {
-            get
-            {
-                return autoCheck;
-            }
-
-            set
-            {
-                autoCheck = value;
-            }
-        }
+        [DefaultValue(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.CheckBoxAutoCheckDescr))]
+        public bool AutoCheck { get; set; }
 
         /// <summary>
         ///  Gets or sets
         ///  the horizontal and vertical alignment of a check box on a check box
         ///  control.
         /// </summary>
-        [
-        Bindable(true),
-        Localizable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(ContentAlignment.MiddleLeft),
-        SRDescription(nameof(SR.CheckBoxCheckAlignDescr))
-        ]
+        [Bindable(true)]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(ContentAlignment.MiddleLeft)]
+        [SRDescription(nameof(SR.CheckBoxCheckAlignDescr))]
         public ContentAlignment CheckAlign
         {
             get
             {
-                return checkAlign;
+                return _checkAlign;
             }
             set
             {
@@ -180,9 +146,9 @@ namespace System.Windows.Forms
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ContentAlignment));
                 }
 
-                if (checkAlign != value)
+                if (_checkAlign != value)
                 {
-                    checkAlign = value;
+                    _checkAlign = value;
                     LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.CheckAlign);
                     if (OwnerDraw)
                     {
@@ -202,19 +168,17 @@ namespace System.Windows.Forms
         ///  check box
         ///  is checked.
         /// </summary>
-        [
-        Bindable(true),
-        SettingsBindable(true),
-        DefaultValue(false),
-        SRCategory(nameof(SR.CatAppearance)),
-        RefreshProperties(RefreshProperties.All),
-        SRDescription(nameof(SR.CheckBoxCheckedDescr))
-        ]
+        [Bindable(true),
+        SettingsBindable(true)]
+        [DefaultValue(false)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [RefreshProperties(RefreshProperties.All)]
+        [SRDescription(nameof(SR.CheckBoxCheckedDescr))]
         public bool Checked
         {
             get
             {
-                return checkState != CheckState.Unchecked;
+                return _checkState != CheckState.Unchecked;
             }
 
             set
@@ -230,18 +194,16 @@ namespace System.Windows.Forms
         ///  Gets
         ///  or sets a value indicating whether the check box is checked.
         /// </summary>
-        [
-        Bindable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(CheckState.Unchecked),
-        RefreshProperties(RefreshProperties.All),
-        SRDescription(nameof(SR.CheckBoxCheckStateDescr))
-        ]
+        [Bindable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(CheckState.Unchecked)]
+        [RefreshProperties(RefreshProperties.All)]
+        [SRDescription(nameof(SR.CheckBoxCheckStateDescr))]
         public CheckState CheckState
         {
             get
             {
-                return checkState;
+                return _checkState;
             }
 
             set
@@ -252,16 +214,15 @@ namespace System.Windows.Forms
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(CheckState));
                 }
 
-                if (checkState != value)
+                if (_checkState != value)
                 {
-
                     bool oldChecked = Checked;
 
-                    checkState = value;
+                    _checkState = value;
 
                     if (IsHandleCreated)
                     {
-                        SendMessage(NativeMethods.BM_SETCHECK, (int)checkState, 0);
+                        User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, (IntPtr)_checkState);
                     }
 
                     if (oldChecked != Checked)
@@ -274,7 +235,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler DoubleClick
         {
             add => base.DoubleClick += value;
@@ -282,7 +244,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event MouseEventHandler MouseDoubleClick
         {
             add => base.MouseDoubleClick += value;
@@ -299,27 +262,26 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = "BUTTON";
+                cp.ClassName = ComCtl32.WindowClasses.WC_BUTTON;
                 if (OwnerDraw)
                 {
-                    cp.Style |= NativeMethods.BS_OWNERDRAW;
+                    cp.Style |= (int)User32.BS.OWNERDRAW;
                 }
                 else
                 {
-                    cp.Style |= NativeMethods.BS_3STATE;
+                    cp.Style |= (int)User32.BS.THREE_STATE;
                     if (Appearance == Appearance.Button)
                     {
-                        cp.Style |= NativeMethods.BS_PUSHLIKE;
+                        cp.Style |= (int)User32.BS.PUSHLIKE;
                     }
 
                     // Determine the alignment of the check box
                     //
                     ContentAlignment align = RtlTranslateContent(CheckAlign);
-                    if ((int)(align & anyRight) != 0)
+                    if ((int)(align & AnyRight) != 0)
                     {
-                        cp.Style |= NativeMethods.BS_RIGHTBUTTON;
+                        cp.Style |= (int)User32.BS.RIGHTBUTTON;
                     }
-
                 }
 
                 return cp;
@@ -351,8 +313,8 @@ namespace System.Windows.Forms
         {
             base.RescaleConstantsForDpi(deviceDpiOld, deviceDpiNew);
 
-            flatSystemStylePaddingWidth = LogicalToDeviceUnits(FlatSystemStylePaddingWidth);
-            flatSystemStyleMinimumHeight = LogicalToDeviceUnits(FlatSystemStyleMinimumHeight);
+            _flatSystemStylePaddingWidth = LogicalToDeviceUnits(FlatSystemStylePaddingWidth);
+            _flatSystemStyleMinimumHeight = LogicalToDeviceUnits(FlatSystemStyleMinimumHeight);
         }
 
         internal override Size GetPreferredSizeCore(Size proposedConstraints)
@@ -370,8 +332,8 @@ namespace System.Windows.Forms
 
             Size textSize = TextRenderer.MeasureText(Text, Font);
             Size size = SizeFromClientSize(textSize);
-            size.Width += flatSystemStylePaddingWidth;
-            size.Height = Math.Max(size.Height + 5, flatSystemStyleMinimumHeight); // ensure minimum height to avoid truncation of check-box or text
+            size.Width += _flatSystemStylePaddingWidth;
+            size.Height = Math.Max(size.Height + 5, _flatSystemStyleMinimumHeight); // ensure minimum height to avoid truncation of check-box or text
             return size + Padding.Size;
         }
 
@@ -416,46 +378,28 @@ namespace System.Windows.Forms
             }
         }
 
+        internal override bool SupportsUiaProviders => true;
+
         /// <summary>
         ///  Gets or sets a value indicating the alignment of the
         ///  text on the checkbox control.
         /// </summary>
-        [
-        Localizable(true),
-        DefaultValue(ContentAlignment.MiddleLeft)
-        ]
+        [Localizable(true)]
+        [DefaultValue(ContentAlignment.MiddleLeft)]
         public override ContentAlignment TextAlign
         {
-            get
-            {
-                return base.TextAlign;
-            }
-            set
-            {
-                base.TextAlign = value;
-            }
+            get => base.TextAlign;
+            set => base.TextAlign = value;
         }
 
         /// <summary>
         ///  Gets or sets a value indicating
         ///  whether the check box will allow three check states rather than two.
         /// </summary>
-        [
-        DefaultValue(false),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.CheckBoxThreeStateDescr))
-        ]
-        public bool ThreeState
-        {
-            get
-            {
-                return threeState;
-            }
-            set
-            {
-                threeState = value;
-            }
-        }
+        [DefaultValue(false)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.CheckBoxThreeStateDescr))]
+        public bool ThreeState { get; set; }
 
         /// <summary>
         ///  Occurs when the
@@ -510,14 +454,19 @@ namespace System.Windows.Forms
                 AccessibilityNotifyClients(AccessibleEvents.SystemCaptureStart, -1);
             }
 
+            // MSAA events:
             AccessibilityNotifyClients(AccessibleEvents.StateChange, -1);
             AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
+
+            // UIA events:
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.NamePropertyId, Name, Name);
+            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
 
             if (FlatStyle == FlatStyle.System)
             {
                 AccessibilityNotifyClients(AccessibleEvents.SystemCaptureEnd, -1);
             }
-            
+
             ((EventHandler)Events[EVENT_CHECKEDCHANGED])?.Invoke(this, e);
         }
 
@@ -530,7 +479,7 @@ namespace System.Windows.Forms
             {
                 Refresh();
             }
-            
+
             ((EventHandler)Events[EVENT_CHECKSTATECHANGED])?.Invoke(this, e);
         }
 
@@ -542,7 +491,7 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnClick(EventArgs e)
         {
-            if (autoCheck)
+            if (AutoCheck)
             {
                 switch (CheckState)
                 {
@@ -550,7 +499,7 @@ namespace System.Windows.Forms
                         CheckState = CheckState.Checked;
                         break;
                     case CheckState.Checked:
-                        if (threeState)
+                        if (ThreeState)
                         {
                             CheckState = CheckState.Indeterminate;
 
@@ -583,33 +532,10 @@ namespace System.Windows.Forms
         {
             base.OnHandleCreated(e);
 
-            // Since this is a protected override...
-            // this can be directly called in by a overriden class..
-            // and the Handle need not be created...
-            // So Check for the handle
             if (IsHandleCreated)
             {
-                SendMessage(NativeMethods.BM_SETCHECK, (int)checkState, 0);
+                User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, (IntPtr)_checkState);
             }
-        }
-
-        /// <summary>
-        ///  We override this to ensure that press '+' or '=' checks the box,
-        ///  while pressing '-' unchecks the box
-        /// </summary>
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            /*
-            if (Enabled) {
-                if (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add) {
-                    CheckState = CheckState.Checked;
-                }
-                if (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract) {
-                    CheckState = CheckState.Unchecked;
-                }
-            }
-            */
-            base.OnKeyDown(e);
         }
 
         /// <summary>
@@ -623,7 +549,7 @@ namespace System.Windows.Forms
                 if (base.MouseIsDown)
                 {
                     Point pt = PointToScreen(new Point(mevent.X, mevent.Y));
-                    if (UnsafeNativeMethods.WindowFromPoint(pt) == Handle)
+                    if (User32.WindowFromPoint(pt) == Handle)
                     {
                         //Paint in raised state...
                         ResetFlagsandPaint();
@@ -672,7 +598,6 @@ namespace System.Windows.Forms
                     {
                         OnClick(EventArgs.Empty);
                     }
-
                 }
                 return true;
             }
@@ -690,87 +615,5 @@ namespace System.Windows.Forms
             int checkState = (int)CheckState;
             return s + ", CheckState: " + checkState.ToString(CultureInfo.InvariantCulture);
         }
-
-        [ComVisible(true)]
-        public class CheckBoxAccessibleObject : ButtonBaseAccessibleObject
-        {
-            public CheckBoxAccessibleObject(Control owner) : base(owner)
-            {
-            }
-
-            public override string DefaultAction
-            {
-                get
-                {
-                    string defaultAction = Owner.AccessibleDefaultActionDescription;
-                    if (defaultAction != null)
-                    {
-                        return defaultAction;
-                    }
-
-                    if (((CheckBox)Owner).Checked)
-                    {
-                        return SR.AccessibleActionUncheck;
-                    }
-                    else
-                    {
-                        return SR.AccessibleActionCheck;
-                    }
-                }
-            }
-
-            public override AccessibleRole Role
-            {
-                get
-                {
-                    AccessibleRole role = Owner.AccessibleRole;
-                    if (role != AccessibleRole.Default)
-                    {
-                        return role;
-                    }
-                    return AccessibleRole.CheckButton;
-                }
-            }
-
-            public override AccessibleStates State
-            {
-                get
-                {
-                    switch (((CheckBox)Owner).CheckState)
-                    {
-                        case CheckState.Checked:
-                            return AccessibleStates.Checked | base.State;
-                        case CheckState.Indeterminate:
-                            return AccessibleStates.Indeterminate | base.State;
-                    }
-
-                    return base.State;
-                }
-            }
-
-            public override void DoDefaultAction()
-            {
-                CheckBox cb = Owner as CheckBox;
-
-                if (cb != null)
-                {
-                    cb.AccObjDoDefaultAction = true;
-                }
-
-                try
-                {
-                    base.DoDefaultAction();
-                }
-                finally
-                {
-                    if (cb != null)
-                    {
-                        cb.AccObjDoDefaultAction = false;
-                    }
-                }
-
-            }
-        }
     }
 }
-

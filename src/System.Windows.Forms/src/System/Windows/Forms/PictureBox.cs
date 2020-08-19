@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -20,14 +22,12 @@ namespace System.Windows.Forms
     ///  Displays an image that can be a graphic from a bitmap, icon, or metafile, as well as from
     ///  an enhanced metafile, JPEG, or GIF files.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(Image))]
     [DefaultBindingProperty(nameof(Image))]
     [Docking(DockingBehavior.Ask)]
     [Designer("System.Windows.Forms.Design.PictureBoxDesigner, " + AssemblyRef.SystemDesign)]
     [SRDescription(nameof(SR.DescriptionPictureBox))]
-    public class PictureBox : Control, ISupportInitialize
+    public partial class PictureBox : Control, ISupportInitialize
     {
         /// <summary>
         ///  The type of border this control will have.
@@ -61,22 +61,20 @@ namespace System.Windows.Forms
         private byte[] _readBuffer;
         private ImageInstallationType _imageInstallationType;
         private SendOrPostCallback _loadCompletedDelegate;
-        private SendOrPostCallback _loadProgressDelegate = null;
+        private SendOrPostCallback _loadProgressDelegate;
         private bool _handleValid;
         private readonly object _internalSyncObject = new object();
 
         // These default images will be demand loaded.
-        private Image _defaultInitialImage = null;
-        private Image _defaultErrorImage = null;
+        private Image _defaultInitialImage;
+        private Image _defaultErrorImage;
 
         [ThreadStatic]
-        private static Image t_defaultInitialImageForThread = null;
+        private static Image t_defaultInitialImageForThread;
 
         [ThreadStatic]
-        private static Image t_defaultErrorImageForThread = null;
+        private static Image t_defaultErrorImageForThread;
 
-        private static readonly object s_defaultInitialImageKey = new object();
-        private static readonly object s_defaultErrorImageKey = new object();
         private static readonly object s_loadCompletedKey = new object();
         private static readonly object s_loadProgressChangedKey = new object();
 
@@ -95,8 +93,8 @@ namespace System.Windows.Forms
         ///  http://msdn.microsoft.com/en-us/library/93z9ee4x(v=VS.100).aspx
         ///  if we load an image from a stream, we must keep the stream open for the lifetime of the Image
         /// </summary>
-        private StreamReader _localImageStreamReader = null;
-        private Stream _uriImageStream = null;
+        private StreamReader _localImageStreamReader;
+        private Stream _uriImageStream;
 
         /// <summary>
         ///  Creates a new picture with all default properties and no Image. The default PictureBox.SizeMode
@@ -233,12 +231,12 @@ namespace System.Windows.Forms
                 // Strange pictureBoxState[PICTUREBOXSTATE_useDefaultErrorImage] approach used
                 // here to avoid statically loading the default bitmaps from resources at
                 // runtime when they're never used.
-                if (errorImage == null && _pictureBoxState[UseDefaultErrorImageState])
+                if (errorImage is null && _pictureBoxState[UseDefaultErrorImageState])
                 {
-                    if (_defaultErrorImage == null)
+                    if (_defaultErrorImage is null)
                     {
                         // Can't share images across threads.
-                        if (t_defaultErrorImageForThread == null)
+                        if (t_defaultErrorImageForThread is null)
                         {
                             t_defaultErrorImageForThread = DpiHelper.GetBitmapFromIcon(typeof(PictureBox), "ImageInError");
                         }
@@ -394,12 +392,12 @@ namespace System.Windows.Forms
                 // Strange pictureBoxState[PICTUREBOXSTATE_useDefaultInitialImage] approach
                 // used here to avoid statically loading the default bitmaps from resources at
                 // runtime when they're never used.
-                if (_initialImage == null && _pictureBoxState[UseDefaultInitialImageState])
+                if (_initialImage is null && _pictureBoxState[UseDefaultInitialImageState])
                 {
-                    if (_defaultInitialImage == null)
+                    if (_defaultInitialImage is null)
                     {
                         // Can't share images across threads.
-                        if (t_defaultInitialImageForThread == null)
+                        if (t_defaultInitialImageForThread is null)
                         {
                             t_defaultInitialImageForThread = DpiHelper.GetBitmapFromIcon(typeof(PictureBox), "PictureBox.Loading");
                         }
@@ -537,14 +535,14 @@ namespace System.Windows.Forms
 
             _pictureBoxState[AsyncOperationInProgressState] = true;
 
-            if ((Image == null || (_imageInstallationType == ImageInstallationType.ErrorOrInitial)) && InitialImage != null)
+            if ((Image is null || (_imageInstallationType == ImageInstallationType.ErrorOrInitial)) && InitialImage != null)
             {
                 InstallNewImage(InitialImage, ImageInstallationType.ErrorOrInitial);
             }
 
             _currentAsyncLoadOperation = AsyncOperationManager.CreateOperation(null);
 
-            if (_loadCompletedDelegate == null)
+            if (_loadCompletedDelegate is null)
             {
                 _loadCompletedDelegate = new SendOrPostCallback(LoadCompletedDelegate);
                 _loadProgressDelegate = new SendOrPostCallback(LoadProgressDelegate);
@@ -581,7 +579,7 @@ namespace System.Windows.Forms
 
             Image img = ErrorImage;
             ImageInstallationType installType = ImageInstallationType.ErrorOrInitial;
-            if (!e.Cancelled && e.Error == null)
+            if (!e.Cancelled && e.Error is null)
             {
                 // successful completion
                 try
@@ -634,7 +632,6 @@ namespace System.Windows.Forms
                     ReadBlockSize,
                     new AsyncCallback(ReadCallBack),
                     responseStream);
-
             }
             catch (Exception error)
             {
@@ -831,13 +828,16 @@ namespace System.Windows.Forms
 
         private static readonly object EVENT_SIZEMODECHANGED = new object();
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.PictureBoxOnSizeModeChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.PictureBoxOnSizeModeChangedDescr))]
         public event EventHandler SizeModeChanged
         {
             add => Events.AddHandler(EVENT_SIZEMODECHANGED, value);
 
             remove => Events.RemoveHandler(EVENT_SIZEMODECHANGED, value);
         }
+
+        internal override bool SupportsUiaProviders => true;
 
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -872,7 +872,8 @@ namespace System.Windows.Forms
         }
 
         [Browsable(false)]
-        [EditorBrowsable(EditorBrowsableState.Never), Bindable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Bindable(false)]
         public override string Text
         {
             get => base.Text;
@@ -970,6 +971,9 @@ namespace System.Windows.Forms
             }
         }
 
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new PictureBoxAccessibleObject(this);
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -1001,7 +1005,7 @@ namespace System.Windows.Forms
         /// </summary>
         internal override Size GetPreferredSizeCore(Size proposedSize)
         {
-            if (_image == null)
+            if (_image is null)
             {
                 return CommonProperties.GetSpecifiedBounds(this).Size;
             }

@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Diagnostics;
+#nullable disable
+
 using System.Collections;
+using System.Diagnostics;
 
 namespace System.Windows.Forms
 {
@@ -134,7 +136,7 @@ namespace System.Windows.Forms
             if (tmp2.DataGridViewCell == dataGridViewCell)
             {
                 DataGridViewCellLinkedListElement tmp3 = tmp2.Next;
-                if (tmp1 == null)
+                if (tmp1 is null)
                 {
                     headElement = tmp3;
                 }
@@ -150,22 +152,6 @@ namespace System.Windows.Forms
             return false;
         }
 
-        /* Unused for now
-        public DataGridViewCell RemoveHead()
-        {
-            if (this.headElement == null)
-            {
-                return null;
-            }
-            DataGridViewCellLinkedListElement tmp = this.headElement;
-            this.headElement = tmp.Next;
-            this.count--;
-            this.lastAccessedElement = null;
-            this.lastAccessedIndex = -1;
-            return tmp.DataGridViewCell;
-        }
-        */
-
         public int RemoveAllCellsAtBand(bool column, int bandIndex)
         {
             int removedCount = 0;
@@ -176,7 +162,7 @@ namespace System.Windows.Forms
                     (!column && tmp2.DataGridViewCell.RowIndex == bandIndex))
                 {
                     DataGridViewCellLinkedListElement tmp3 = tmp2.Next;
-                    if (tmp1 == null)
+                    if (tmp1 is null)
                     {
                         headElement = tmp3;
                     }
@@ -228,7 +214,7 @@ namespace System.Windows.Forms
         {
             if (reset)
             {
-                Debug.Assert(current == null);
+                Debug.Assert(current is null);
                 current = headElement;
                 reset = false;
             }

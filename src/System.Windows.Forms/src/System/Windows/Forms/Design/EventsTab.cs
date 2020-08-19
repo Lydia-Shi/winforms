@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -39,7 +41,7 @@ namespace System.Windows.Forms.Design
         /// <summary>
         ///  Gets a value indicating whether the specified object can be extended.
         /// </summary>
-        public override bool CanExtend(object extendee) => extendee == null || !Marshal.IsComObject(extendee);
+        public override bool CanExtend(object extendee) => extendee is null || !Marshal.IsComObject(extendee);
 
         private void OnActiveDesignerChanged(object sender, ActiveDesignerEventArgs adevent)
         {
@@ -52,7 +54,7 @@ namespace System.Windows.Forms.Design
         public override PropertyDescriptor GetDefaultProperty(object obj)
         {
             IEventBindingService eventPropertySvc = GetEventPropertyService(obj, null);
-            if (eventPropertySvc == null)
+            if (eventPropertySvc is null)
             {
                 return null;
             }
@@ -61,7 +63,7 @@ namespace System.Windows.Forms.Design
             // the property to event match, so we can == on the default event.
             // We assert that this always works.
             EventDescriptor defEvent = TypeDescriptor.GetDefaultEvent(obj);
-            if (defEvent == null)
+            if (defEvent is null)
             {
                 return null;
             }
@@ -122,7 +124,7 @@ namespace System.Windows.Forms.Design
         public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object component, Attribute[] attributes)
         {
             IEventBindingService eventPropertySvc = GetEventPropertyService(component, context);
-            if (eventPropertySvc == null)
+            if (eventPropertySvc is null)
             {
                 return new PropertyDescriptorCollection(null);
             }
@@ -154,7 +156,7 @@ namespace System.Windows.Forms.Design
                     EventDescriptorCollection namespaceEvents = TypeDescriptor.GetEvents(namespaceValue, attributes);
                     if (namespaceEvents.Count > 0)
                     {
-                        if (list == null)
+                        if (list is null)
                         {
                             list = new ArrayList();
                         }

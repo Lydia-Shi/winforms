@@ -51,15 +51,15 @@ namespace System.ComponentModel.Design.Serialization
             {
                 IComponent baseComponent = null;
 
-                if (c == null)
+                if (c is null)
                 {
                     return null;
                 }
 
-                if (_host == null)
+                if (_host is null)
                 {
                     ISite site = c.Site;
-                    
+
                     if (site != null)
                     {
                         _host = (IDesignerHost)site.GetService(typeof(IDesignerHost));
@@ -80,16 +80,18 @@ namespace System.ComponentModel.Design.Serialization
             ///  is a boolean that, if true, causes a field member to be generated for
             ///  the object.
             /// </summary>
-            [DesignOnly(true), DefaultValue(true), SRDescription(nameof(SR.CodeDomDesignerLoaderPropGenerateMember)), Category("Design")]
+            [DesignOnly(true)]
+            [DefaultValue(true)]
+            [SRDescription(nameof(SR.CodeDomDesignerLoaderPropGenerateMember))]
+            [Category("Design")]
             [HelpKeyword("Designer_GenerateMember")]
             public bool GetGenerateMember(IComponent comp)
             {
                 ISite site = comp.Site;
 
-                if (site == null)
+                if (site is null)
                 {
                     return true;
-
                 }
 
                 IDictionaryService dictionary = (IDictionaryService)site.GetService(typeof(IDictionaryService));
@@ -113,7 +115,11 @@ namespace System.ComponentModel.Design.Serialization
             ///  is an enum represneing the "public/protected/private" scope
             ///  of a component.
             /// </summary>
-            [DesignOnly(true), TypeConverter(typeof(ModifierConverter)), DefaultValue(MemberAttributes.Private), SRDescription(nameof(SR.CodeDomDesignerLoaderPropModifiers)), Category("Design")]
+            [DesignOnly(true)]
+            [TypeConverter(typeof(ModifierConverter))]
+            [DefaultValue(MemberAttributes.Private)]
+            [SRDescription(nameof(SR.CodeDomDesignerLoaderPropModifiers))]
+            [Category("Design")]
             [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             [HelpKeyword("Designer_Modifiers")]
             public MemberAttributes GetModifiers(IComponent comp)
@@ -158,7 +164,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 ISite site = comp.Site;
 
-                if (site == null)
+                if (site is null)
                 {
                     return;
                 }
@@ -181,7 +187,7 @@ namespace System.ComponentModel.Design.Serialization
 
                 string compName = site.Name;
 
-                if (!(site.GetService(typeof(CodeTypeDeclaration)) is CodeTypeDeclaration typeDecl) || compName == null)
+                if (!(site.GetService(typeof(CodeTypeDeclaration)) is CodeTypeDeclaration typeDecl) || compName is null)
                 {
                     return;
                 }
@@ -206,13 +212,13 @@ namespace System.ComponentModel.Design.Serialization
             {
                 ISite site = comp.Site;
 
-                if (site == null)
+                if (site is null)
                 {
                     return;
                 }
 
                 IDictionaryService dictionary = (IDictionaryService)site.GetService(typeof(IDictionaryService));
-                
+
                 if (dictionary != null)
                 {
                     dictionary.SetValue("Modifiers", modifiers);

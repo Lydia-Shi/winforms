@@ -11,7 +11,7 @@ using Xunit;
 
 namespace System.ComponentModel.Design.Tests
 {
-    public class ExceptionCollectionTests
+    public class ExceptionCollectionTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> Ctor_ArrayList_TestData()
         {
@@ -25,7 +25,7 @@ namespace System.ComponentModel.Design.Tests
         public void ExceptionCollection_Ctor_ArrayList(ArrayList exceptions)
         {
             var collection = new ExceptionCollection(exceptions);
-            if (exceptions == null)
+            if (exceptions is null)
             {
                 Assert.Null(collection.Exceptions);
             }
@@ -45,7 +45,9 @@ namespace System.ComponentModel.Design.Tests
             {
                 var formatter = new BinaryFormatter();
                 var collection = new ExceptionCollection(new ArrayList());
+#pragma warning disable CS0618 // Type or member is obsolete
                 Assert.Throws<SerializationException>(() => formatter.Serialize(stream, collection));
+#pragma warning restore CS0618 // Type or member is obsolete
             }
         }
 

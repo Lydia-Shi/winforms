@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -13,9 +15,9 @@ namespace System.Windows.Forms
     [ToolboxBitmap(typeof(DataGridViewImageColumn), "DataGridViewImageColumn")]
     public class DataGridViewImageColumn : DataGridViewColumn
     {
-        private static readonly Type columnType = typeof(DataGridViewImageColumn);
-        private Image image;
-        private Icon icon;
+        private static readonly Type s_columnType = typeof(DataGridViewImageColumn);
+        private Image _image;
+        private Icon _icon;
 
         public DataGridViewImageColumn() : this(false /*valuesAreIcons*/)
         {
@@ -39,16 +41,11 @@ namespace System.Windows.Forms
             DefaultCellStyle = defaultCellStyle;
         }
 
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override DataGridViewCell CellTemplate
         {
-            get
-            {
-                return base.CellTemplate;
-            }
+            get => base.CellTemplate;
             set
             {
                 if (value != null && !(value is DataGridViewImageCell))
@@ -59,34 +56,24 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(true),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_ColumnDefaultCellStyleDescr))
-        ]
+        [Browsable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_ColumnDefaultCellStyleDescr))]
         public override DataGridViewCellStyle DefaultCellStyle
         {
-            get
-            {
-                return base.DefaultCellStyle;
-            }
-            set
-            {
-                base.DefaultCellStyle = value;
-            }
+            get => base.DefaultCellStyle;
+            set => base.DefaultCellStyle = value;
         }
 
-        [
-            Browsable(true),
-            DefaultValue(""),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridViewImageColumn_DescriptionDescr))
-        ]
+        [Browsable(true)]
+        [DefaultValue("")]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridViewImageColumn_DescriptionDescr))]
         public string Description
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -94,7 +81,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -115,19 +102,17 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Icon Icon
         {
             get
             {
-                return icon;
+                return _icon;
             }
             set
             {
-                icon = value;
+                _icon = value;
                 if (DataGridView != null)
                 {
                     DataGridView.OnColumnCommonChange(Index);
@@ -135,20 +120,18 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(null),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridViewImageColumn_ImageDescr))
-        ]
+        [DefaultValue(null)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridViewImageColumn_ImageDescr))]
         public Image Image
         {
             get
             {
-                return image;
+                return _image;
             }
             set
             {
-                image = value;
+                _image = value;
                 if (DataGridView != null)
                 {
                     DataGridView.OnColumnCommonChange(Index);
@@ -164,16 +147,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(DataGridViewImageCellLayout.Normal),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridViewImageColumn_ImageLayoutDescr))
-        ]
+        [DefaultValue(DataGridViewImageCellLayout.Normal)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridViewImageColumn_ImageLayoutDescr))]
         public DataGridViewImageCellLayout ImageLayout
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -207,15 +188,13 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ValuesAreIcons
         {
             get
             {
-                if (ImageCellTemplate == null)
+                if (ImageCellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -262,7 +241,7 @@ namespace System.Windows.Forms
             DataGridViewImageColumn dataGridViewColumn;
             Type thisType = GetType();
 
-            if (thisType == columnType) //performance improvement
+            if (thisType == s_columnType) //performance improvement
             {
                 dataGridViewColumn = new DataGridViewImageColumn();
             }
@@ -275,8 +254,8 @@ namespace System.Windows.Forms
             if (dataGridViewColumn != null)
             {
                 base.CloneInternal(dataGridViewColumn);
-                dataGridViewColumn.Icon = icon;
-                dataGridViewColumn.Image = image;
+                dataGridViewColumn.Icon = _icon;
+                dataGridViewColumn.Image = _image;
             }
             return dataGridViewColumn;
         }

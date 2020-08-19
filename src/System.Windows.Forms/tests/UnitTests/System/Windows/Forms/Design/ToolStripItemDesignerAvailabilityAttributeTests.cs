@@ -8,7 +8,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Design.Tests
 {
-    public class ToolStripItemDesignerAvailabilityAttributeTests
+    // NB: doesn't require thread affinity
+    public class ToolStripItemDesignerAvailabilityAttributeTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void ToolStripItemDesignerAvailabilityAttribute_Ctor_Default()

@@ -11,7 +11,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class ListViewSubItemCollectionTests
+    // NB: doesn't require thread affinity
+    public class ListViewSubItemCollectionTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void ListViewSubItemCollection_Ctor_ListViewItem()

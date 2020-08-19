@@ -192,6 +192,11 @@
         <target state="translated">Zwiń</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="new">Double Click</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">Rozwiń</target>
@@ -230,11 +235,6 @@
       <trans-unit id="ApplyCaption">
         <source>&amp;Apply</source>
         <target state="translated">&amp;Zastosuj</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ArraysNotSameSize">
-        <source>Arrays '{0}' and '{1}' must be the same size.</source>
-        <target state="translated">Tablice '{0}' i '{1}' muszą mieć taki sam rozmiar.</target>
         <note />
       </trans-unit>
       <trans-unit id="AutoCompleteFailure">
@@ -690,16 +690,6 @@
       <trans-unit id="CannotChangePrintedDocument">
         <source>You cannot alter the document or add to it once you have printed it.</source>
         <target state="translated">Po wydrukowaniu dokumentu nie można już go zmieniać ani dodawać do niego.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertDoubleToDate">
-        <source>Double cannot be converted to a date.</source>
-        <target state="translated">Nie można przekonwertować typu double na typ date.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertIntToFloat">
-        <source>Integer cannot be converted to a float.</source>
-        <target state="translated">Nie można przekonwertować typu integer na typ float.</target>
         <note />
       </trans-unit>
       <trans-unit id="CantNestMessageLoops">
@@ -1182,6 +1172,11 @@
         <target state="translated">Nieobsługiwany typ {0}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConstructorArgumentInvalidValueType">
+        <source>Argument '{0}' cannot be converted to type '{1}'.</source>
+        <target state="translated">Nie można przekonwertować argumentu '{0}' na typ '{1}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
         <source>The currently active control.</source>
         <target state="translated">Aktualnie aktywny formant.</target>
@@ -1219,7 +1214,7 @@
       </trans-unit>
       <trans-unit id="ContextMenuStripSourceControlDescr">
         <source>The last control that caused this context menu strip to be displayed.</source>
-        <target state="new">The last control that caused this context menu strip to be displayed.</target>
+        <target state="translated">Ostatni formant, który spowodował wyświetlenie tego paska menu kontekstowego.</target>
         <note />
       </trans-unit>
       <trans-unit id="ControlAccessibileObjectInvalid">
@@ -4224,6 +4219,16 @@ Aby zamienić to domyślne okno dialogowe, obsłuż zdarzenie DataError.</target
         <target state="translated">Edytuj</target>
         <note />
       </trans-unit>
+      <trans-unit id="DefaultNumericUpDownAccessibleName">
+        <source>NumericUpDown</source>
+        <target state="translated">NumericUpDown</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DefaultUpDownButtonsAccessibleName">
+        <source>UpDown</source>
+        <target state="translated">Strzałki w górę/w dół</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DescriptionBindingNavigator">
         <source>Provides a user interface for navigation and manipulation of data bound to controls on a form.</source>
         <target state="translated">Udostępnia interfejs użytkownika służący do nawigacji i manipulacji danymi powiązanymi z formantami formularza.</target>
@@ -4577,6 +4582,11 @@ Aby zamienić to domyślne okno dialogowe, obsłuż zdarzenie DataError.</target
       <trans-unit id="ErrorProviderDataSourceDescr">
         <source>Indicates the source of data to bind errors against.</source>
         <target state="translated">Określa źródło danych, z którym zostaną powiązane błędy.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ErrorProviderDefaultAccessibleName">
+        <source>Error provider</source>
+        <target state="translated">Dostawca błędów</target>
         <note />
       </trans-unit>
       <trans-unit id="ErrorProviderErrorDescr">
@@ -5417,6 +5427,11 @@ Czy chcesz go zamienić?</target>
         <target state="translated">Liczba wierszy w tabeli.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HScrollBarDefaultAccessibleName">
+        <source>Horizontal</source>
+        <target state="translated">Poziomo</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HandleAlreadyExists">
         <source>Window handle already exists.</source>
         <target state="translated">Uchwyt okna już istnieje.</target>
@@ -5536,6 +5551,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Nie można utworzyć uchwytu elementu ImageList.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ImageListDuplicateFailed">
+        <source>Duplication of the ImageList handle did not succeed.</source>
+        <target state="translated">Duplikowanie uchwytu elementu ImageList nie powiodło się.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ImageListEntryType">
         <source>Image added to an ImageList must either derive from Image or be an Icon.</source>
         <target state="translated">Obraz dodany do listy ImageList musi dziedziczyć po elemencie Image lub musi być elementem Icon.</target>
@@ -5621,6 +5641,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Indeks {0} jest poza zakresem.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InputLanguageCultureNotFound">
+        <source>Could not find an InputLanguage for culture '{0}'.</source>
+        <target state="translated">Nie udało się znaleźć elementu InputLanguage dla kultury „{0}”.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidArgument">
         <source>InvalidArgument=Value of '{1}' is not valid for '{0}'.</source>
         <target state="translated">InvalidArgument=Wartość '{1}' nie jest prawidłową wartością dla '{0}'.</target>
@@ -5654,6 +5679,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">Uchwyt Win32 przekazany do {0} jest nieprawidłowy lub nieprawidłowego typu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="new">Invalid HDC type: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -6336,6 +6366,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Wyświetla linie siatki wokół elementów i podelementów. Pokazywany tylko w widoku Details.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupCollapsedStateChangedDescr">
+        <source>Event raised when the CollapsedState property of a ListViewGroup changes.</source>
+        <target state="translated">Zdarzenie wywoływane, gdy zostanie zmieniona właściwość CollapsedState elementu ListViewGroup.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupCollectionBadListViewGroup">
         <source>Parameter must be of type ListViewGroup.</source>
         <target state="translated">Parametr musi być typu ListViewGroup.</target>
@@ -6351,9 +6386,19 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">ListViewGroup</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupImageListDescr">
+        <source>The ImageList control used by the ListView for ListViewGroup images in all views.</source>
+        <target state="translated">Kontrolka ImageList używany przez element ListViewer do obrazów ListViewGroup we wszystkich widokach.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupNameDescr">
         <source>The name of this group.</source>
         <target state="translated">Nazwa tej grupy.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupTaskLinkClickDescr">
+        <source>Event raised when the TaskLink property of a ListViewGroup is clicked.</source>
+        <target state="translated">Zdarzenie wywoływane, gdy zostanie kliknięta właściwość TaskLink elementu ListViewGroup.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupsDescr">
@@ -6808,12 +6853,12 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       </trans-unit>
       <trans-unit id="MenuItemShortCutDescr">
         <source>The shortcut key associated with the menu item. </source>
-        <target state="new">The shortcut key associated with the menu item. </target>
+        <target state="translated">Klawisz skrótu skojarzony z elementem menu. </target>
         <note />
       </trans-unit>
       <trans-unit id="MenuItemShowShortCutDescr">
         <source>Indicates whether the shorcut key for the menu item is displayed on the item. </source>
-        <target state="new">Indicates whether the shorcut key for the menu item is displayed on the item. </target>
+        <target state="translated">Wskazuje, czy skrót do elementu menu będzie wyświetlany. </target>
         <note />
       </trans-unit>
       <trans-unit id="MenuStripMdiWindowListItem">
@@ -6838,7 +6883,7 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       </trans-unit>
       <trans-unit id="MonthCalendarBodyAccessibleName">
         <source>Calendar body</source>
-        <target state="new">Calendar body</target>
+        <target state="translated">Treść kalendarza</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarDimensionsDescr">
@@ -6893,7 +6938,7 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       </trans-unit>
       <trans-unit id="MonthCalendarNextButtonAccessibleName">
         <source>Next</source>
-        <target state="new">Next</target>
+        <target state="translated">Dalej</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarOnDateChangedDescr">
@@ -6908,7 +6953,7 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       </trans-unit>
       <trans-unit id="MonthCalendarPreviousButtonAccessibleName">
         <source>Previous</source>
-        <target state="new">Previous</target>
+        <target state="translated">Wstecz</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarRange">
@@ -6988,7 +7033,7 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       </trans-unit>
       <trans-unit id="MonthCalendarTodayButtonAccessibleName">
         <source>Today: {0}</source>
-        <target state="new">Today: {0}</target>
+        <target state="translated">Dzisiaj: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarTodayDateDescr">
@@ -7891,6 +7936,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Końcowy kolor gradientu używany w elemencie ToolStripPanel.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ProgressBarDefaultAccessibleName">
+        <source>ProgressBar</source>
+        <target state="translated">ProgressBar</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProgressBarIncrementMarqueeException">
         <source>Increment should not be called if the style is Marquee.</source>
         <target state="translated">Element Increment nie powinien zostać wywołany, jeżeli styl jest ustawiony na Marquee.</target>
@@ -8076,6 +8126,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Otwórz</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridEntryValuesListDefaultAccessibleName">
+        <source>Available values</source>
+        <target state="translated">Dostępne wartości</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridExceptionInfo">
         <source>Error Information</source>
         <target state="translated">Informacje o błędzie</target>
@@ -8159,11 +8214,6 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       <trans-unit id="PropertyGridPropertyValueSelectedFormat">
         <source>{0} selected.</source>
         <target state="translated">Wybrano: {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PropertyGridRemotedObject">
-        <source>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</source>
-        <target state="translated">Obiekt {0} jest zdalnie sterowany przez serwer proxy, który nie obsługuje odnajdowania interfejsu. Ten typ zdalnie sterowanego obiektu nie jest obsługiwany.</target>
         <note />
       </trans-unit>
       <trans-unit id="PropertyGridRemoveStaticTabs">
@@ -8696,11 +8746,6 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Posortowano malejąco.</target>
         <note />
       </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">Pokrętło</target>
-        <note />
-      </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
         <source>Indicates that a particular SplitContainer's Panel should remain fixed in size during resize events.</source>
         <target state="translated">Wskazuje, że określony panel elementu SplitContainer powinien mieć nadal ustalony rozmiar w czasie zdarzeń zamiany rozmiaru.</target>
@@ -8821,91 +8866,6 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Nie można uzyskać modułu serializacji dla identyfikatora IID {0}.</target>
         <note />
       </trans-unit>
-      <trans-unit id="StatusBarAddFailed">
-        <source>Adding the panel to the native status bar control has not succeeded.</source>
-        <target state="translated">Nie można dodać panelu do formantu paska stanu macierzystego.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarBadStatusBarPanel">
-        <source>Parameter must be of type StatusBarPanel.</source>
-        <target state="translated">Parametr musi być typu StatusBarPanel.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarDrawItem">
-        <source>Occurs whenever a panel in the StatusBar needs to be painted.</source>
-        <target state="translated">Występuje za każdym razem, gdy w elemencie StatusBar musi zostać narysowany panel.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarOnPanelClickDescr">
-        <source>Occurs when a panel within the status bar is clicked.</source>
-        <target state="translated">Występuje, gdy zostanie kliknięty panel na pasku stanu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelAlignmentDescr">
-        <source>The alignment of the panel's text.</source>
-        <target state="translated">Wyrównanie tekstu panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelAutoSizeDescr">
-        <source>Determines how a panel will resize when the parent changes size.</source>
-        <target state="translated">Określa, w jaki sposób zmieni się rozmiar panelu, gdy zmienia się rozmiar elementu nadrzędnego.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelBorderStyleDescr">
-        <source>Determines what type of border a panel has.</source>
-        <target state="translated">Określa typ obramowania panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelIconDescr">
-        <source>Determines what icon is displayed in the panel.</source>
-        <target state="translated">Określa, jaka ikona jest wyświetlana na panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelMinWidthDescr">
-        <source>The minimum width of the panel.</source>
-        <target state="translated">Minimalna szerokość panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelNameDescr">
-        <source>The name of the panel.</source>
-        <target state="translated">Nazwa panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelStyleDescr">
-        <source>The style of the panel.</source>
-        <target state="translated">Styl panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelTextDescr">
-        <source>The text displayed in the panel.</source>
-        <target state="translated">Tekst wyświetlany w panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelToolTipTextDescr">
-        <source>The panel's ToolTip text.</source>
-        <target state="translated">Tekst elementu ToolTip panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelWidthDescr">
-        <source>The width of the panel.</source>
-        <target state="translated">Szerokość panelu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelsDescr">
-        <source>The panels in the status bar.</source>
-        <target state="translated">Panele na pasku stanu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarShowPanelsDescr">
-        <source>Determines if a status bar displays panels, or if it displays a single line of text.</source>
-        <target state="translated">Określa, czy pasek stanu wyświetla panele, czy pojedynczy wiersz tekstu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarSizingGripDescr">
-        <source>Determines whether a status bar has a sizing grip.</source>
-        <target state="translated">Określa, czy pasek stanu ma uchwyt zmiany rozmiaru.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StatusStripPanelBorderSidesDescr">
         <source>Specifies the sides of the panel that should display borders.</source>
         <target state="translated">Określa strony panelu, które mają wyświetlać obramowanie.</target>
@@ -8924,6 +8884,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       <trans-unit id="SystemInformationFeatureNotSupported">
         <source>Feature not supported with this operating system.</source>
         <target state="translated">Funkcja nie jest obsługiwana w tym systemie operacyjnym.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TabControlBadControl">
+        <source>Parameter must be of type TabPage.</source>
+        <target state="translated">Parametr musi być typu TabPage.</target>
         <note />
       </trans-unit>
       <trans-unit id="TabControlTabPageNotOnTabControl">
@@ -9101,6 +9066,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Bezpośrednie ustawianie elementu TableLayoutSettings nie jest obsługiwane. Użyj zamiast tego indywidualnych właściwości.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TableLayoutSettingsConverterNoName">
+        <source>Cannot convert TableLayoutSettings to string: could not find a 'Name' string property on a control.</source>
+        <target state="translated">Nie można przekonwertować elementu TableLayoutSettings na ciąg: w kontrolce nie można było znaleźć właściwości ciągu „Name”.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TableLayoutSettingsGetCellPositionDescr">
         <source>Indicates the row and column of the cell.</source>
         <target state="translated">Wskazuje wiersz i kolumnę komórki.</target>
@@ -9114,6 +9084,151 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       <trans-unit id="TablePrintLayoutFromDifferentDocument">
         <source>TablePrintLayout instance specified was constructed for a different document.</source>
         <target state="translated">Określone wystąpienie elementu TablePrintLayout zostało utworzone dla innego dokumentu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogButtonTextMustNotBeNull">
+        <source>The text of a custom button must not be null or an empty string.</source>
+        <target state="translated">Tekst przycisku niestandardowego nie może mieć wartości null ani być pustym ciągiem.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCanUpdateStateOnlyWhenShown">
+        <source>Can only update the state of a task dialog while it is shown.</source>
+        <target state="translated">Stan okna dialogowego zadania może być aktualizowany tylko wtedy, gdy jest ono wyświetlane.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateClosedDialog">
+        <source>Cannot navigate the dialog when it has already closed.</source>
+        <target state="translated">Nie można nawigować oknem dialogowym, gdy zostało już zamknięte.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithinNavigationEventHandler">
+        <source>Cannot navigate the dialog from an event handler that is called from within navigation.</source>
+        <target state="translated">Nie można nawigować oknen=m dialogowym z poziomu programu obsługi zdarzeń wywoływanego z nawigacji.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithinRadioButtonCheckedChanged">
+        <source>Cannot navigate the dialog from within the {0} event of one of the radio buttons of the current task dialog.</source>
+        <target state="translated">Nie można nawigować oknem dialogowym z poziomu zdarzenia {0} jednego z przycisków opcji bieżącego okna dialogowego zadania.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithoutDialog">
+        <source>Cannot navigate from a page not bound to a dialog.</source>
+        <target state="translated">Nie można nawigować ze strony niepowiązanej z oknem dialogowym.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotRemoveProgressBarWhileDialogIsShown">
+        <source>Cannot remove the progress bar while the task dialog is shown.</source>
+        <target state="translated">Nie można usunąć paska postępu, gdy okno dialogowe zadania jest wyświetlane.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetPropertyOfBoundPage">
+        <source>Cannot set this property or call this method while the page is bound to a task dialog.</source>
+        <target state="translated">Nie można ustawić tej właściwości lub wywołać tej metody, gdy strona jest powiązana z oknem dialogowym zadania.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetPropertyOfShownDialog">
+        <source>Cannot set this property while the task dialog is shown.</source>
+        <target state="translated">Nie można ustawić tej właściwości, gdy okno dialogowe zadania jest wyświetlane.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetRadioButtonCheckedWithinCheckedChangedEvent">
+        <source>Cannot set the {0} property from within the {1} event of one of the radio buttons of the current task dialog.</source>
+        <target state="translated">Nie można ustawić właściwości {0} z poziomu zdarzenia {1} jednego z przycisków opcji bieżącego okna dialogowego zadania.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetTextForStandardButton">
+        <source>Cannot set the text for a standard button.</source>
+        <target state="translated">Nie można ustawić tekstu przycisku standardowego.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotShowCustomButtonsAndCommandLinks">
+        <source>Cannot show both custom buttons and command links at the same time.</source>
+        <target state="translated">Nie można jednocześnie wyświetlić przycisków niestandardowych i linków poleceń.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUncheckRadioButtonWhileBound">
+        <source>Cannot uncheck a radio button while it is bound to a task dialog.</source>
+        <target state="translated">Nie można usunąć zaznaczenia przycisku opcji, gdy jest on powiązany z oknem dialogowym zadania.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUpdateAfterNavigation">
+        <source>Cannot manipulate the task dialog immediately after navigating it. Please wait for the {0} event of the next page to occur.</source>
+        <target state="translated">Nie można manipulować oknem dialogowym zadania zaraz po nawigowaniu nim. Poczekaj na wystąpienie zdarzenia {0} następnej strony.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUpdateIconType">
+        <source>Cannot update the icon from a handle icon type to a non-handle icon type, and vice versa.</source>
+        <target state="translated">Nie można zaktualizować ikony z typu ikony uchwytu na typ inny niż uchwytu i odwrotnie.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCollectionAlreadyBound">
+        <source>One of the collections of this {0} is already bound to a {1} instance.</source>
+        <target state="translated">Jedna z kolekcji tego elementu {0} jest już powiązana z wystąpieniem {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlAlreadyAddedToCollection">
+        <source>This control has already been added to the collection.</source>
+        <target state="translated">Ta kontrolka została już dodana do kolekcji.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlAlreadyBound">
+        <source>One of the controls of this {0} is already bound to a {1} instance.</source>
+        <target state="translated">Jedna z kontrolek tego elementu {0} jest już powiązana z wystąpieniem {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlIsPartOfOtherCollection">
+        <source>This control is already part of a different collection.</source>
+        <target state="translated">Ta kontrolka jest już częścią innej kolekcji.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlNotBound">
+        <source>This control is not currently bound to a task dialog.</source>
+        <target state="translated">Ta kontrolka nie jest obecnie powiązana z oknem dialogowym zadania.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlNotCreated">
+        <source>The control has not been created.</source>
+        <target state="translated">Nie utworzono kontrolki.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogDefaultButtonMustExistInCollection">
+        <source>The default button must exist in the buttons collection.</source>
+        <target state="translated">Przycisk domyślny musi istnieć w kolekcji przycisków.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogInstanceAlreadyShown">
+        <source>This {0} instance is already being shown.</source>
+        <target state="translated">To wystąpienie {0} jest już wyświetlane.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogNavigationNotCompleted">
+        <source>Navigation of the task dialog did not complete yet. Please wait for the {0} event to occur.</source>
+        <target state="translated">Nawigacja w oknie dialogowym zadania nie została jeszcze ukończona. Zaczekaj, aż wystąpi zdarzenie {0}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogOnlySingleRadioButtonCanBeChecked">
+        <source>Only a single radio button can be set as checked.</source>
+        <target state="translated">Tylko jeden przycisk opcji można wybrać jako zaznaczony.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogPageIsAlreadyBound">
+        <source>This {0} instance is already bound to a {1} instance.</source>
+        <target state="translated">To wystąpienie {0} jest już powiązane z wystąpieniem {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogRadioButtonTextMustNotBeNull">
+        <source>The text of a radio button must not be null or an empty string.</source>
+        <target state="translated">Tekst przycisku opcji nie może mieć wartości null ani być pustym ciągiem.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogTooManyButtonsAdded">
+        <source>Too many custom buttons or radio buttons have been added.</source>
+        <target state="translated">Dodano za dużo przycisków niestandardowych lub przycisków opcji.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogVisualStylesNotEnabled">
+        <source>Visual styles are not enabled. Please call {0} before showing the task dialog.</source>
+        <target state="translated">Style wizualne nie są włączone. Wywołaj element {0} przed wyświetleniem okna dialogowego zadania.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextBoxAcceptsReturnDescr">
@@ -9284,6 +9399,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
         <target state="translated">Wskazuje, czy wiersze w wielowierszowych formantach edycyjnych są automatycznie zawijane.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="new">TextFormatFlags.ModifyString is not allowed.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10681,6 +10801,11 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Występuje za każdym razem, gdy jest ładowany formant użytkownika.</target>
         <note />
       </trans-unit>
+      <trans-unit id="VScrollBarDefaultAccessibleName">
+        <source>Vertical</source>
+        <target state="translated">Pionowo</target>
+        <note />
+      </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">
         <source>Visual Style handle creation operation did not succeed.</source>
         <target state="translated">Operacja utworzenia uchwytu elementu Visual Style nie powiodła się.</target>
@@ -10764,11 +10889,6 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
       <trans-unit id="WebBrowserFileDownloadDescr">
         <source>Occurs when a file download occurs.</source>
         <target state="translated">Występuje, gdy zostanie pobrany plik.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WebBrowserInIENotSupported">
-        <source>Adding a WebBrowser control in Internet Explorer is not supported.</source>
-        <target state="translated">Dodawanie formantu WebBrowser w programie Internet Explorer nie jest obsługiwane.</target>
         <note />
       </trans-unit>
       <trans-unit id="WebBrowserIsOfflineDescr">
@@ -10866,9 +10986,19 @@ Stos śledzenia, w którym wystąpiła zabroniona operacja:
         <target state="translated">Szerokość musi być większa od wartości elementu MinWidth.</target>
         <note />
       </trans-unit>
+      <trans-unit id="Win32SetParentFailed">
+        <source>Failed to set Win32 parent window of the Control.</source>
+        <target state="translated">Nie można ustawić okna nadrzędnego systemu Win32 kontrolki.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Win32WindowAlreadyCreated">
         <source>SetCompatibleTextRenderingDefault must be called before the first IWin32Window object is created in the application.</source>
         <target state="translated">Należy wywołać element SetCompatibleTextRenderingDefault, aby pierwszy obiekt IWin32Window został utworzony w aplikacji.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WindowSubclassHandlerWndProcIsNotExceptedOne">
+        <source>The current window procedure is not the expected one.</source>
+        <target state="translated">Bieżąca procedura okna nie jest oczekiwana.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowsFormsSetEvent">

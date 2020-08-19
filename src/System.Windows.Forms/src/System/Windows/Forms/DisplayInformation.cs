@@ -2,23 +2,23 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using Microsoft.Win32;
 
 namespace System.Windows.Forms
 {
     internal class DisplayInformation
     {
-        private static bool highContrast;               //whether we are under hight contrast mode
-        private static bool lowRes;                     //whether we are under low resolution mode
-        private static bool isTerminalServerSession;    //whether this application is run on a terminal server (remote desktop)
-        private static bool highContrastSettingValid;   //indicates whether the high contrast setting is correct
-        private static bool lowResSettingValid;         //indicates whether the low resolution setting is correct
-        private static bool terminalSettingValid;       //indicates whether the terminal server setting is correct
-        private static short bitsPerPixel;
-        private static bool dropShadowSettingValid;
-        private static bool dropShadowEnabled;
-        private static bool menuAccessKeysUnderlinedValid;
-        private static bool menuAccessKeysUnderlined;
+        private static bool s_highContrast;               // whether we are under hight contrast mode
+        private static bool s_lowRes;                     // whether we are under low resolution mode
+        private static bool s_highContrastSettingValid;   // indicates whether the high contrast setting is correct
+        private static bool s_lowResSettingValid;         // indicates whether the low resolution setting is correct
+        private static short s_bitsPerPixel;
+        private static bool s_dropShadowSettingValid;
+        private static bool s_dropShadowEnabled;
+        private static bool s_menuAccessKeysUnderlinedValid;
+        private static bool s_menuAccessKeysUnderlined;
 
         static DisplayInformation()
         {
@@ -30,84 +30,65 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (bitsPerPixel == 0)
+                if (s_bitsPerPixel == 0)
                 {
                     // we used to iterate through all screens, but
                     // for some reason unused screens can temparily appear
                     // in the AllScreens collection - we would honor the display
                     // setting of an unused screen.
                     // According to EnumDisplayMonitors, a primary screen check should be sufficient
-                    bitsPerPixel = (short)Screen.PrimaryScreen.BitsPerPixel;
-
+                    s_bitsPerPixel = (short)Screen.PrimaryScreen.BitsPerPixel;
                 }
-                return bitsPerPixel;
+                return s_bitsPerPixel;
             }
         }
 
-        ///<summary>
-        ///tests to see if the monitor is in low resolution mode (8-bit color depth or less).
-        ///</summary>
+        /// <summary>
+        ///  Tests to see if the monitor is in low resolution mode (8-bit color depth or less).
+        /// </summary>
         public static bool LowResolution
         {
             get
             {
-
-                if (lowResSettingValid && !lowRes)
+                if (s_lowResSettingValid && !s_lowRes)
                 {
-                    return lowRes;
+                    return s_lowRes;
                 }
                 // dont cache if we're in low resolution.
-                lowRes = BitsPerPixel <= 8;
-                lowResSettingValid = true;
-                return lowRes;
+                s_lowRes = BitsPerPixel <= 8;
+                s_lowResSettingValid = true;
+                return s_lowRes;
             }
         }
 
-        ///<summary>
-        ///tests to see if we are under high contrast mode
-        ///</summary>
+        /// <summary>
+        ///  Tests to see if we are under high contrast mode
+        /// </summary>
         public static bool HighContrast
         {
             get
             {
-                if (highContrastSettingValid)
+                if (s_highContrastSettingValid)
                 {
-                    return highContrast;
+                    return s_highContrast;
                 }
-                highContrast = SystemInformation.HighContrast;
-                highContrastSettingValid = true;
-                return highContrast;
+                s_highContrast = SystemInformation.HighContrast;
+                s_highContrastSettingValid = true;
+                return s_highContrast;
             }
         }
+
         public static bool IsDropShadowEnabled
         {
             get
             {
-                if (dropShadowSettingValid)
+                if (s_dropShadowSettingValid)
                 {
-                    return dropShadowEnabled;
+                    return s_dropShadowEnabled;
                 }
-                dropShadowEnabled = SystemInformation.IsDropShadowEnabled;
-                dropShadowSettingValid = true;
-                return dropShadowEnabled;
-            }
-        }
-
-        ///<summary>
-        ///test to see if we are under terminal server mode
-        ///</summary>
-        public static bool TerminalServer
-        {
-            get
-            {
-                if (terminalSettingValid)
-                {
-                    return isTerminalServerSession;
-                }
-
-                isTerminalServerSession = SystemInformation.TerminalServerSession;
-                terminalSettingValid = true;
-                return isTerminalServerSession;
+                s_dropShadowEnabled = SystemInformation.IsDropShadowEnabled;
+                s_dropShadowSettingValid = true;
+                return s_dropShadowEnabled;
             }
         }
 
@@ -116,43 +97,40 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (menuAccessKeysUnderlinedValid)
+                if (s_menuAccessKeysUnderlinedValid)
                 {
-                    return menuAccessKeysUnderlined;
+                    return s_menuAccessKeysUnderlined;
                 }
-                menuAccessKeysUnderlined = SystemInformation.MenuAccessKeysUnderlined;
-                menuAccessKeysUnderlinedValid = true;
-                return menuAccessKeysUnderlined;
+                s_menuAccessKeysUnderlined = SystemInformation.MenuAccessKeysUnderlined;
+                s_menuAccessKeysUnderlinedValid = true;
+                return s_menuAccessKeysUnderlined;
             }
         }
 
-        ///<summary>
+        /// <summary>
         ///event handler for change in display setting
-        ///</summary>
+        /// </summary>
         private static void DisplaySettingsChanging(object obj, EventArgs ea)
         {
-            highContrastSettingValid = false;
-            lowResSettingValid = false;
-            terminalSettingValid = false;
-            dropShadowSettingValid = false;
-            menuAccessKeysUnderlinedValid = false;
-
+            s_highContrastSettingValid = false;
+            s_lowResSettingValid = false;
+            s_dropShadowSettingValid = false;
+            s_menuAccessKeysUnderlinedValid = false;
         }
 
-        ///<summary>
+        /// <summary>
         ///event handler for change in user preference
-        ///</summary>
+        /// </summary>
         private static void UserPreferenceChanging(object obj, UserPreferenceChangingEventArgs e)
         {
-            highContrastSettingValid = false;
-            lowResSettingValid = false;
-            terminalSettingValid = false;
-            dropShadowSettingValid = false;
-            bitsPerPixel = 0;
+            s_highContrastSettingValid = false;
+            s_lowResSettingValid = false;
+            s_dropShadowSettingValid = false;
+            s_bitsPerPixel = 0;
 
             if (e.Category == UserPreferenceCategory.General)
             {
-                menuAccessKeysUnderlinedValid = false;
+                s_menuAccessKeysUnderlinedValid = false;
             }
         }
     }

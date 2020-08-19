@@ -11,7 +11,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class DataGridViewCellStyleTests
+    // NB: doesn't require thread affinity
+    public class DataGridViewCellStyleTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void DataGridViewCellStyle_Ctor_Default()

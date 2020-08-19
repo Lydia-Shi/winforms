@@ -4,30 +4,30 @@
 
 using System.Drawing;
 using System.Runtime.InteropServices;
+using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Represents a standard Windows horizontal scroll bar.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [SRDescription(nameof(SR.DescriptionHScrollBar))]
-    public class HScrollBar : ScrollBar
+    public partial class HScrollBar : ScrollBar
     {
         protected override CreateParams CreateParams
         {
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.Style |= NativeMethods.SBS_HORZ;
+                cp.Style |= (int)User32.SBS.HORZ;
                 return cp;
             }
         }
 
         protected override Size DefaultSize
-        {
-            get => new Size(80, SystemInformation.HorizontalScrollBarHeight);
-        }
+            => new Size(80, SystemInformation.HorizontalScrollBarHeight);
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new HScrollBarAccessibleObject(this);
     }
 }

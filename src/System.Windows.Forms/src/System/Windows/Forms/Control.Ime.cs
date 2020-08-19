@@ -2,12 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Windows.Forms.Layout;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -95,7 +95,7 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Specifies whether the ImeMode property value can be changed to an active value.
-        ///  Added to support Password & ReadOnly (and maybe other) properties, which when set, should force disabling
+        ///  Added to support Password &amp; ReadOnly (and maybe other) properties, which when set, should force disabling
         ///  the IME if using one.
         /// </summary>
         protected virtual bool CanEnableIme
@@ -193,12 +193,10 @@ namespace System.Windows.Forms
         ///  Specifies a value that determines the IME (Input Method Editor) status of the
         ///  object when that object is selected.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Localizable(true),
-        AmbientValue(ImeMode.Inherit),
-        SRDescription(nameof(SR.ControlIMEModeDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Localizable(true)]
+        [AmbientValue(ImeMode.Inherit)]
+        [SRDescription(nameof(SR.ControlIMEModeDescr))]
         public ImeMode ImeMode
         {
             get
@@ -302,7 +300,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [WinCategory("Behavior"), SRDescription(nameof(SR.ControlOnImeModeChangedDescr))]
+        [WinCategory("Behavior")]
+        [SRDescription(nameof(SR.ControlOnImeModeChangedDescr))]
         public event EventHandler ImeModeChanged
         {
             add => Events.AddHandler(s_imeModeChangedEvent, value);
@@ -403,7 +402,7 @@ namespace System.Windows.Forms
                         // this is the case of a disabled winforms control hosted in a non-Form shell.
                         if (imeMode == ImeMode.Disable)
                         {
-                            focusHandle = UnsafeNativeMethods.GetAncestor(new HandleRef(null, focusHandle), NativeMethods.GA_ROOT);
+                            focusHandle = User32.GetAncestor(focusHandle, User32.GA.ROOT);
 
                             if (focusHandle != IntPtr.Zero)
                             {
@@ -553,8 +552,6 @@ namespace System.Windows.Forms
         /// </summary>
         internal void VerifyImeRestrictedModeChanged()
         {
-            Debug.Assert(ImeSupported, "This method should not be called from controls that don't support IME input.");
-
             Debug.WriteLineIf(CompModSwitches.ImeMode.Level >= TraceLevel.Info, "Inside VerifyImeRestrictedModeChanged(), this = " + this);
             Debug.Indent();
 
@@ -778,7 +775,7 @@ namespace System.Windows.Forms
                 // We guard against re-entrancy since the ImeModeChanged event can be raised and any changes from the handler could
                 // lead to another WM_IME_NOTIFY loop.
 
-                if (wparam == NativeMethods.IMN_SETCONVERSIONMODE || wparam == NativeMethods.IMN_SETOPENSTATUS)
+                if (wparam == (int)Imm32.IMN.SETCONVERSIONMODE || wparam == (int)Imm32.IMN.SETOPENSTATUS)
                 {
                     Debug.WriteLineIf(CompModSwitches.ImeMode.Level >= TraceLevel.Info, string.Format(CultureInfo.CurrentCulture, "Inside WmImeNotify(m.wparam=[{0}]), this={1}", m.WParam, this));
                     Debug.Indent();
@@ -835,7 +832,7 @@ namespace System.Windows.Forms
             Control topMostWinformsParent = TopMostParent;
             Form appForm = topMostWinformsParent as Form;
 
-            if ((appForm == null || appForm.Modal) && !topMostWinformsParent.ContainsFocus)
+            if ((appForm is null || appForm.Modal) && !topMostWinformsParent.ContainsFocus)
             {
                 // This means the winforms component container is not a WinForms host and it is no longer focused.
                 // Or it is not the main app host.
@@ -1231,7 +1228,6 @@ namespace System.Windows.Forms
                 default:
                     if (ImeModeConversion.ImeModeConversionBits.ContainsKey(imeMode))
                     {
-
                         // Update the conversion status
                         //
                         ImeModeConversion conversionEntry = (ImeModeConversion)ImeModeConversion.ImeModeConversionBits[imeMode];
@@ -1320,9 +1316,9 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Supported input language ImeMode tables.
-        ///  	WARNING: Do not try to map 'active' IME modes from one table to another since they can have a different
-        ///  			 meaning depending on the language; for instance ImeMode.Off means 'disable' or 'alpha' to Chinese
-        ///  			 but to Japanese it is 'alpha' and to Korean it has no meaning.
+        ///     WARNING: Do not try to map 'active' IME modes from one table to another since they can have a different
+        ///              meaning depending on the language; for instance ImeMode.Off means 'disable' or 'alpha' to Chinese
+        ///              but to Japanese it is 'alpha' and to Korean it has no meaning.
         /// </summary>
         private static readonly ImeMode[] japaneseTable = {
             ImeMode.Inherit,
@@ -1363,8 +1359,7 @@ namespace System.Windows.Forms
             ImeMode.Off
         };
 
-        private static readonly ImeMode[] unsupportedTable = {
-        };
+        private static readonly ImeMode[] unsupportedTable = Array.Empty<ImeMode>();
 
         internal static ImeMode[] ChineseTable
         {
@@ -1443,9 +1438,8 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (imeModeConversionBits == null)
+                if (imeModeConversionBits is null)
                 {
-
                     // Create ImeModeConversionBits dictionary
                     imeModeConversionBits = new Dictionary<ImeMode, ImeModeConversion>(7);
                     ImeModeConversion conversion;

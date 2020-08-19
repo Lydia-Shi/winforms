@@ -11,10 +11,10 @@ using System.Windows.Forms;
 namespace System.ComponentModel.Design.Serialization
 {
     /// <summary>
-    ///  This is a class that derives from DesignerLoader but provides some default functionality.  
-    ///  This class tracks changes from the loader host and sets its "Modified" bit to true when a 
-    ///  change occurs.  Also, this class implements IDesignerLoaderService to support multiple 
-    ///  load dependencies.  To use BaseDesignerLoader, you need to implement the PerformLoad 
+    ///  This is a class that derives from DesignerLoader but provides some default functionality.
+    ///  This class tracks changes from the loader host and sets its "Modified" bit to true when a
+    ///  change occurs.  Also, this class implements IDesignerLoaderService to support multiple
+    ///  load dependencies.  To use BaseDesignerLoader, you need to implement the PerformLoad
     ///  and PerformFlush methods.
     /// </summary>
     public abstract partial class BasicDesignerLoader : DesignerLoader, IDesignerLoaderService
@@ -33,7 +33,7 @@ namespace System.ComponentModel.Design.Serialization
         private static readonly int s_stateEnableComponentEvents = BitVector32.CreateMask(s_stateModifyIfErrors);   // True if we are currently listening to OnComponent* events
 
         // State for the designer loader.
-        private BitVector32 _state = new BitVector32();
+        private BitVector32 _state;
         private IDesignerLoaderHost _host;
         private int _loadDependencyCount;
         private string _baseComponentClassName;
@@ -58,10 +58,10 @@ namespace System.ComponentModel.Design.Serialization
 
         /// <summary>
         ///  This protected property indicates if there have been any
-        ///  changes made to the design surface.  The Flush method 
+        ///  changes made to the design surface.  The Flush method
         ///  gets the value of this property to determine if it needs
         ///  to generate a code dom tree.  This property is set by
-        ///  the designer loader when it detects a change to the 
+        ///  the designer loader when it detects a change to the
         ///  design surface.  You can override this to perform
         ///  additional work, such as checking out a file from source
         ///  code control.
@@ -95,8 +95,8 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Returns true when the designer is in the process of loading.  
-        ///  Clients that are sinking notifications from the designer often 
+        ///  Returns true when the designer is in the process of loading.
+        ///  Clients that are sinking notifications from the designer often
         ///  want to ignore them while the desingner is loading
         ///  and only respond to them if they result from user interatcions.
         /// </summary>
@@ -110,7 +110,7 @@ namespace System.ComponentModel.Design.Serialization
         {
             get
             {
-                if (_serializationManager == null)
+                if (_serializationManager is null)
                 {
                     throw new InvalidOperationException(SR.BasicDesignerLoaderNotInitialized);
                 }
@@ -119,7 +119,7 @@ namespace System.ComponentModel.Design.Serialization
             }
             set
             {
-                if (_serializationManager == null)
+                if (_serializationManager is null)
                 {
                     throw new InvalidOperationException(SR.BasicDesignerLoaderNotInitialized);
                 }
@@ -135,15 +135,15 @@ namespace System.ComponentModel.Design.Serialization
         protected bool ReloadPending => _state[s_stateReloadAtIdle];
 
         /// <summary>
-        ///  Called by the designer host to begin the loading process.  
-        ///  The designer host passes in an instance of a designer loader 
-        ///  host.  This loader host allows the designer loader to reload 
+        ///  Called by the designer host to begin the loading process.
+        ///  The designer host passes in an instance of a designer loader
+        ///  host.  This loader host allows the designer loader to reload
         ///  the design document and also allows the designer loader to indicate
         ///  that it has finished loading the design document.
         /// </summary>
         public override void BeginLoad(IDesignerLoaderHost host)
         {
-            if (host == null)
+            if (host is null)
             {
                 throw new ArgumentNullException(nameof(host));
             }
@@ -167,7 +167,7 @@ namespace System.ComponentModel.Design.Serialization
             _state[s_stateLoaded | s_stateLoadFailed] = false;
             _loadDependencyCount = 0;
 
-            if (_host == null)
+            if (_host is null)
             {
                 _host = host;
                 _hostInitialized = true;
@@ -185,7 +185,7 @@ namespace System.ComponentModel.Design.Serialization
                 {
                     IServiceContainer sc = GetService(typeof(IServiceContainer)) as IServiceContainer;
 
-                    if (sc == null)
+                    if (sc is null)
                     {
                         ThrowMissingService(typeof(IServiceContainer));
                     }
@@ -198,7 +198,7 @@ namespace System.ComponentModel.Design.Serialization
                 host.Deactivated += new EventHandler(OnDesignerDeactivate);
             }
 
-            // Now that we're initialized, let's begin the load.  We assume 
+            // Now that we're initialized, let's begin the load.  We assume
             // we support reload until the codeLoader tells us we
             // can't.  That way, we will do the reload if we didn't get a
             // valid loader to start with.
@@ -246,11 +246,11 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Disposes this designer loader.  The designer host will call 
-        ///  this method when the design document itself is being destroyed.  
+        ///  Disposes this designer loader.  The designer host will call
+        ///  this method when the design document itself is being destroyed.
         ///  Once called, the designer loader will never be called again.
         ///  This implementation removes any previously added services.  It
-        ///  does not flush changes, which allows for fast teardown of a 
+        ///  does not flush changes, which allows for fast teardown of a
         ///  designer that wasn't saved.
         /// </summary>
         public override void Dispose()
@@ -289,7 +289,7 @@ namespace System.ComponentModel.Design.Serialization
         ///  have been saved by the designer loader.  This method allows
         ///  designer loaders to implement a lazy-write scheme to improve
         ///  performance.  This designer loader implements lazy writes by
-        ///  listening to component change events.  If a component has 
+        ///  listening to component change events.  If a component has
         ///  changed it sets a "modified" bit.  When Flush is called the
         ///  loader will write out a new code dom tree.
         /// </summary>
@@ -409,7 +409,7 @@ namespace System.ComponentModel.Design.Serialization
             EnableComponentNotification(false);
             IComponentChangeService cs = (IComponentChangeService)GetService(typeof(IComponentChangeService));
 
-            if (cs == null)
+            if (cs is null)
             {
                 return;
             }
@@ -444,7 +444,7 @@ namespace System.ComponentModel.Design.Serialization
 
         /// <summary>
         ///  This method is called immediately before the document is unloaded.
-        ///  The document may be unloaded in preparation for reload, or 
+        ///  The document may be unloaded in preparation for reload, or
         ///  if the document failed the load.  If you added document-specific
         ///  services in OnBeginLoad or OnEndLoad, you should remove them
         ///  here.
@@ -569,7 +569,7 @@ namespace System.ComponentModel.Design.Serialization
         {
             _state[s_stateActiveDocument] = true;
 
-            if (!_state[s_stateDeferredReload] || _host == null)
+            if (!_state[s_stateDeferredReload] || _host is null)
             {
                 return;
             }
@@ -618,15 +618,15 @@ namespace System.ComponentModel.Design.Serialization
             //we don't want successful to be true here if there were load errors.
             //this may allow a situation where we have a dirtied WSOD and might allow
             //a user to save a partially loaded designer docdata.
-            successful = successful && (errors == null || errors.Count == 0)
-                                    && (_serializationManager.Errors == null
+            successful = successful && (errors is null || errors.Count == 0)
+                                    && (_serializationManager.Errors is null
                                     || _serializationManager.Errors.Count == 0);
             try
             {
                 _state[s_stateLoaded] = true;
                 IDesignerLoaderHost2 lh2 = GetService(typeof(IDesignerLoaderHost2)) as IDesignerLoaderHost2;
 
-                if (!successful && (lh2 == null || !lh2.IgnoreErrorsDuringReload))
+                if (!successful && (lh2 is null || !lh2.IgnoreErrorsDuringReload))
                 {
                     // Can we even show the Continue Ignore errors in DTEL?
                     if (lh2 != null)
@@ -641,7 +641,7 @@ namespace System.ComponentModel.Design.Serialization
                     successful = true;
                 }
 
-                // Inform the serialization manager that we are all done.  The serialization 
+                // Inform the serialization manager that we are all done.  The serialization
                 // manager clears state at this point to help enforce a stateless serialization
                 // mechanism.
                 if (errors != null)
@@ -744,7 +744,7 @@ namespace System.ComponentModel.Design.Serialization
 
             IDesignerLoaderHost host = LoaderHost;
 
-            if (host == null)
+            if (host is null)
             {
                 return;
             }
@@ -771,7 +771,7 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  This method is called when it is time to flush the 
+        ///  This method is called when it is time to flush the
         ///  contents of the loader.  You should save any state
         ///  at this time.
         /// </summary>
@@ -779,8 +779,8 @@ namespace System.ComponentModel.Design.Serialization
 
         /// <summary>
         ///  This method is called when it is time to load the
-        ///  design surface.  If you are loading asynchronously 
-        ///  you should ask for IDesignerLoaderService and call 
+        ///  design surface.  If you are loading asynchronously
+        ///  you should ask for IDesignerLoaderService and call
         ///  AddLoadDependency.  When loading asynchronously you
         ///  should at least create the root component during
         ///  PerformLoad.  The DesignSurface is only able to provide
@@ -799,7 +799,7 @@ namespace System.ComponentModel.Design.Serialization
         ///  If flush is true, the designer is flushed before performing
         ///  a reload.  If false, any designer changes are abandonded.
         ///  If ModifyOnError is true, the designer loader will be put
-        ///  in the modified state if any errors happened during the 
+        ///  in the modified state if any errors happened during the
         ///  load.
         /// </summary>
         protected void Reload(ReloadOptions flags)
@@ -808,9 +808,9 @@ namespace System.ComponentModel.Design.Serialization
             _state[s_stateFlushReload] = ((flags & ReloadOptions.NoFlush) == 0);
             _state[s_stateModifyIfErrors] = ((flags & ReloadOptions.ModifyOnError) != 0);
 
-            // Our implementation of Reload only reloads if we are the 
+            // Our implementation of Reload only reloads if we are the
             // active designer.  Otherwise, we wait until we become
-            // active and reload at that time.  We also never do a 
+            // active and reload at that time.  We also never do a
             // reload if we are flushing code.
             if (_state[s_stateFlushInProgress])
             {
@@ -850,14 +850,14 @@ namespace System.ComponentModel.Design.Serialization
 
             Debug.Assert(lastError != null, "Someone embedded a null in the error collection");
 
-            if (lastError == null)
+            if (lastError is null)
             {
                 return;
             }
 
             Exception ex = lastError as Exception;
 
-            if (ex == null)
+            if (ex is null)
             {
                 ex = new InvalidOperationException(lastError.ToString());
             }
@@ -874,7 +874,7 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         protected void SetBaseComponentClassName(string name)
         {
-            if (name == null)
+            if (name is null)
             {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -914,7 +914,7 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         void IDesignerLoaderService.AddLoadDependency()
         {
-            if (_serializationManager == null)
+            if (_serializationManager is null)
             {
                 throw new InvalidOperationException();
             }
@@ -953,7 +953,7 @@ namespace System.ComponentModel.Design.Serialization
                 return;
             }
 
-            if (errorCollection == null)
+            if (errorCollection is null)
             {
                 return;
             }

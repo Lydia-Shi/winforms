@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -26,12 +28,12 @@ namespace System.Windows.Forms
 
         /// <summary> AddDocumentShim - adds a HtmlDocumentShim to list of shims to manage
         ///  Can create a WindowShim as a side effect so it knows when to self prune from the list.
-        ///</summary>
+        /// </summary>
         public void AddDocumentShim(HtmlDocument doc)
         {
             HtmlDocument.HtmlDocumentShim shim = null;
 
-            if (htmlDocumentShims == null)
+            if (htmlDocumentShims is null)
             {
                 htmlDocumentShims = new Dictionary<HtmlDocument, HtmlDocument.HtmlDocumentShim>();
                 shim = new HtmlDocument.HtmlDocumentShim(doc);
@@ -46,16 +48,15 @@ namespace System.Windows.Forms
             {
                 OnShimAdded(shim);
             }
-
         }
 
         /// <summary> AddWindowShim - adds a HtmlWindowShim to list of shims to manage
-        ///</summary>
+        /// </summary>
 
         public void AddWindowShim(HtmlWindow window)
         {
             HtmlWindow.HtmlWindowShim shim = null;
-            if (htmlWindowShims == null)
+            if (htmlWindowShims is null)
             {
                 htmlWindowShims = new Dictionary<HtmlWindow, HtmlWindow.HtmlWindowShim>();
                 shim = new HtmlWindow.HtmlWindowShim(window);
@@ -75,12 +76,12 @@ namespace System.Windows.Forms
 
         /// <summary> AddElementShim - adds a HtmlDocumentShim to list of shims to manage
         ///  Can create a WindowShim as a side effect so it knows when to self prune from the list.
-        ///</summary>
+        /// </summary>
         public void AddElementShim(HtmlElement element)
         {
             HtmlElement.HtmlElementShim shim = null;
 
-            if (htmlElementShims == null)
+            if (htmlElementShims is null)
             {
                 htmlElementShims = new Dictionary<HtmlElement, HtmlElement.HtmlElementShim>();
                 shim = new HtmlElement.HtmlElementShim(element);
@@ -95,12 +96,11 @@ namespace System.Windows.Forms
             {
                 OnShimAdded(shim);
             }
-
         }
 
         internal HtmlDocument.HtmlDocumentShim GetDocumentShim(HtmlDocument document)
         {
-            if (htmlDocumentShims == null)
+            if (htmlDocumentShims is null)
             {
                 return null;
             }
@@ -113,7 +113,7 @@ namespace System.Windows.Forms
 
         internal HtmlElement.HtmlElementShim GetElementShim(HtmlElement element)
         {
-            if (htmlElementShims == null)
+            if (htmlElementShims is null)
             {
                 return null;
             }
@@ -126,7 +126,7 @@ namespace System.Windows.Forms
 
         internal HtmlWindow.HtmlWindowShim GetWindowShim(HtmlWindow window)
         {
-            if (htmlWindowShims == null)
+            if (htmlWindowShims is null)
             {
                 return null;
             }
@@ -220,7 +220,6 @@ namespace System.Windows.Forms
         {
             if (disposing)
             {
-
                 if (htmlElementShims != null)
                 {
                     foreach (HtmlElement.HtmlElementShim shim in htmlElementShims.Values)
@@ -246,13 +245,11 @@ namespace System.Windows.Forms
                 htmlWindowShims = null;
                 htmlDocumentShims = null;
                 htmlWindowShims = null;
-
             }
         }
         ~HtmlShimManager()
         {
             Dispose(false);
         }
-
     }
 }

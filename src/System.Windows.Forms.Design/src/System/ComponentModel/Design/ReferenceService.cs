@@ -64,10 +64,9 @@ namespace System.ComponentModel.Design
         private void EnsureReferences()
         {
             // If the references are null, create them for the first time and connect up our events to listen to changes to the container. Otherwise, check to see if the added or removed lists contain anything for us to sync up.
-            if (_references == null)
+            if (_references is null)
             {
-
-                if (_provider == null)
+                if (_provider is null)
                 {
                     throw new ObjectDisposedException("IReferenceService");
                 }
@@ -130,7 +129,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         private void OnComponentAdded(object sender, ComponentEventArgs cevent)
         {
-            if (_addedComponents == null)
+            if (_addedComponents is null)
             {
                 _addedComponents = new ArrayList();
             }
@@ -151,7 +150,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         private void OnComponentRemoved(object sender, ComponentEventArgs cevent)
         {
-            if (_removedComponents == null)
+            if (_removedComponents is null)
             {
                 _removedComponents = new ArrayList();
             }
@@ -266,7 +265,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         object IReferenceService.GetReference(string name)
         {
-            if (name == null)
+            if (name is null)
             {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -302,7 +301,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         object[] IReferenceService.GetReferences(Type baseType)
         {
-            if (baseType == null)
+            if (baseType is null)
             {
                 throw new ArgumentNullException(nameof(baseType));
             }
@@ -360,7 +359,7 @@ namespace System.ComponentModel.Design
             }
 
             /// <summary>
-            ///  Resets the name of this reference holder.  It will be re-aquired on demand
+            ///  Resets the name of this reference holder.  It will be re-acquired on demand
             /// </summary>
             internal void ResetName()
             {
@@ -374,7 +373,7 @@ namespace System.ComponentModel.Design
             {
                 get
                 {
-                    if (_fullName == null)
+                    if (_fullName is null)
                     {
                         if (_sitedComponent != null)
                         {
@@ -385,7 +384,7 @@ namespace System.ComponentModel.Design
                             }
                         }
 
-                        if (_fullName == null)
+                        if (_fullName is null)
                         {
                             _fullName = string.Empty;
 #if DEBUG

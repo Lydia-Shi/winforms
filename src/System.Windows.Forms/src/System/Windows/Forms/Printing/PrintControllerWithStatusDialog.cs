@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using System.Drawing.Printing;
 using System.Threading;
@@ -140,8 +142,8 @@ namespace System.Windows.Forms
             private readonly PrintControllerWithStatusDialog parent;
             private StatusDialog dialog;
             private readonly Thread thread;
-            internal bool canceled = false;
-            private bool alreadyStopped = false;
+            internal bool canceled;
+            private bool alreadyStopped;
 
             // Called from any thread
             internal BackgroundThread(PrintControllerWithStatusDialog parent)
@@ -234,7 +236,6 @@ namespace System.Windows.Forms
 
             internal StatusDialog(BackgroundThread backgroundThread, string dialogTitle)
             {
-
                 InitializeComponent();
                 this.backgroundThread = backgroundThread;
                 Text = dialogTitle;

@@ -2,11 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Design;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 
 namespace System.Windows.Forms
@@ -15,8 +15,6 @@ namespace System.Windows.Forms
     ///  TabPage implements a single page of a tab control. It is essentially a Panel with TabItem
     ///  properties.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [Designer("System.Windows.Forms.Design.TabPageDesigner, " + AssemblyRef.SystemDesign)]
     [ToolboxItem(false)]
     [DesignTimeVisible(false)]
@@ -26,9 +24,9 @@ namespace System.Windows.Forms
     {
         private ImageList.Indexer _imageIndexer;
         private string _toolTipText = string.Empty;
-        private bool _enterFired = false;
-        private bool _leaveFired = false;
-        private bool _useVisualStyleBackColor = false;
+        private bool _enterFired;
+        private bool _leaveFired;
+        private bool _useVisualStyleBackColor;
 
         /// <summary>
         ///  Constructs an empty TabPage.
@@ -66,8 +64,8 @@ namespace System.Windows.Forms
         ///  Hide AutoSize: it doesn't make sense for this control
         /// </summary>
         [Browsable(false)]
-        [EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override bool AutoSize
         {
             get => base.AutoSize;
@@ -358,7 +356,7 @@ namespace System.Windows.Forms
             get => _toolTipText;
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -503,7 +501,7 @@ namespace System.Windows.Forms
                 // there is no good way to determine the padding used on the TabPage.
                 Rectangle rectWithBorder = new Rectangle(inflateRect.X - 4, inflateRect.Y - 2, inflateRect.Width + 8, inflateRect.Height + 6);
 
-                TabRenderer.DrawTabPage(e.Graphics, rectWithBorder);
+                TabRenderer.DrawTabPage(e, rectWithBorder);
 
                 // TabRenderer does not support painting the background image on the panel, so
                 // draw it ourselves.
@@ -562,7 +560,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Our control collection will throw an exception if you try to add other tab pages.
         /// </summary>
-        [ComVisible(false)]
         public class TabPageControlCollection : ControlCollection
         {
             /// <summary>

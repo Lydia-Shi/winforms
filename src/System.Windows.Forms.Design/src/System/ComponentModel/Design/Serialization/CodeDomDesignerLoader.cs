@@ -11,24 +11,23 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Windows.Forms.Design;
 
 namespace System.ComponentModel.Design.Serialization
 {
     /// <summary>
-    ///  DesignerLoader.  This class is responsible for loading a designer document.  
+    ///  DesignerLoader.  This class is responsible for loading a designer document.
     ///  Where and how this load occurs is a private matter for the designer loader.
-    ///  The designer loader will be handed to an IDesignerHost instance.  This instance, 
+    ///  The designer loader will be handed to an IDesignerHost instance.  This instance,
     ///  when it is ready to load the document, will call BeginLoad, passing an instance
     ///  of IDesignerLoaderHost.  The designer loader will load up the design surface
     ///  using the host interface, and call EndLoad on the interface when it is done.
     ///  The error collection passed into EndLoad should be empty or null to indicate a
-    ///  successful load, or it should contain a collection of exceptions that 
+    ///  successful load, or it should contain a collection of exceptions that
     ///  describe the error.
     ///
     ///  Once a document is loaded, the designer loader is also responsible for
     ///  writing any changes made to the document back whatever storage the
-    ///  loader used when loading the document.  
+    ///  loader used when loading the document.
     /// </summary>
     public abstract partial class CodeDomDesignerLoader : BasicDesignerLoader, INameCreationService, IDesignerSerializationService
     {
@@ -39,7 +38,7 @@ namespace System.ComponentModel.Design.Serialization
         private static readonly int s_stateOwnTypeResolution = BitVector32.CreateMask(s_stateCodeParserChecked);    // True if we have added our own type resolution service
 
         // State for the designer loader.
-        private BitVector32 _state = new BitVector32();
+        private BitVector32 _state;
         private IExtenderProvider[] _extenderProviders;
         private IExtenderProviderService _extenderProviderService;
 
@@ -60,10 +59,10 @@ namespace System.ComponentModel.Design.Serialization
         protected abstract CodeDomProvider CodeDomProvider { get; }
 
         /// <summary>
-        ///  The TypeResolutionService property returns a type resolution service that the code dom 
-        ///  serializers will use when resolving types.  The CodeDomDesignerLoader automatically 
+        ///  The TypeResolutionService property returns a type resolution service that the code dom
+        ///  serializers will use when resolving types.  The CodeDomDesignerLoader automatically
         ///  adds this type resolver as a service to the service container during Initialize if it
-        ///  is non-null.  While the type resolution service is optional in many scenarios, it is required for 
+        ///  is non-null.  While the type resolution service is optional in many scenarios, it is required for
         ///  code interpretation because source code contains type names, but no assembly references.
         /// </summary>
         protected abstract ITypeResolutionService TypeResolutionService { get; }
@@ -86,8 +85,8 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Disposes this designer loader.  The designer host will call 
-        ///  this method when the design document itself is being destroyed.  
+        ///  Disposes this designer loader.  The designer host will call
+        ///  this method when the design document itself is being destroyed.
         ///  Once called, the designer loader will never be called again.
         ///  This implementation flushes any changes and removes any
         ///  previously added services.
@@ -124,13 +123,13 @@ namespace System.ComponentModel.Design.Serialization
             base.Dispose();
         }
 
+#if DEBUG
         /// <summary>
         ///  Internal debug method to dump a code dom tree to text.
         /// </summary>
-#if DEBUG
         internal static void DumpTypeDeclaration(CodeTypeDeclaration typeDecl)
         {
-            if (typeDecl == null || !s_traceCDLoader.TraceVerbose)
+            if (typeDecl is null || !s_traceCDLoader.TraceVerbose)
             {
                 return;
             }
@@ -138,7 +137,7 @@ namespace System.ComponentModel.Design.Serialization
 #pragma warning disable 618
             ICodeGenerator codeGenerator = new Microsoft.CSharp.CSharpCodeProvider().CreateGenerator();
 #pragma warning restore 618
-            StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
+            using var sw = new StringWriter(CultureInfo.InvariantCulture);
 
             try
             {
@@ -183,10 +182,10 @@ namespace System.ComponentModel.Design.Serialization
         /// <summary>
         ///  This ensures that we can load the code dom elements into a
         ///  document.  It ensures that there is a code dom provider, that
-        ///  the provider can parse the code, and that the returned 
+        ///  the provider can parse the code, and that the returned
         ///  code compile unit contains a class that can be deserialized
         ///  through a code dom serializer.  During all of this checking
-        ///  it establishes state in our member variables so that 
+        ///  it establishes state in our member variables so that
         ///  calls after it can assume that the variables are set.  This
         ///  will throw a human readable exception if any part of the
         ///  process fails.
@@ -196,12 +195,12 @@ namespace System.ComponentModel.Design.Serialization
             Debug.Assert(manager != null, "Should pass a serialization manager into EnsureDocument");
 
             // If we do not yet have the compile unit, ask for it.
-            if (_documentCompileUnit == null)
+            if (_documentCompileUnit is null)
             {
-                Debug.Assert(_documentType == null && _documentNamespace == null, "We have no compile unit but we still have a type or namespace.  Our state is inconsistent.");
+                Debug.Assert(_documentType is null && _documentNamespace is null, "We have no compile unit but we still have a type or namespace.  Our state is inconsistent.");
                 _documentCompileUnit = Parse();
 
-                if (_documentCompileUnit == null)
+                if (_documentCompileUnit is null)
                 {
                     Exception ex = new NotSupportedException(SR.CodeDomDesignerLoaderNoLanguageSupport);
                     ex.HelpLink = SR.CodeDomDesignerLoaderNoLanguageSupport;
@@ -211,7 +210,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             // Search namespaces and types to identify something that we can load.
-            if (_documentType == null)
+            if (_documentType is null)
             {
                 // We keep track of any failures here.  If we failed to find a type this
                 // array list will contain a list of strings listing what we have tried.
@@ -248,9 +247,9 @@ namespace System.ComponentModel.Design.Serialization
                                 break;
                             }
 
-                            if (t == null)
+                            if (t is null)
                             {
-                                if (failures == null)
+                                if (failures is null)
                                 {
                                     failures = new ArrayList();
                                 }
@@ -305,7 +304,7 @@ namespace System.ComponentModel.Design.Serialization
 
                             //add a check for root designer -- this allows an extra level of checking so we can skip classes
                             //that cannot be designed.
-                            if (_rootSerializer == null && HasRootDesignerAttribute(baseType))
+                            if (_rootSerializer is null && HasRootDesignerAttribute(baseType))
                             {
                                 _typeSerializer = manager.GetSerializer(baseType, typeof(TypeCodeDomSerializer)) as TypeCodeDomSerializer;
 
@@ -319,9 +318,9 @@ namespace System.ComponentModel.Design.Serialization
                             }
 
                             // If we didn't find a serializer for this type, report it.
-                            if (_rootSerializer == null && _typeSerializer == null)
+                            if (_rootSerializer is null && _typeSerializer is null)
                             {
-                                if (failures == null)
+                                if (failures is null)
                                 {
                                     failures = new ArrayList();
                                 }
@@ -355,9 +354,9 @@ namespace System.ComponentModel.Design.Serialization
                 }
 
                 // If we did not get a document type, throw, because we're unable to continue.
-                if (_documentType == null)
+                if (_documentType is null)
                 {
-                    // The entire compile unit needs to be thrown away so 
+                    // The entire compile unit needs to be thrown away so
                     // we can later reparse.
                     _documentCompileUnit = null;
 
@@ -638,11 +637,11 @@ namespace System.ComponentModel.Design.Serialization
             // The code dom desinger loader requires a working ITypeResolutionService to
             // function.  See if someone added one already, and if not, provide
             // our own.
-            if (GetService(typeof(ITypeResolutionService)) == null)
+            if (GetService(typeof(ITypeResolutionService)) is null)
             {
                 ITypeResolutionService trs = TypeResolutionService;
 
-                if (trs == null)
+                if (trs is null)
                 {
                     throw new InvalidOperationException(SR.CodeDomDesignerLoaderNoTypeResolution);
                 }
@@ -681,7 +680,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             // If we have no document, we definitely need a reload.
-            if (_documentType == null)
+            if (_documentType is null)
             {
                 return true;
             }
@@ -717,7 +716,7 @@ namespace System.ComponentModel.Design.Serialization
             if (_documentCompileUnit != null)
             {
                 reload = reloader.ShouldReloadDesigner(_documentCompileUnit);
-                reload |= (_documentType == null || !_documentType.Name.Equals(oldTypeName));
+                reload |= (_documentType is null || !_documentType.Name.Equals(oldTypeName));
             }
 
             return reload;
@@ -751,7 +750,7 @@ namespace System.ComponentModel.Design.Serialization
 
         /// <summary>
         ///  This method is called immediately before the document is unloaded.
-        ///  The document may be unloaded in preparation for reload, or 
+        ///  The document may be unloaded in preparation for reload, or
         ///  if the document failed the load.  If you added document-specific
         ///  services in OnBeginLoad or OnEndLoad, you should remove them
         ///  here.
@@ -821,7 +820,7 @@ namespace System.ComponentModel.Design.Serialization
             // to make the loader dirty.
             IComponentChangeService cs = (IComponentChangeService)GetService(typeof(IComponentChangeService));
 
-            if (cs == null)
+            if (cs is null)
             {
                 return;
             }
@@ -929,7 +928,7 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  This virtual method gets override in the VsCodeDomDesignerLoader to call the RenameElement on the 
+        ///  This virtual method gets override in the VsCodeDomDesignerLoader to call the RenameElement on the
         ///  ChangeNotificationService to rename the component name through out the project scope.
         /// </summary>
         protected virtual void OnComponentRename(object component, string oldName, string newName)
@@ -944,7 +943,7 @@ namespace System.ComponentModel.Design.Serialization
                 return;
             }
 
-            if (_documentType == null)
+            if (_documentType is null)
             {
                 return;
             }
@@ -968,7 +967,7 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         private void RemoveDeclaration(string name)
         {
-            if (_documentType == null)
+            if (_documentType is null)
             {
                 return;
             }
@@ -1013,12 +1012,12 @@ namespace System.ComponentModel.Design.Serialization
                 return false;
             }
 
-            if (typeLeft.TypeArguments != null && typeRight.TypeArguments == null)
+            if (typeLeft.TypeArguments != null && typeRight.TypeArguments is null)
             {
                 return false;
             }
 
-            if (typeLeft.TypeArguments == null && typeRight.TypeArguments != null)
+            if (typeLeft.TypeArguments is null && typeRight.TypeArguments != null)
             {
                 return false;
             }
@@ -1073,7 +1072,7 @@ namespace System.ComponentModel.Design.Serialization
 
             ComponentSerializationService css = GetService(typeof(ComponentSerializationService)) as ComponentSerializationService;
 
-            if (css == null)
+            if (css is null)
             {
                 ThrowMissingService(typeof(ComponentSerializationService));
             }
@@ -1082,20 +1081,20 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Serializes the given collection of objects and 
+        ///  Serializes the given collection of objects and
         ///  stores them in an opaque serialization data object.
         ///  The returning object fully supports runtime serialization.
         /// </summary>
         object IDesignerSerializationService.Serialize(ICollection objects)
         {
-            if (objects == null)
+            if (objects is null)
             {
-                objects = new object[0];
+                objects = Array.Empty<object>();
             }
 
             ComponentSerializationService css = GetService(typeof(ComponentSerializationService)) as ComponentSerializationService;
 
-            if (css == null)
+            if (css is null)
             {
                 ThrowMissingService(typeof(ComponentSerializationService));
             }
@@ -1121,7 +1120,7 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         string INameCreationService.CreateName(IContainer container, Type dataType)
         {
-            if (dataType == null)
+            if (dataType is null)
             {
                 throw new ArgumentNullException(nameof(dataType));
             }
@@ -1186,7 +1185,6 @@ namespace System.ComponentModel.Design.Serialization
                     {
                         conflict = true;
                     }
-
                 } while (conflict);
             }
             else
@@ -1196,7 +1194,7 @@ namespace System.ComponentModel.Design.Serialization
 
             // And validate the new name against the code dom's code
             // generator to ensure it's not a keyword.
-            if (_codeGenerator == null)
+            if (_codeGenerator is null)
             {
                 CodeDomProvider provider = CodeDomProvider;
 
@@ -1217,14 +1215,14 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Determines if the given name is valid.  A name 
+        ///  Determines if the given name is valid.  A name
         ///  creation service may have rules defining a valid
         ///  name, and this method allows the sevice to enforce
         ///  those rules.
         /// </summary>
         bool INameCreationService.IsValidName(string name)
         {
-            if (name == null)
+            if (name is null)
             {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -1234,7 +1232,7 @@ namespace System.ComponentModel.Design.Serialization
                 return false;
             }
 
-            if (_codeGenerator == null)
+            if (_codeGenerator is null)
             {
                 CodeDomProvider provider = CodeDomProvider;
 
@@ -1260,7 +1258,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             // We don't validate against the type members if we're loading,
-            // because during load these members are being added by the 
+            // because during load these members are being added by the
             // parser, so of course there will be duplicates.
             if (!Loading)
             {
@@ -1291,7 +1289,7 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Determines if the given name is valid.  A name 
+        ///  Determines if the given name is valid.  A name
         ///  creation service may have rules defining a valid
         ///  name, and this method allows the sevice to enforce
         ///  those rules.  It is similar to IsValidName, except
@@ -1301,7 +1299,7 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         void INameCreationService.ValidateName(string name)
         {
-            if (name == null)
+            if (name is null)
             {
                 throw new ArgumentNullException(nameof(name));
             }
@@ -1314,7 +1312,7 @@ namespace System.ComponentModel.Design.Serialization
                 throw ex;
             }
 
-            if (_codeGenerator == null)
+            if (_codeGenerator is null)
             {
                 CodeDomProvider provider = CodeDomProvider;
 
@@ -1354,7 +1352,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             // We don't validate against the type members if we're loading,
-            // because during load these members are being added by the 
+            // because during load these members are being added by the
             // parser, so of course there will be duplicates.
             bool dup = false;
             CodeTypeDeclaration type = _documentType;

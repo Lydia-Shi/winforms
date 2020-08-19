@@ -29,7 +29,7 @@ namespace System.Windows.Forms.Design
         private object _prevPrimarySelection; //used to check if the primary selection changed
         private Rectangle[] _curSelectionBounds;
         private int _curCompIndex;
-        private DesignerActionUI _designerActionUI = null; // the "container" for all things related to the designer action (smartags) UI
+        private DesignerActionUI _designerActionUI; // the "container" for all things related to the designer action (smartags) UI
         private bool _selectionChanging; //we dont want the OnSelectionChanged to be recursively called.
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace System.Windows.Forms.Design
             _serviceProvider = serviceProvider;
             _selSvc = (ISelectionService)serviceProvider.GetService(typeof(ISelectionService));
             _designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
-            if (_designerHost == null || _selSvc == null)
+            if (_designerHost is null || _selSvc is null)
             {
                 Debug.Fail("SelectionManager - Host or SelSvc is null, can't continue");
             }
@@ -132,7 +132,6 @@ namespace System.Windows.Forms.Design
                     if (selType == GlyphSelectionType.SelectedPrimary ||
                         selType == GlyphSelectionType.Selected)
                     {
-
                         if (_curSelectionBounds[_curCompIndex] == Rectangle.Empty)
                         {
                             _curSelectionBounds[_curCompIndex] = bodyGlyph.Bounds;
@@ -275,7 +274,7 @@ namespace System.Windows.Forms.Design
         }
 
         /// <summary>
-        ///  When a component is removed - we remove the key & value from our hashtable.
+        ///  When a component is removed - we remove the key and value from our hashtable.
         /// </summary>
         private void OnComponentRemoved(object source, ComponentEventArgs ce)
         {
@@ -289,8 +288,9 @@ namespace System.Windows.Forms.Design
                 _designerActionUI.RemoveActionGlyph(ce.Component);
             }
         }
+
         /// <summary>
-        ///  Computes the region representing the difference between the old  selection and the new selection.
+        ///  Computes the region representing the difference between the old selection and the new selection.
         /// </summary>
         private Region DetermineRegionToRefresh(object primarySelection)
         {

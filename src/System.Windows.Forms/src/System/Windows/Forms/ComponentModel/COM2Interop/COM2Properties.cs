@@ -2,9 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms.ComponentModel.Com2Interop
@@ -15,7 +16,9 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
     /// </summary>
     internal class Com2Properties
     {
+#if DEBUG
         private static readonly TraceSwitch DbgCom2PropertiesSwitch = new TraceSwitch("DbgCom2Properties", "Com2Properties: debug Com2 properties manager");
+#endif
 
         /// <summary>
         ///  This is the interval that we'll hold props for.  If someone doesn't touch an object
@@ -23,7 +26,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         ///
         ///  5 minutes -- ticks are 1/10,000,000th of a second
         /// </summary>
-        private static readonly long AGE_THRESHHOLD = (long)(10000000L * 60L * 5L);
+        private const long AGE_THRESHHOLD = (long)(10000000L * 60L * 5L);
 
         /// <summary>
         ///  This is the object that gave us the properties.  We hold a WeakRef so we don't addref the object.
@@ -50,14 +53,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         ///  For non-IProvideMultipleClassInfo ITypeInfos, this is the version number on the last
         ///  ITypeInfo we looked at.  If this changes, we know we need to dump the cache.
         /// </summary>
-        private long[] typeInfoVersions;
+        private (ushort, ushort, ushort, ushort)[] _typeInfoVersions;
 
 #if DEBUG
         private readonly string dbgObjName;
         private readonly string dbgObjClass;
 #endif
 
-        private int alwaysValid = 0;
+        private int alwaysValid;
 
         /// <summary>
         ///  These are the interfaces we recognize for extended browsing.
@@ -65,10 +68,10 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         private static readonly Type[] extendedInterfaces = new Type[]
         {
             typeof(VSSDK.ICategorizeProperties),
-            typeof(NativeMethods.IProvidePropertyBuilder),
-            typeof(Ole32.IPerPropertyBrowsing),
-            typeof(NativeMethods.IVsPerPropertyBrowsing),
-            typeof(NativeMethods.IManagedPerPropertyBrowsing)
+            typeof(VSSDK.IProvidePropertyBuilder),
+            typeof(Oleaut32.IPerPropertyBrowsing),
+            typeof(VSSDK.IVsPerPropertyBrowsing),
+            typeof(VSSDK.IVSMDPerPropertyBrowsing)
         };
 
         /// <summary>
@@ -92,12 +95,12 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 #if DEBUG
             ComNativeDescriptor cnd = new ComNativeDescriptor();
             dbgObjName = cnd.GetName(obj);
-            if (dbgObjName == null)
+            if (dbgObjName is null)
             {
                 dbgObjName = "(null)";
             }
             dbgObjClass = cnd.GetClassName(obj);
-            if (dbgObjClass == null)
+            if (dbgObjClass is null)
             {
                 dbgObjClass = "(null)";
             }
@@ -113,10 +116,9 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
             this.defaultIndex = defaultIndex;
 
-            typeInfoVersions = GetTypeInfoVersions(obj);
+            _typeInfoVersions = GetTypeInfoVersions(obj);
 
             touchedTime = DateTime.Now.Ticks;
-
         }
 
         internal bool AlwaysValid
@@ -217,7 +219,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             get
             {
                 CheckValid(true);
-                if (touchedTime == 0 || props == null)
+                if (touchedTime == 0 || props is null)
                 {
                     return null;
                 }
@@ -264,7 +266,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         public void AddExtendedBrowsingHandlers(Hashtable handlers)
         {
             object target = TargetObject;
-            if (target == null)
+            if (target is null)
             {
                 return;
             }
@@ -279,12 +281,11 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 //
                 if (t.IsInstanceOfType(target))
                 {
-
                     // since handlers must be stateless, check to see if we've already
                     // created one of this type
                     //
                     Com2ExtendedBrowsingHandler handler = (Com2ExtendedBrowsingHandler)handlers[t];
-                    if (handler == null)
+                    if (handler is null)
                     {
                         handler = (Com2ExtendedBrowsingHandler)Activator.CreateInstance(extendedInterfaceHandlerTypes[i]);
                         handlers[t] = handler;
@@ -323,7 +324,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
             if (props != null)
             {
-
                 Disposed?.Invoke(this, EventArgs.Empty);
 
                 weakObjRef = null;
@@ -349,19 +349,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         }
 
         /// <summary>
-        ///  Gets a list of version longs for each type info in the COM object
-        ///  representing hte current version stamp, function and variable count.
+        ///  Gets a list of version longs for each type info in the COM object representing the
+        ///  current version stamp, function and variable count.
         ///  If any of these things change, we'll re-fetch the properties.
         /// </summary>
-        private long[] GetTypeInfoVersions(object comObject)
+        private (ushort, ushort, ushort, ushort)[] GetTypeInfoVersions(object comObject)
         {
-            // get type infos
-            //
-            UnsafeNativeMethods.ITypeInfo[] pTypeInfos = Com2TypeInfoProcessor.FindTypeInfos(comObject, false);
-
-            // build up the info.
-            //
-            long[] versions = new long[pTypeInfos.Length];
+            Oleaut32.ITypeInfo[] pTypeInfos = Com2TypeInfoProcessor.FindTypeInfos(comObject, false);
+            var versions = new (ushort, ushort, ushort, ushort)[pTypeInfos.Length];
             for (int i = 0; i < pTypeInfos.Length; i++)
             {
                 versions[i] = GetTypeInfoVersion(pTypeInfos[i]);
@@ -369,117 +364,18 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             return versions;
         }
 
-        private static int countOffset = -1;
-        private static int versionOffset = -1;
-
-        // we define a struct here so we can use unsafe code to marshal it
-        // as a blob of memory.  This is here as a reference to how big and where the members are.
-        //
-        /*private struct tagTYPEATTR {
-            public Guid guid;                       //16
-            public   int lcid;                      // 4
-            public   int dwReserved;                // 4
-            public   int memidConstructor;          // 4
-            public   int memidDestructor;           // 4
-            public   IntPtr lpstrSchema;            // platform
-            public   int cbSizeInstance;            // 4
-            public    int typekind;                 // 4
-            public   short cFuncs;                  // 2
-            public   short cVars;                   // 2
-            public   short cImplTypes;              // 2
-            public   short cbSizeVft;               // 2
-            public   short cbAlignment;             // 2
-            public   short wTypeFlags;              // 2
-            public   short wMajorVerNum;            // 2
-            public   short wMinorVerNum;            // 2
-
-            public   int tdescAlias_unionMember;
-            public   short tdescAlias_vt;
-            public   int idldescType_dwReserved;
-            public   short idldescType_wIDLFlags;
-
-        }*/
-
-        // the offset of the cFunc member in the TYPEATTR structure.
-        //
-        private static int CountMemberOffset
+        private unsafe (ushort, ushort, ushort, ushort) GetTypeInfoVersion(Oleaut32.ITypeInfo pTypeInfo)
         {
-            get
+            Ole32.TYPEATTR* pTypeAttr = null;
+            HRESULT hr = pTypeInfo.GetTypeAttr(&pTypeAttr);
+            if (!hr.Succeeded() || pTypeAttr is null)
             {
-                if (countOffset == -1)
-                {
-                    countOffset = Marshal.SizeOf<Guid>() + IntPtr.Size + 24;
-                }
-                return countOffset;
-            }
-        }
-
-        // the offset of the cMajorVerNum member in the TYPEATTR structure.
-        //
-        private static int VersionOffset
-        {
-            get
-            {
-                if (versionOffset == -1)
-                {
-                    versionOffset = CountMemberOffset + 12;
-                }
-                return versionOffset;
+                return (0, 0, 0, 0);
             }
 
-        }
-
-        private unsafe long GetTypeInfoVersion(UnsafeNativeMethods.ITypeInfo pTypeInfo)
-        {
-            IntPtr pTypeAttr = IntPtr.Zero;
-            HRESULT hr = pTypeInfo.GetTypeAttr(ref pTypeAttr);
-            if (!hr.Succeeded())
-            {
-                return 0;
-            }
-
-            Runtime.InteropServices.ComTypes.TYPEATTR pTAStruct;
             try
             {
-                try
-                {
-                    // just access directly...no marshalling needed!
-                    //
-                    pTAStruct = *(Runtime.InteropServices.ComTypes.TYPEATTR*)pTypeAttr;
-                }
-                catch
-                {
-
-                    return 0;
-                }
-
-                long result = 0;
-
-                // we pull two things out of the struct: the
-                // number of functions and variables, and the version.
-                // since they are next to each other, we just pull the memory directly.
-                //
-                // the cFuncs and cVars are both shorts, so we read them as one block of ints.
-                //
-                //
-                int* pResult = (int*)&result;
-                byte* pbStruct = (byte*)&pTAStruct;
-
-                // in the low byte, pull the number of props.
-                //
-                *pResult = *(int*)(pbStruct + CountMemberOffset);
-
-                // move up to the high word of the long.
-                //
-                pResult++;
-
-                // now pull out the version info.
-                //
-                *pResult = *(int*)(pbStruct + VersionOffset);
-
-                // return that composite long.
-                //
-                return result;
+                return (pTypeAttr->cFuncs, pTypeAttr->cVars, pTypeAttr->wMajorVerNum, pTypeAttr->wMinorVerNum);
             }
             finally
             {
@@ -497,25 +393,19 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             bool valid = weakObjRef != null && weakObjRef.IsAlive;
 
             // check the version information for each ITypeInfo the object exposes.
-            //
             if (valid && checkVersions)
             {
-
-                //
-                long[] newTypeInfoVersions = GetTypeInfoVersions(weakObjRef.Target);
-
-                if (newTypeInfoVersions.Length != typeInfoVersions.Length)
+                (ushort, ushort, ushort, ushort)[] newTypeInfoVersions = GetTypeInfoVersions(weakObjRef.Target);
+                if (newTypeInfoVersions.Length != _typeInfoVersions.Length)
                 {
                     valid = false;
                 }
                 else
                 {
                     // compare each version number to the old one.
-                    //
                     for (int i = 0; i < newTypeInfoVersions.Length; i++)
                     {
-
-                        if (newTypeInfoVersions[i] != typeInfoVersions[i])
+                        if (newTypeInfoVersions[i] != _typeInfoVersions[i])
                         {
                             valid = false;
                             break;
@@ -525,10 +415,9 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
                 if (!valid)
                 {
-
                     // update to the new version list we have.
                     //
-                    typeInfoVersions = newTypeInfoVersions;
+                    _typeInfoVersions = newTypeInfoVersions;
                 }
             }
 
@@ -539,7 +428,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 #if DEBUG
                 if (DbgCom2PropertiesSwitch.TraceVerbose)
                 {
-                    Debug.WriteLine("Disposing reference to object " + dbgObjName + ", class=" + dbgObjClass + " (weakRef " + (weakObjRef == null ? "null" : "dead") + ")");
+                    Debug.WriteLine("Disposing reference to object " + dbgObjName + ", class=" + dbgObjClass + " (weakRef " + (weakObjRef is null ? "null" : "dead") + ")");
                 }
 #endif
 

@@ -5,16 +5,15 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Represents a standard Windows vertical scroll bar.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [SRDescription(nameof(SR.DescriptionVScrollBar))]
-    public class VScrollBar : ScrollBar
+    public partial class VScrollBar : ScrollBar
     {
         private const int DefaultHeight = 80;
 
@@ -23,7 +22,7 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.Style |= NativeMethods.SBS_VERT;
+                cp.Style |= (int)User32.SBS.VERT;
                 return cp;
             }
         }
@@ -36,10 +35,8 @@ namespace System.Windows.Forms
                 {
                     return new Size(SystemInformation.GetVerticalScrollBarWidthForDpi(_deviceDpi), LogicalToDeviceUnits(DefaultHeight));
                 }
-                else
-                {
-                    return new Size(SystemInformation.VerticalScrollBarWidth, DefaultHeight);
-                }
+
+                return new Size(SystemInformation.VerticalScrollBarWidth, DefaultHeight);
             }
         }
 
@@ -48,16 +45,18 @@ namespace System.Windows.Forms
         public override RightToLeft RightToLeft
         {
             get => RightToLeft.No;
-            set
-            {
-            }
+            set { }
         }
+
         [Browsable(false)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public new event EventHandler RightToLeftChanged
+        public new event EventHandler? RightToLeftChanged
         {
             add => base.RightToLeftChanged += value;
             remove => base.RightToLeftChanged -= value;
         }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new VScrollBarAccessibleObject(this);
     }
 }

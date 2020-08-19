@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -17,15 +19,13 @@ namespace System.Windows.Forms
     {
         readonly List<NumericUpDownAcceleration> items;
 
-        ///  ICollection<NumericUpDownAcceleration> implementation.
-
         /// <summary>
         ///  Adds an item (NumericUpDownAcceleration object) to the ICollection.
         ///  The item is added preserving the collection sorted.
         /// </summary>
         public void Add(NumericUpDownAcceleration acceleration)
         {
-            if (acceleration == null)
+            if (acceleration is null)
             {
                 throw new ArgumentNullException(nameof(acceleration));
             }
@@ -93,8 +93,6 @@ namespace System.Windows.Forms
             return items.Remove(acceleration);
         }
 
-        ///  IEnumerable<NumericUpDownAcceleration> implementation.
-
         /// <summary>
         ///  Returns an enumerator that can iterate through the collection.
         /// </summary>
@@ -123,7 +121,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void AddRange(params NumericUpDownAcceleration[] accelerations)
         {
-            if (accelerations == null)
+            if (accelerations is null)
             {
                 throw new ArgumentNullException(nameof(accelerations));
             }
@@ -131,7 +129,7 @@ namespace System.Windows.Forms
             // Accept the range only if ALL elements in the array are not null.
             foreach (NumericUpDownAcceleration acceleration in accelerations)
             {
-                if (acceleration == null)
+                if (acceleration is null)
                 {
                     throw new ArgumentNullException(SR.NumericUpDownAccelerationCollectionAtLeastOneEntryIsNull);
                 }

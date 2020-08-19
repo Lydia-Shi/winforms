@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Drawing;
+#nullable disable
+
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using static Interop;
 
@@ -11,7 +13,6 @@ namespace System.Windows.Forms
 {
     public partial class DataGridView
     {
-        [ComVisible(true)]
         protected class DataGridViewTopRowAccessibleObject : AccessibleObject
         {
             private int[] runtimeId;
@@ -30,13 +31,13 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (owner == null)
+                    if (owner is null)
                     {
                         throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
                     }
                     if (owner.ColumnHeadersVisible)
                     {
-                        Rectangle rect = Rectangle.Union(owner.layout.ColumnHeaders, owner.layout.TopLeftHeader);
+                        Rectangle rect = Rectangle.Union(owner._layout.ColumnHeaders, owner._layout.TopLeftHeader);
                         return owner.RectangleToScreen(rect);
                     }
                     else
@@ -74,7 +75,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (owner == null)
+                    if (owner is null)
                     {
                         throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
                     }
@@ -94,7 +95,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (runtimeId == null)
+                    if (runtimeId is null)
                     {
                         runtimeId = new int[3];
                         runtimeId[0] = RuntimeIDFirstItem; // first item is static - 0x2a
@@ -116,7 +117,7 @@ namespace System.Windows.Forms
 
             public override AccessibleObject GetChild(int index)
             {
-                if (owner == null)
+                if (owner is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
                 }
@@ -152,7 +153,7 @@ namespace System.Windows.Forms
 
             public override int GetChildCount()
             {
-                if (owner == null)
+                if (owner is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
                 }
@@ -168,7 +169,7 @@ namespace System.Windows.Forms
 
             public override AccessibleObject Navigate(AccessibleNavigation navigationDirection)
             {
-                if (owner == null)
+                if (owner is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewTopRowAccessibleObject_OwnerNotSet);
                 }

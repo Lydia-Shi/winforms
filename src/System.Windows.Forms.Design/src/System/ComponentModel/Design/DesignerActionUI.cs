@@ -37,7 +37,7 @@ namespace System.ComponentModel.Design
         internal DesignerActionToolStripDropDown designerActionHost;
 
         private readonly MenuCommand _cmdShowDesignerActions; //used to respond to the Alt+Shft+F10 command
-        private bool _inTransaction = false;
+        private bool _inTransaction;
         private IComponent _relatedComponentTransaction;
         private DesignerActionGlyph _relatedGlyphTransaction;
         private readonly bool _disposeActionService;
@@ -59,7 +59,7 @@ namespace System.ComponentModel.Design
             _behaviorService = (BehaviorService)serviceProvider.GetService(typeof(BehaviorService));
             _menuCommandService = (IMenuCommandService)serviceProvider.GetService(typeof(IMenuCommandService));
             _selSvc = (ISelectionService)serviceProvider.GetService(typeof(ISelectionService));
-            if (_behaviorService == null || _selSvc == null)
+            if (_behaviorService is null || _selSvc is null)
             {
                 Debug.Fail("Either BehaviorService or ISelectionService is null, cannot continue.");
                 return;
@@ -67,14 +67,14 @@ namespace System.ComponentModel.Design
 
             //query for our DesignerActionService
             _designerActionService = (DesignerActionService)serviceProvider.GetService(typeof(DesignerActionService));
-            if (_designerActionService == null)
+            if (_designerActionService is null)
             {
                 //start the service
                 _designerActionService = new DesignerActionService(serviceProvider);
                 _disposeActionService = true;
             }
             _designerActionUIService = (DesignerActionUIService)serviceProvider.GetService(typeof(DesignerActionUIService));
-            if (_designerActionUIService == null)
+            if (_designerActionUIService is null)
             {
                 _designerActionUIService = new DesignerActionUIService(serviceProvider);
                 _disposeActionUIService = true;
@@ -175,7 +175,7 @@ namespace System.ComponentModel.Design
             }
 
             // we didnt get on, fetch it
-            if (dalColl == null)
+            if (dalColl is null)
             {
                 dalColl = _designerActionService.GetComponentActions(comp);
             }
@@ -183,7 +183,7 @@ namespace System.ComponentModel.Design
             if (dalColl != null && dalColl.Count > 0)
             {
                 DesignerActionGlyph dag = null;
-                if (_componentToGlyph[comp] == null)
+                if (_componentToGlyph[comp] is null)
                 {
                     DesignerActionBehavior dab = new DesignerActionBehavior(_serviceProvider, comp, dalColl, this);
 
@@ -203,7 +203,7 @@ namespace System.ComponentModel.Design
                     }
 
                     //either comp is a control or we failed to find a traycontrol (which could be the case for toolstripitem components) - in this case just create a standard glyoh.
-                    if (dag == null)
+                    if (dag is null)
                     {
                         //if the related comp is a control, then this shortcut will be off its bounds
                         dag = new DesignerActionGlyph(dab, _designerActionAdorner);
@@ -243,7 +243,7 @@ namespace System.ComponentModel.Design
         private void OnComponentChanged(object source, ComponentChangedEventArgs ce)
         {
             //validate event args
-            if (ce.Component == null || ce.Member == null || !IsDesignerActionPanelVisible)
+            if (ce.Component is null || ce.Member is null || !IsDesignerActionPanelVisible)
             {
                 return;
             }
@@ -467,14 +467,14 @@ namespace System.ComponentModel.Design
         internal bool ShowDesignerActionPanelForPrimarySelection()
         {
             //can't do anythign w/o selection service
-            if (_selSvc == null)
+            if (_selSvc is null)
             {
                 return false;
             }
 
             object primarySelection = _selSvc.PrimarySelection;
             //verfiy that we have obtained a valid component with designer actions
-            if (primarySelection == null || !_componentToGlyph.Contains(primarySelection))
+            if (primarySelection is null || !_componentToGlyph.Contains(primarySelection))
             {
                 return false;
             }
@@ -505,7 +505,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         internal void RemoveActionGlyph(object relatedObject)
         {
-            if (relatedObject == null)
+            if (relatedObject is null)
             {
                 return;
             }
@@ -600,7 +600,7 @@ namespace System.ComponentModel.Design
                 Debug.WriteLineIf(DesignerActionUI.DropDownVisibilityDebug.TraceVerbose, "[DesignerActionUI.toolStripDropDown_Closing] Closing...");
                 Debug.Assert(_lastPanelComponent != null, "last panel component should not be null here... " +
                     "(except if you're currently debugging VS where deactivation messages in the middle of the pump can mess up everything...)");
-                if (_lastPanelComponent == null)
+                if (_lastPanelComponent is null)
                 {
                     return;
                 }
@@ -626,17 +626,17 @@ namespace System.ComponentModel.Design
 
         internal Point UpdateDAPLocation(IComponent component, DesignerActionGlyph glyph)
         {
-            if (component == null)
+            if (component is null)
             { // in case of a resize...
                 component = _lastPanelComponent;
             }
 
-            if (designerActionHost == null)
+            if (designerActionHost is null)
             {
                 return Point.Empty;
             }
 
-            if (component == null || glyph == null)
+            if (component is null || glyph is null)
             {
                 return designerActionHost.Location;
             }
@@ -682,13 +682,13 @@ namespace System.ComponentModel.Design
             return glyphLocationScreenCoord;
         }
 
-        bool _cancelClose = false;
+        bool _cancelClose;
         /// <summary>
         ///  This shows the actual chrome paenl that is created by the DesignerActionBehavior object.
         /// </summary>
         internal void ShowDesignerActionPanel(IComponent relatedComponent, DesignerActionPanel panel, DesignerActionGlyph glyph)
         {
-            if (designerActionHost == null)
+            if (designerActionHost is null)
             {
                 designerActionHost = new DesignerActionToolStripDropDown(this, _mainParentWindow)
                 {
@@ -714,7 +714,7 @@ namespace System.ComponentModel.Design
                 {
                     Debug.WriteLineIf(s_designeActionPanelTraceSwitch.TraceVerbose, "Assigning owner to mainParentWindow");
                     Debug.WriteLineIf(DesignerActionUI.DropDownVisibilityDebug.TraceVerbose, "Assigning owner to mainParentWindow");
-                    UnsafeNativeMethods.SetWindowLong(new HandleRef(designerActionHost, designerActionHost.Handle), NativeMethods.GWL_HWNDPARENT, new HandleRef(_mainParentWindow, _mainParentWindow.Handle));
+                    User32.SetWindowLong(designerActionHost, User32.GWL.HWNDPARENT, new HandleRef(_mainParentWindow, _mainParentWindow.Handle));
                 }
 
                 _cancelClose = true;
@@ -748,7 +748,7 @@ namespace System.ComponentModel.Design
         private readonly IWin32Window _mainParentWindow;
         private ToolStripControlHost _panel;
         private readonly DesignerActionUI _designerActionUI;
-        private bool _cancelClose = false;
+        private bool _cancelClose;
         private Glyph _relatedGlyph;
 
         public DesignerActionToolStripDropDown(DesignerActionUI designerActionUI, IWin32Window mainParentWindow)
@@ -872,7 +872,7 @@ namespace System.ComponentModel.Design
                 }
 
                 // what's the owner of the windows being activated?
-                IntPtr parent = UnsafeNativeMethods.GetWindowLong(new HandleRef(this, hwndActivating), NativeMethods.GWL_HWNDPARENT);
+                IntPtr parent = User32.GetWindowLong(new HandleRef(this, hwndActivating), User32.GWL.HWNDPARENT);
                 // is it currently disabled (ie, the activating windows is in modal mode)
                 if (!IsWindowEnabled(parent))
                 {
@@ -919,7 +919,6 @@ namespace System.ComponentModel.Design
             {
                 CheckFocusIsRight();
             }
-
         }
 
         private void PanelResized(object sender, System.EventArgs e)
@@ -960,7 +959,7 @@ namespace System.ComponentModel.Design
             {
                 Debug.WriteLine("\t\tOWNER: " + GetControlInformation(hWndOwner));
                 Debug.WriteLine("\t\tOWNEE: " + GetControlInformation(hWndDescendant));
-                IntPtr claimedOwnerHwnd = UnsafeNativeMethods.GetWindowLong(new HandleRef(null, hWndDescendant), NativeMethods.GWL_HWNDPARENT);
+                IntPtr claimedOwnerHwnd = User32.GetWindowLong(hWndDescendant, User32.GWL.HWNDPARENT);
                 Debug.WriteLine("OWNEE's CLAIMED OWNER: " + GetControlInformation(claimedOwnerHwnd));
             }
 #endif
@@ -972,7 +971,7 @@ namespace System.ComponentModel.Design
 
             while (hWndDescendant != IntPtr.Zero)
             {
-                hWndDescendant = UnsafeNativeMethods.GetWindowLong(new HandleRef(null, hWndDescendant), NativeMethods.GWL_HWNDPARENT);
+                hWndDescendant = User32.GetWindowLong(hWndDescendant, User32.GWL.HWNDPARENT);
                 if (hWndDescendant == IntPtr.Zero)
                 {
                     Debug.WriteLineIf(DesignerActionUI.DropDownVisibilityDebug.TraceVerbose, "NOPE.");
@@ -1032,13 +1031,13 @@ namespace System.ComponentModel.Design
         }
         private bool IsWindowEnabled(IntPtr handle)
         {
-            int style = (int)UnsafeNativeMethods.GetWindowLong(new HandleRef(this, handle), NativeMethods.GWL_STYLE);
+            int style = (int)User32.GetWindowLong(new HandleRef(this, handle), User32.GWL.STYLE);
             return (style & (int)User32.WS.DISABLED) == 0;
         }
 
         private void WmActivate(ref Message m)
         {
-            if (unchecked((int)(long)m.WParam) == NativeMethods.WA_INACTIVE)
+            if (unchecked((int)(long)m.WParam) == (int)User32.WA.INACTIVE)
             {
                 IntPtr hwndActivating = m.LParam;
                 if (WindowOwnsWindow(Handle, hwndActivating))
@@ -1061,9 +1060,9 @@ namespace System.ComponentModel.Design
 
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_ACTIVATE:
+                case User32.WM.ACTIVATE:
                     WmActivate(ref m);
                     return;
             }

@@ -2,12 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Design;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using static Interop;
+using static Interop.Ole32;
 
 namespace System.Windows.Forms.ComponentModel.Com2Interop
 {
@@ -17,13 +20,13 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             get
             {
-                return typeof(Ole32.IPerPropertyBrowsing);
+                return typeof(Oleaut32.IPerPropertyBrowsing);
             }
         }
 
         public override void SetupPropertyHandlers(Com2PropertyDescriptor[] propDesc)
         {
-            if (propDesc == null)
+            if (propDesc is null)
             {
                 return;
             }
@@ -36,7 +39,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             }
         }
 
-        private unsafe Guid GetPropertyPageGuid(Ole32.IPerPropertyBrowsing target, Ole32.DispatchID dispid)
+        private unsafe Guid GetPropertyPageGuid(Oleaut32.IPerPropertyBrowsing target, Ole32.DispatchID dispid)
         {
             // check for a property page
             Guid guid = Guid.Empty;
@@ -49,7 +52,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             return Guid.Empty;
         }
 
-        internal static string GetDisplayString(Ole32.IPerPropertyBrowsing ppb, Ole32.DispatchID dispid, ref bool success)
+        internal static string GetDisplayString(Oleaut32.IPerPropertyBrowsing ppb, Ole32.DispatchID dispid, ref bool success)
         {
             HRESULT hr = ppb.GetDisplayString(dispid, out string strVal);
             if (hr != HRESULT.S_OK)
@@ -68,7 +71,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         /// </summary>
         private void OnGetBaseAttributes(Com2PropertyDescriptor sender, GetAttributesEvent attrEvent)
         {
-            if (sender.TargetObject is Ole32.IPerPropertyBrowsing target)
+            if (sender.TargetObject is Oleaut32.IPerPropertyBrowsing target)
             {
                 // we hide IDispatch props by default, we we need to force showing them here
 
@@ -76,7 +79,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
                 if (sender.CanShow && validPropPage)
                 {
-                    if (typeof(UnsafeNativeMethods.IDispatch).IsAssignableFrom(sender.PropertyType))
+                    if (typeof(Oleaut32.IDispatch).IsAssignableFrom(sender.PropertyType))
                     {
                         attrEvent.Add(BrowsableAttribute.Yes);
                     }
@@ -88,9 +91,8 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             try
             {
-                if (sender.TargetObject is Ole32.IPerPropertyBrowsing)
+                if (sender.TargetObject is Oleaut32.IPerPropertyBrowsing)
                 {
-
                     // if we are using the dropdown, don't convert the value
                     // or the values will change when we select them and call back
                     // for the display value.
@@ -101,7 +103,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
                     bool success = true;
 
-                    string displayString = GetDisplayString((Ole32.IPerPropertyBrowsing)sender.TargetObject, sender.DISPID, ref success);
+                    string displayString = GetDisplayString((Oleaut32.IPerPropertyBrowsing)sender.TargetObject, sender.DISPID, ref success);
 
                     if (success)
                     {
@@ -116,13 +118,13 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
         private unsafe void OnGetTypeConverterAndTypeEditor(Com2PropertyDescriptor sender, GetTypeConverterAndTypeEditorEvent gveevent)
         {
-            if (sender.TargetObject is Ole32.IPerPropertyBrowsing ppb)
+            if (sender.TargetObject is Oleaut32.IPerPropertyBrowsing ppb)
             {
                 bool hasStrings = false;
 
                 // check for enums
-                var caStrings = new Ole32.CA_STRUCT();
-                var caCookies = new Ole32.CA_STRUCT();
+                var caStrings = new Ole32.CA();
+                var caCookies = new Ole32.CA();
 
                 HRESULT hr = HRESULT.S_OK;
                 try
@@ -171,7 +173,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 //
                 if (!hasStrings)
                 {
-
                     // this is a _bit_ of a backwards-compat work around...
                     // many older ActiveX controls will show a property page
                     // for all properties since the old grid would only put up the
@@ -204,14 +205,13 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
             public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destType)
             {
-
                 if (destType == typeof(string) && !itemsEnum.arraysFetched)
                 {
                     object curValue = itemsEnum.target.GetValue(itemsEnum.target.TargetObject);
                     if (curValue == value || (curValue != null && curValue.Equals(value)))
                     {
                         bool success = false;
-                        string val = GetDisplayString((Ole32.IPerPropertyBrowsing)itemsEnum.target.TargetObject, itemsEnum.target.DISPID, ref success);
+                        string val = GetDisplayString((Oleaut32.IPerPropertyBrowsing)itemsEnum.target.TargetObject, itemsEnum.target.DISPID, ref success);
                         if (success)
                         {
                             return val;
@@ -267,16 +267,11 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 }
             }
 
-            /*internal bool StandardValuesQueried {
-               get {
-                   this.standardValuesQueried = value;
-               }
-            } */
-
-            // ensure that we have processed the caStructs into arrays
-            // of values and strings
-            //
-            private void EnsureArrays()
+            /// <summary>
+            ///  Ensure that we have processed the caStructs into arrays
+            ///  of values and strings
+            /// </summary>
+            private unsafe void EnsureArrays()
             {
                 if (arraysFetched)
                 {
@@ -291,16 +286,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                     object[] nameItems = nameMarshaller.Items;
                     object[] cookieItems = valueMarshaller.Items;
 
-                    Ole32.IPerPropertyBrowsing ppb = (Ole32.IPerPropertyBrowsing)target.TargetObject;
+                    Oleaut32.IPerPropertyBrowsing ppb = (Oleaut32.IPerPropertyBrowsing)target.TargetObject;
                     int itemCount = 0;
 
                     Debug.Assert(cookieItems != null && nameItems != null, "An item array is null");
 
                     if (nameItems.Length > 0)
                     {
-
                         object[] valueItems = new object[cookieItems.Length];
-                        var var = new Ole32.VARIANT();
                         int cookie;
 
                         Debug.Assert(cookieItems.Length == nameItems.Length, "Got uneven names and cookies");
@@ -311,14 +304,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                         for (int i = nameItems.Length - 1; i >= 0; i--)
                         {
                             cookie = (int)cookieItems[i];
-                            if (nameItems[i] == null || !(nameItems[i] is string))
+                            if (nameItems[i] is null || !(nameItems[i] is string))
                             {
-                                Debug.Fail("Bad IPerPropertyBrowsing item [" + i.ToString(CultureInfo.InvariantCulture) + "], name=" + (nameItems == null ? "(unknown)" : nameItems[i].ToString()));
+                                Debug.Fail("Bad IPerPropertyBrowsing item [" + i.ToString(CultureInfo.InvariantCulture) + "], name=" + (nameItems is null ? "(unknown)" : nameItems[i].ToString()));
                                 continue;
                             }
-                            var.vt = Ole32.VARENUM.EMPTY;
-                            HRESULT hr = ppb.GetPredefinedValue(target.DISPID, (uint)cookie, var);
-                            if (hr == HRESULT.S_OK && var.vt != Ole32.VARENUM.EMPTY)
+                            using var var = new Oleaut32.VARIANT();
+                            HRESULT hr = ppb.GetPredefinedValue(target.DISPID, (uint)cookie, &var);
+                            if (hr == HRESULT.S_OK && var.vt != VARENUM.EMPTY)
                             {
                                 valueItems[i] = var.ToObject();
                                 if (valueItems[i].GetType() != targetType)
@@ -341,13 +334,13 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                                 }
                             }
 
-                            var.Clear();
-                            if (hr == NativeMethods.S_OK)
+                            if (hr == HRESULT.S_OK)
                             {
                                 itemCount++;
                                 continue;
                             }
-                            else if (itemCount > 0)
+
+                            if (itemCount > 0)
                             {
                                 // shorten the arrays to ignore the failed ones.  this isn't terribly
                                 // efficient but shouldn't happen very often.  It's rare for these to fail.
@@ -355,14 +348,12 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                                 Array.Copy(nameItems, i, nameItems, i + 1, itemCount);
                                 Array.Copy(valueItems, i, valueItems, i + 1, itemCount);
                             }
-
                         }
 
                         // pass this data down to the base Com2Enum object...
                         string[] strings = new string[itemCount];
                         Array.Copy(nameItems, 0, strings, 0, itemCount);
                         base.PopulateArrays(strings, valueItems);
-
                     }
                 }
                 catch (Exception ex)
@@ -385,7 +376,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
             public override string ToString(object v)
             {
-
                 // If the value is the object's current value, then
                 // ask GetDisplay string first.  This is a perf improvement
                 // because this way we don't populate the arrays when an object is selected, only
@@ -393,10 +383,9 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 //
                 if (target.IsCurrentValue(v))
                 {
-
                     bool success = false;
 
-                    string displayString = Com2IPerPropertyBrowsingHandler.GetDisplayString((Ole32.IPerPropertyBrowsing)target.TargetObject, target.DISPID, ref success);
+                    string displayString = Com2IPerPropertyBrowsingHandler.GetDisplayString((Oleaut32.IPerPropertyBrowsing)target.TargetObject, target.DISPID, ref success);
 
                     if (success)
                     {
@@ -410,6 +399,5 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 return base.ToString(v);
             }
         }
-
     }
 }

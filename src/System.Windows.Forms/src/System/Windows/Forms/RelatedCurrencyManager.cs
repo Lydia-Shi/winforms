@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,7 +37,7 @@ namespace System.Windows.Forms
             this.parentManager = parentManager;
             this.dataField = dataField;
             fieldInfo = parentManager.GetItemProperties().Find(dataField, true);
-            if (fieldInfo == null || !typeof(IList).IsAssignableFrom(fieldInfo.PropertyType))
+            if (fieldInfo is null || !typeof(IList).IsAssignableFrom(fieldInfo.PropertyType))
             {
                 throw new ArgumentException(string.Format(SR.RelatedListManagerChild, dataField));
             }
@@ -102,9 +104,9 @@ namespace System.Windows.Forms
             return GetItemProperties(null);
         }
 
-        // <summary>
-        //    Gets the name of the list.
-        // </summary>
+        /// <summary>
+        ///    Gets the name of the list.
+        /// </summary>
         internal override string GetListName()
         {
             string name = GetListName(new ArrayList());
@@ -201,6 +203,5 @@ namespace System.Windows.Forms
             OnCurrentChanged(EventArgs.Empty);
             OnCurrentItemChanged(EventArgs.Empty);
         }
-
     }
 }

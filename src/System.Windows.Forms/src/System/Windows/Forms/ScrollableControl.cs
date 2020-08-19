@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -14,8 +16,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Defines a base class for controls that support auto-scrolling behavior.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [Designer("System.Windows.Forms.Design.ScrollableControlDesigner, " + AssemblyRef.SystemDesign)]
     public class ScrollableControl : Control, IArrangedElement
     {
@@ -57,13 +57,13 @@ namespace System.Windows.Forms
         /// </summary>
         private Point _scrollPosition = Point.Empty;
 
-        private DockPaddingEdges dockPadding = null;
+        private DockPaddingEdges dockPadding;
 
         private int _scrollState;
 
-        private VScrollProperties _verticalScroll = null;
+        private VScrollProperties _verticalScroll;
 
-        private HScrollProperties _horizontalScroll = null;
+        private HScrollProperties _horizontalScroll;
 
         private static readonly object s_scrollEvent = new object();
 
@@ -71,7 +71,7 @@ namespace System.Windows.Forms
         ///  Used to figure out what the horizontal scroll value should be set to when the horizontal
         ///  scrollbar is first shown.
         /// </summary>
-        private bool resetRTLHScrollValue = false;
+        private bool resetRTLHScrollValue;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='ScrollableControl'/> class.
@@ -254,7 +254,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        // Gets the Horizontal Scroll bar for this ScrollableControl.
+        /// Gets the Horizontal Scroll bar for this ScrollableControl.
         /// </summary>
         [SRCategory(nameof(SR.CatLayout))]
         [SRDescription(nameof(SR.ScrollableControlHorizontalScrollDescr))]
@@ -402,7 +402,6 @@ namespace System.Windows.Forms
             bool defaultLayoutEngine = (LayoutEngine == DefaultLayout.Instance);
             if (!defaultLayoutEngine && CommonProperties.HasLayoutBounds(this))
             {
-
                 Size layoutBounds = CommonProperties.GetLayoutBounds(this);
 
                 if (layoutBounds.Width > maxX)
@@ -671,6 +670,9 @@ namespace System.Windows.Forms
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
+            if (e is null)
+                throw new ArgumentNullException(nameof(e));
+
             if ((HScroll || VScroll) &&
                 BackgroundImage != null &&
                 (BackgroundImageLayout == ImageLayout.Zoom || BackgroundImageLayout == ImageLayout.Stretch || BackgroundImageLayout == ImageLayout.Center))
@@ -817,7 +819,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void ScrollControlIntoView(Control activeControl)
         {
-            if (activeControl == null)
+            if (activeControl is null)
             {
                 return;
             }
@@ -914,7 +916,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Occurs when the scroll box has been moved by either a mouse or keyboard action.
         /// </summary>
-        [SRCategory(nameof(SR.CatAction)), SRDescription(nameof(SR.ScrollBarOnScrollDescr))]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.ScrollBarOnScrollDescr))]
         public event ScrollEventHandler Scroll
         {
             add => Events.AddHandler(s_scrollEvent, value);
@@ -979,7 +982,6 @@ namespace System.Windows.Forms
                 || (!vert && VScroll)
                 || (vert && !VScroll))
             {
-
                 needLayout = true;
             }
 
@@ -1042,7 +1044,6 @@ namespace System.Windows.Forms
             bool needLayout = false;
             if (_displayRect.Width != width || _displayRect.Height != height)
             {
-
                 _displayRect.Width = width;
                 _displayRect.Height = height;
                 needLayout = true;
@@ -1214,10 +1215,11 @@ namespace System.Windows.Forms
         {
             if (!IsMirrored)
             {
-                SendMessage(
-                    WindowMessages.WM_HSCROLL,
-                    NativeMethods.Util.MAKELPARAM((RightToLeft == RightToLeft.Yes) ? (int)User32.SBH.RIGHT : (int)User32.SBH.LEFT, 0),
-                    0);
+                User32.SendMessageW(
+                    this,
+                    User32.WM.HSCROLL,
+                    PARAM.FromLowHigh((RightToLeft == RightToLeft.Yes) ? (int)User32.SBH.RIGHT : (int)User32.SBH.LEFT, 0),
+                    IntPtr.Zero);
             }
         }
 
@@ -1244,7 +1246,7 @@ namespace System.Windows.Forms
             }
 
             Rectangle client = ClientRectangle;
-            User32.SBV loWord = (User32.SBV)NativeMethods.Util.LOWORD(m.WParam);
+            User32.SBV loWord = (User32.SBV)PARAM.LOWORD(m.WParam);
             bool thumbTrack = loWord != User32.SBV.THUMBTRACK;
             int pos = -_displayRect.Y;
             int oldValue = pos;
@@ -1344,7 +1346,7 @@ namespace System.Windows.Forms
                 maxPos = HorizontalScroll.Maximum;
             }
 
-            User32.SBH loWord = (User32.SBH)NativeMethods.Util.LOWORD(m.WParam);
+            User32.SBH loWord = (User32.SBH)PARAM.LOWORD(m.WParam);
             switch (loWord)
             {
                 case User32.SBH.THUMBPOSITION:
@@ -1415,7 +1417,7 @@ namespace System.Windows.Forms
         /// </summary>
         private void WmOnScroll(ref Message m, int oldValue, int value, ScrollOrientation scrollOrientation)
         {
-            ScrollEventType type = (ScrollEventType)NativeMethods.Util.LOWORD(m.WParam);
+            ScrollEventType type = (ScrollEventType)PARAM.LOWORD(m.WParam);
             if (type != ScrollEventType.EndScroll)
             {
                 ScrollEventArgs se = new ScrollEventArgs(type, oldValue, value, scrollOrientation);
@@ -1437,15 +1439,15 @@ namespace System.Windows.Forms
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_VSCROLL:
+                case User32.WM.VSCROLL:
                     WmVScroll(ref m);
                     break;
-                case WindowMessages.WM_HSCROLL:
+                case User32.WM.HSCROLL:
                     WmHScroll(ref m);
                     break;
-                case WindowMessages.WM_SETTINGCHANGE:
+                case User32.WM.SETTINGCHANGE:
                     WmSettingChange(ref m);
                     break;
                 default:
@@ -1492,7 +1494,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         if (_left == _right && _top == _bottom && _left == _top)
                         {
@@ -1522,7 +1524,7 @@ namespace System.Windows.Forms
                 }
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _left = value;
                         _top = value;
@@ -1543,10 +1545,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingBottomDescr))]
             public int Bottom
             {
-                get => _owner == null ? _bottom : _owner.Padding.Bottom;
+                get => _owner is null ? _bottom : _owner.Padding.Bottom;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _bottom = value;
                     }
@@ -1566,10 +1568,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingLeftDescr))]
             public int Left
             {
-                get => _owner == null ? _left : _owner.Padding.Left;
+                get => _owner is null ? _left : _owner.Padding.Left;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _left = value;
                     }
@@ -1589,10 +1591,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingRightDescr))]
             public int Right
             {
-                get => _owner == null ? _right : _owner.Padding.Right;
+                get => _owner is null ? _right : _owner.Padding.Right;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _right = value;
                     }
@@ -1612,10 +1614,10 @@ namespace System.Windows.Forms
             [SRDescription(nameof(SR.PaddingTopDescr))]
             public int Top
             {
-                get => _owner == null ? _top : _owner.Padding.Top;
+                get => _owner is null ? _top : _owner.Padding.Top;
                 set
                 {
-                    if (_owner == null)
+                    if (_owner is null)
                     {
                         _top = value;
                     }

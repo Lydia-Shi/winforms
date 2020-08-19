@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Forms.ComponentModel.Com2Interop;
@@ -56,10 +58,11 @@ namespace System.Windows.Forms
                 }
             }
 
-            // ensure that we have processed the caStructs into arrays
-            // of values and strings
-            //
-            private void EnsureArrays()
+            /// <summary>
+            ///  Ensure that we have processed the caStructs into arrays
+            ///  of values and strings
+            /// </summary>
+            private unsafe void EnsureArrays()
             {
                 if (arraysFetched)
                 {
@@ -70,11 +73,10 @@ namespace System.Windows.Forms
 
                 try
                 {
-
                     // marshal the items.
                     object[] nameItems = nameMarshaller.Items;
                     object[] cookieItems = valueMarshaller.Items;
-                    Ole32.IPerPropertyBrowsing ppb = (Ole32.IPerPropertyBrowsing)owner.GetPerPropertyBrowsing();
+                    Oleaut32.IPerPropertyBrowsing ppb = (Oleaut32.IPerPropertyBrowsing)owner.GetPerPropertyBrowsing();
                     int itemCount = 0;
 
                     Debug.Assert(cookieItems != null && nameItems != null, "An item array is null");
@@ -82,28 +84,25 @@ namespace System.Windows.Forms
                     if (nameItems.Length > 0)
                     {
                         object[] valueItems = new object[cookieItems.Length];
-                        var var = new Ole32.VARIANT();
                         int cookie;
 
                         Debug.Assert(cookieItems.Length == nameItems.Length, "Got uneven names and cookies");
 
                         // for each name item, we ask the object for it's corresponding value.
-                        //
                         for (int i = 0; i < nameItems.Length; i++)
                         {
                             cookie = (int)cookieItems[i];
-                            if (nameItems[i] == null || !(nameItems[i] is string))
+                            if (nameItems[i] is null || !(nameItems[i] is string))
                             {
-                                Debug.Fail("Bad IPerPropertyBrowsing item [" + i.ToString(CultureInfo.InvariantCulture) + "], name=" + (nameItems == null ? "(unknown)" : nameItems[i].ToString()));
+                                Debug.Fail("Bad IPerPropertyBrowsing item [" + i.ToString(CultureInfo.InvariantCulture) + "], name=" + (nameItems is null ? "(unknown)" : nameItems[i].ToString()));
                                 continue;
                             }
-                            var.vt = (short)Ole32.VARENUM.EMPTY;
-                            HRESULT hr = ppb.GetPredefinedValue(target.Dispid, (uint)cookie, var);
+                            using var var = new Oleaut32.VARIANT();
+                            HRESULT hr = ppb.GetPredefinedValue(target.Dispid, (uint)cookie, &var);
                             if (hr == HRESULT.S_OK && var.vt != Ole32.VARENUM.EMPTY)
                             {
                                 valueItems[i] = var.ToObject();
                             }
-                            var.Clear();
                             itemCount++;
                         }
 

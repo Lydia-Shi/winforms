@@ -2,11 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Design;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.ButtonInternal;
 using System.Windows.Forms.Layout;
 using static Interop;
@@ -16,21 +17,17 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Implements the basic functionality required by a button control.
     /// </summary>
-    [
-        ComVisible(true),
-        ClassInterface(ClassInterfaceType.AutoDispatch),
-        Designer("System.Windows.Forms.Design.ButtonBaseDesigner, " + AssemblyRef.SystemDesign)
-    ]
-    public abstract class ButtonBase : Control
+    [Designer("System.Windows.Forms.Design.ButtonBaseDesigner, " + AssemblyRef.SystemDesign)]
+    public abstract partial class ButtonBase : Control
     {
-        private FlatStyle flatStyle = System.Windows.Forms.FlatStyle.Standard;
-        private ContentAlignment imageAlign = ContentAlignment.MiddleCenter;
-        private ContentAlignment textAlign = ContentAlignment.MiddleCenter;
-        private TextImageRelation textImageRelation = TextImageRelation.Overlay;
-        private readonly ImageList.Indexer imageIndex = new ImageList.Indexer();
-        private FlatButtonAppearance flatAppearance;
-        private ImageList imageList;
-        private Image image;
+        private FlatStyle _flatStyle = FlatStyle.Standard;
+        private ContentAlignment _imageAlign = ContentAlignment.MiddleCenter;
+        private ContentAlignment _textAlign = ContentAlignment.MiddleCenter;
+        private TextImageRelation _textImageRelation = TextImageRelation.Overlay;
+        private readonly ImageList.Indexer _imageIndex = new ImageList.Indexer();
+        private FlatButtonAppearance _flatAppearance;
+        private ImageList _imageList;
+        private Image _image;
 
         private const int FlagMouseOver = 0x0001;
         private const int FlagMouseDown = 0x0002;
@@ -41,14 +38,14 @@ namespace System.Windows.Forms
         private const int FlagIsDefault = 0x0040;
         private const int FlagUseMnemonic = 0x0080;
         private const int FlagShowToolTip = 0x0100;
-        private int state = 0;
+        private int _state;
 
-        private ToolTip textToolTip;
+        private ToolTip _textToolTip;
 
-        //this allows the user to disable visual styles for the button so that it inherits its background color
-        private bool enableVisualStyleBackground = true;
+        // This allows the user to disable visual styles for the button so that it inherits its background color
+        private bool _enableVisualStyleBackground = true;
 
-        private bool isEnableVisualStyleBackgroundSet = false;
+        private bool _isEnableVisualStyleBackgroundSet;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='ButtonBase'/> class.
@@ -78,13 +75,11 @@ namespace System.Windows.Forms
         ///  This property controls the activation handling of bleedover for the text that
         ///  extends beyond the width of the button.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatBehavior)),
-            DefaultValue(false),
-            Browsable(true),
-            EditorBrowsable(EditorBrowsableState.Always),
-            SRDescription(nameof(SR.ButtonAutoEllipsisDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
+        [SRDescription(nameof(SR.ButtonAutoEllipsisDescr))]
         public bool AutoEllipsis
         {
             get
@@ -94,32 +89,32 @@ namespace System.Windows.Forms
 
             set
             {
-                if (AutoEllipsis != value)
+                if (value == AutoEllipsis)
                 {
-                    SetFlag(FlagAutoEllipsis, value);
-                    if (value)
-                    {
-                        if (textToolTip == null)
-                        {
-                            textToolTip = new ToolTip();
-                        }
-                    }
-                    Invalidate();
+                    return;
                 }
+
+                SetFlag(FlagAutoEllipsis, value);
+                if (value)
+                {
+                    if (_textToolTip is null)
+                    {
+                        _textToolTip = new ToolTip();
+                    }
+                }
+                Invalidate();
             }
         }
 
         /// <summary>
         ///  Indicates whether the control is automatically resized to fit its contents
         /// </summary>
-        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public override bool AutoSize
         {
-            get
-            {
-                return base.AutoSize;
-            }
+            get => base.AutoSize;
             set
             {
                 base.AutoSize = value;
@@ -131,8 +126,10 @@ namespace System.Windows.Forms
             }
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.ControlOnAutoSizeChangedDescr))]
-        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always)]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.ControlOnAutoSizeChangedDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         new public event EventHandler AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
@@ -143,16 +140,11 @@ namespace System.Windows.Forms
         ///  The background color of this control. This is an ambient property and
         ///  will always return a non-null value.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.ControlBackColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.ControlBackColorDescr))]
         public override Color BackColor
         {
-            get
-            {
-                return base.BackColor;
-            }
+            get => base.BackColor;
             set
             {
                 if (DesignMode)
@@ -160,11 +152,7 @@ namespace System.Windows.Forms
                     if (value != Color.Empty)
                     {
                         PropertyDescriptor pd = TypeDescriptor.GetProperties(this)["UseVisualStyleBackColor"];
-                        Debug.Assert(pd != null);
-                        if (pd != null)
-                        {
-                            pd.SetValue(this, false);
-                        }
+                        pd?.SetValue(this, false);
                     }
                 }
                 else
@@ -197,39 +185,38 @@ namespace System.Windows.Forms
                 {
                     cp.ExStyle &= ~(int)User32.WS_EX.RIGHT;   // WS_EX_RIGHT overrides the BS_XXXX alignment styles
 
-                    cp.Style |= NativeMethods.BS_MULTILINE;
+                    cp.Style |= (int)User32.BS.MULTILINE;
 
                     if (IsDefault)
                     {
-                        cp.Style |= NativeMethods.BS_DEFPUSHBUTTON;
+                        cp.Style |= (int)User32.BS.DEFPUSHBUTTON;
                     }
 
                     ContentAlignment align = RtlTranslateContent(TextAlign);
 
                     if ((int)(align & WindowsFormsUtils.AnyLeftAlign) != 0)
                     {
-                        cp.Style |= NativeMethods.BS_LEFT;
+                        cp.Style |= (int)User32.BS.LEFT;
                     }
                     else if ((int)(align & WindowsFormsUtils.AnyRightAlign) != 0)
                     {
-                        cp.Style |= NativeMethods.BS_RIGHT;
+                        cp.Style |= (int)User32.BS.RIGHT;
                     }
                     else
                     {
-                        cp.Style |= NativeMethods.BS_CENTER;
-
+                        cp.Style |= (int)User32.BS.CENTER;
                     }
                     if ((int)(align & WindowsFormsUtils.AnyTopAlign) != 0)
                     {
-                        cp.Style |= NativeMethods.BS_TOP;
+                        cp.Style |= (int)User32.BS.TOP;
                     }
                     else if ((int)(align & WindowsFormsUtils.AnyBottomAlign) != 0)
                     {
-                        cp.Style |= NativeMethods.BS_BOTTOM;
+                        cp.Style |= (int)User32.BS.BOTTOM;
                     }
                     else
                     {
-                        cp.Style |= NativeMethods.BS_VCENTER;
+                        cp.Style |= (int)User32.BS.VCENTER;
                     }
                 }
                 return cp;
@@ -252,19 +239,21 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (GetFlag(FlagIsDefault) != value)
+                if (value == IsDefault)
                 {
-                    SetFlag(FlagIsDefault, value);
-                    if (IsHandleCreated)
+                    return;
+                }
+
+                SetFlag(FlagIsDefault, value);
+                if (IsHandleCreated)
+                {
+                    if (OwnerDraw)
                     {
-                        if (OwnerDraw)
-                        {
-                            Invalidate();
-                        }
-                        else
-                        {
-                            UpdateStyles();
-                        }
+                        Invalidate();
+                    }
+                    else
+                    {
+                        UpdateStyles();
                     }
                 }
             }
@@ -275,47 +264,48 @@ namespace System.Windows.Forms
         ///  sets
         ///  the flat style appearance of the button control.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            DefaultValue(FlatStyle.Standard),
-            Localizable(true),
-            SRDescription(nameof(SR.ButtonFlatStyleDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(FlatStyle.Standard)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.ButtonFlatStyleDescr))]
         public FlatStyle FlatStyle
         {
             get
             {
-                return flatStyle;
+                return _flatStyle;
             }
             set
             {
+                if (value == FlatStyle)
+                {
+                    return;
+                }
+
                 if (!ClientUtils.IsEnumValid(value, (int)value, (int)FlatStyle.Flat, (int)FlatStyle.System))
                 {
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(FlatStyle));
                 }
-                flatStyle = value;
+                _flatStyle = value;
                 LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.FlatStyle);
                 Invalidate();
                 UpdateOwnerDraw();
             }
         }
 
-        [
-            Browsable(true),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.ButtonFlatAppearance)),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Content)
-        ]
+        [Browsable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.ButtonFlatAppearance))]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public FlatButtonAppearance FlatAppearance
         {
             get
             {
-                if (flatAppearance == null)
+                if (_flatAppearance is null)
                 {
-                    flatAppearance = new FlatButtonAppearance(this);
+                    _flatAppearance = new FlatButtonAppearance(this);
                 }
 
-                return flatAppearance;
+                return _flatAppearance;
             }
         }
 
@@ -323,71 +313,69 @@ namespace System.Windows.Forms
         ///  Gets or sets the image
         ///  that is displayed on a button control.
         /// </summary>
-        [
-            SRDescription(nameof(SR.ButtonImageDescr)),
-            Localizable(true),
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRDescription(nameof(SR.ButtonImageDescr))]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Image Image
         {
             get
             {
-                if (image == null && imageList != null)
+                if (_image is null && _imageList != null)
                 {
-                    int actualIndex = imageIndex.ActualIndex;
+                    int actualIndex = _imageIndex.ActualIndex;
 
                     // Pre-whidbey we used to use ImageIndex rather than ImageIndexer.ActualIndex.
                     // ImageIndex clamps to the length of the image list.  We need to replicate
                     // this logic here for backwards compatibility.
                     // We do not bake this into ImageIndexer because different controls
                     // treat this scenario differently.
-                    if (actualIndex >= imageList.Images.Count)
+                    if (actualIndex >= _imageList.Images.Count)
                     {
-                        actualIndex = imageList.Images.Count - 1;
+                        actualIndex = _imageList.Images.Count - 1;
                     }
 
                     if (actualIndex >= 0)
                     {
-                        return imageList.Images[actualIndex];
+                        return _imageList.Images[actualIndex];
                     }
-                    Debug.Assert(image == null, "We expect to be returning null.");
+                    Debug.Assert(_image is null, "We expect to be returning null.");
                 }
-                return image;
+                return _image;
             }
             set
             {
-                if (Image != value)
+                if (value == Image)
                 {
-                    StopAnimate();
-
-                    image = value;
-                    if (image != null)
-                    {
-                        ImageIndex = -1;
-                        ImageList = null;
-                    }
-
-                    LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.Image);
-                    Animate();
-                    Invalidate();
+                    return;
                 }
+
+                StopAnimate();
+
+                _image = value;
+                if (_image != null)
+                {
+                    ImageIndex = ImageList.Indexer.DefaultIndex;
+                    ImageList = null;
+                }
+
+                LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.Image);
+                Animate();
+                Invalidate();
             }
         }
 
         /// <summary>
         ///  Gets or sets the alignment of the image on the button control.
         /// </summary>
-        [
-            DefaultValue(ContentAlignment.MiddleCenter),
-            Localizable(true),
-            SRDescription(nameof(SR.ButtonImageAlignDescr)),
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(ContentAlignment.MiddleCenter)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.ButtonImageAlignDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public ContentAlignment ImageAlign
         {
             get
             {
-                return imageAlign;
+                return _imageAlign;
             }
             set
             {
@@ -395,9 +383,9 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ContentAlignment));
                 }
-                if (value != imageAlign)
+                if (value != _imageAlign)
                 {
-                    imageAlign = value;
+                    _imageAlign = value;
                     LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.ImageAlign);
                     Invalidate();
                 }
@@ -408,43 +396,44 @@ namespace System.Windows.Forms
         ///  Gets or sets the image list index value of the image
         ///  displayed on the button control.
         /// </summary>
-        [
-            TypeConverter(typeof(ImageIndexConverter)),
-            Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-            Localizable(true),
-            DefaultValue(-1),
-            RefreshProperties(RefreshProperties.Repaint),
-            SRDescription(nameof(SR.ButtonImageIndexDescr)),
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [TypeConverter(typeof(ImageIndexConverter))]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [Localizable(true)]
+        [DefaultValue(ImageList.Indexer.DefaultIndex)]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [SRDescription(nameof(SR.ButtonImageIndexDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public int ImageIndex
         {
             get
             {
-                if (imageIndex.Index != -1 && imageList != null && imageIndex.Index >= imageList.Images.Count)
+                if (_imageIndex.Index != ImageList.Indexer.DefaultIndex && _imageList != null && _imageIndex.Index >= _imageList.Images.Count)
                 {
-                    return imageList.Images.Count - 1;
+                    return _imageList.Images.Count - 1;
                 }
-                return imageIndex.Index;
+                return _imageIndex.Index;
             }
             set
             {
-                if (value < -1)
+                if (value < ImageList.Indexer.DefaultIndex)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, -1));
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, ImageList.Indexer.DefaultIndex));
                 }
-                if (imageIndex.Index != value)
-                {
-                    if (value != -1)
-                    {
-                        // Image.set calls ImageIndex = -1
-                        image = null;
-                    }
 
-                    // If they were previously using keys - this should clear out the image key field.
-                    imageIndex.Index = value;
-                    Invalidate();
+                if (value == _imageIndex.Index && value != ImageList.Indexer.DefaultIndex)
+                {
+                    return;
                 }
+
+                if (value != ImageList.Indexer.DefaultIndex)
+                {
+                    // Image.set calls ImageIndex = -1
+                    _image = null;
+                }
+
+                // If they were previously using keys - this should clear out the image key field.
+                _imageIndex.Index = value;
+                Invalidate();
             }
         }
 
@@ -452,105 +441,101 @@ namespace System.Windows.Forms
         ///  Gets or sets the image list index key of the image
         ///  displayed on the button control.  Note - setting this unsets the ImageIndex
         /// </summary>
-        [
-            TypeConverter(typeof(ImageKeyConverter)),
-            Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-            Localizable(true),
-            DefaultValue(""),
-            RefreshProperties(RefreshProperties.Repaint),
-            SRDescription(nameof(SR.ButtonImageIndexDescr)),
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [TypeConverter(typeof(ImageKeyConverter))]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [Localizable(true)]
+        [DefaultValue(ImageList.Indexer.DefaultKey)]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [SRDescription(nameof(SR.ButtonImageIndexDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public string ImageKey
         {
             get
             {
-                return imageIndex.Key;
+                return _imageIndex.Key;
             }
             set
             {
-                if (imageIndex.Key != value)
+                if (value == _imageIndex.Key && !string.Equals(value, ImageList.Indexer.DefaultKey))
                 {
-                    if (value != null)
-                    {
-                        // Image.set calls ImageIndex = -1
-                        image = null;
-                    }
-
-                    // If they were previously using indexes - this should clear out the image index field.
-                    imageIndex.Key = value;
-                    Invalidate();
+                    return;
                 }
+
+                if (value != null)
+                {
+                    // Image.set calls ImageIndex = -1
+                    _image = null;
+                }
+
+                // If they were previously using indexes - this should clear out the image index field.
+                _imageIndex.Key = value;
+                Invalidate();
             }
         }
 
         /// <summary>
         ///  Gets or sets the <see cref='Forms.ImageList'/> that contains the <see cref='Drawing.Image'/> displayed on a button control.
         /// </summary>
-        [
-            DefaultValue(null),
-            SRDescription(nameof(SR.ButtonImageListDescr)),
-            RefreshProperties(RefreshProperties.Repaint),
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(null)]
+        [SRDescription(nameof(SR.ButtonImageListDescr))]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [SRCategory(nameof(SR.CatAppearance))]
         public ImageList ImageList
         {
             get
             {
-                return imageList;
+                return _imageList;
             }
             set
             {
-                if (imageList != value)
+                if (value == _imageList)
                 {
-                    EventHandler recreateHandler = new EventHandler(ImageListRecreateHandle);
-                    EventHandler disposedHandler = new EventHandler(DetachImageList);
-
-                    // Detach old event handlers
-                    //
-                    if (imageList != null)
-                    {
-                        imageList.RecreateHandle -= recreateHandler;
-                        imageList.Disposed -= disposedHandler;
-                    }
-
-                    // Make sure we don't have an Image as well as an ImageList
-                    //
-                    if (value != null)
-                    {
-                        image = null; // Image.set calls ImageList = null
-                    }
-
-                    imageList = value;
-                    imageIndex.ImageList = value;
-
-                    // Wire up new event handlers
-                    //
-                    if (value != null)
-                    {
-                        value.RecreateHandle += recreateHandler;
-                        value.Disposed += disposedHandler;
-                    }
-
-                    Invalidate();
+                    return;
                 }
+
+                EventHandler recreateHandler = new EventHandler(ImageListRecreateHandle);
+                EventHandler disposedHandler = new EventHandler(DetachImageList);
+
+                // Detach old event handlers
+                //
+                if (_imageList != null)
+                {
+                    _imageList.RecreateHandle -= recreateHandler;
+                    _imageList.Disposed -= disposedHandler;
+                }
+
+                // Make sure we don't have an Image as well as an ImageList
+                //
+                if (value != null)
+                {
+                    _image = null; // Image.set calls ImageList = null
+                }
+
+                _imageList = value;
+                _imageIndex.ImageList = value;
+
+                // Wire up new event handlers
+                //
+                if (value != null)
+                {
+                    value.RecreateHandle += recreateHandler;
+                    value.Disposed += disposedHandler;
+                }
+
+                Invalidate();
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public ImeMode ImeMode
         {
-            get
-            {
-                return base.ImeMode;
-            }
-            set
-            {
-                base.ImeMode = value;
-            }
+            get => base.ImeMode;
+            set => base.ImeMode = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler ImeModeChanged
         {
             add => base.ImeModeChanged += value;
@@ -569,12 +554,12 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-            ///  The area of the button encompassing any changes between the button's
+        ///  The area of the button encompassing any changes between the button's
         ///  resting appearance and its appearance when the mouse is over it.
-                ///  Consider overriding this property if you override any painting methods,
+        ///  Consider overriding this property if you override any painting methods,
         ///  or your button may not paint correctly or may have flicker. Returning
         ///  ClientRectangle is safe for correct painting but may still cause flicker.
-            /// </summary>
+        /// </summary>
         internal virtual Rectangle OverChangeRectangle
         {
             get
@@ -601,12 +586,12 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-            ///  The area of the button encompassing any changes between the button's
+        ///  The area of the button encompassing any changes between the button's
         ///  appearance when the mouse is over it but not pressed and when it is pressed.
-                ///  Consider overriding this property if you override any painting methods,
+        ///  Consider overriding this property if you override any painting methods,
         ///  or your button may not paint correctly or may have flicker. Returning
         ///  ClientRectangle is safe for correct painting but may still cause flicker.
-            /// </summary>
+        /// </summary>
         internal virtual Rectangle DownChangeRectangle
         {
             get
@@ -658,36 +643,26 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Editor("System.ComponentModel.Design.MultilineStringEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-            SettingsBindable(true)
-        ]
+        [Editor("System.ComponentModel.Design.MultilineStringEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
+            SettingsBindable(true)]
         public override string Text
         {
-            get
-            {
-                return base.Text;
-            }
-            set
-            {
-                base.Text = value;
-            }
+            get => base.Text;
+            set => base.Text = value;
         }
 
         /// <summary>
         ///  Gets or sets the alignment of the text on the button control.
         /// </summary>
-        [
-            DefaultValue(ContentAlignment.MiddleCenter),
-            Localizable(true),
-            SRDescription(nameof(SR.ButtonTextAlignDescr)),
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(ContentAlignment.MiddleCenter)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.ButtonTextAlignDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public virtual ContentAlignment TextAlign
         {
             get
             {
-                return textAlign;
+                return _textAlign;
             }
             set
             {
@@ -695,18 +670,20 @@ namespace System.Windows.Forms
                 {
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ContentAlignment));
                 }
-                if (value != textAlign)
+                if (value == TextAlign)
                 {
-                    textAlign = value;
-                    LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.TextAlign);
-                    if (OwnerDraw)
-                    {
-                        Invalidate();
-                    }
-                    else
-                    {
-                        UpdateStyles();
-                    }
+                    return;
+                }
+
+                _textAlign = value;
+                LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.TextAlign);
+                if (OwnerDraw)
+                {
+                    Invalidate();
+                }
+                else
+                {
+                    UpdateStyles();
                 }
             }
         }
@@ -717,7 +694,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatAppearance))]
         public TextImageRelation TextImageRelation
         {
-            get => textImageRelation;
+            get => _textImageRelation;
             set
             {
                 if (!ClientUtils.IsEnumValid(value, (int)value, (int)TextImageRelation.Overlay, (int)TextImageRelation.TextBeforeImage, 1))
@@ -725,12 +702,14 @@ namespace System.Windows.Forms
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(TextImageRelation));
                 }
 
-                if (value != TextImageRelation)
+                if (value == TextImageRelation)
                 {
-                    textImageRelation = value;
-                    LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.TextImageRelation);
-                    Invalidate();
+                    return;
                 }
+
+                _textImageRelation = value;
+                LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.TextImageRelation);
+                Invalidate();
             }
         }
 
@@ -738,11 +717,9 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether an ampersand (&amp;) included in the text of
         ///  the control.
         /// </summary>
-        [
-            SRDescription(nameof(SR.ButtonUseMnemonicDescr)),
-            DefaultValue(true),
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRDescription(nameof(SR.ButtonUseMnemonicDescr))]
+        [DefaultValue(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
         public bool UseMnemonic
         {
             get
@@ -752,6 +729,11 @@ namespace System.Windows.Forms
 
             set
             {
+                if (value == UseMnemonic)
+                {
+                    return;
+                }
+
                 SetFlag(FlagUseMnemonic, value);
                 LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.Text);
                 Invalidate();
@@ -774,17 +756,17 @@ namespace System.Windows.Forms
             {
                 if (animate)
                 {
-                    if (image != null)
+                    if (_image != null)
                     {
-                        ImageAnimator.Animate(image, new EventHandler(OnFrameChanged));
+                        ImageAnimator.Animate(_image, new EventHandler(OnFrameChanged));
                         SetFlag(FlagCurrentlyAnimating, animate);
                     }
                 }
                 else
                 {
-                    if (image != null)
+                    if (_image != null)
                     {
-                        ImageAnimator.StopAnimate(image, new EventHandler(OnFrameChanged));
+                        ImageAnimator.StopAnimate(_image, new EventHandler(OnFrameChanged));
                         SetFlag(FlagCurrentlyAnimating, animate);
                     }
                 }
@@ -806,15 +788,15 @@ namespace System.Windows.Forms
             if (disposing)
             {
                 StopAnimate();
-                if (imageList != null)
+                if (_imageList != null)
                 {
-                    imageList.Disposed -= new EventHandler(DetachImageList);
+                    _imageList.Disposed -= new EventHandler(DetachImageList);
                 }
                 //Dipose the tooltip if one present..
-                if (textToolTip != null)
+                if (_textToolTip != null)
                 {
-                    textToolTip.Dispose();
-                    textToolTip = null;
+                    _textToolTip.Dispose();
+                    _textToolTip = null;
                 }
             }
             base.Dispose(disposing);
@@ -822,7 +804,7 @@ namespace System.Windows.Forms
 
         private bool GetFlag(int flag)
         {
-            return ((state & flag) == flag);
+            return ((_state & flag) == flag);
         }
 
         private void ImageListRecreateHandle(object sender, EventArgs e)
@@ -861,12 +843,11 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseEnter(EventArgs eventargs)
         {
-            Debug.Assert(Enabled, "ButtonBase.OnMouseEnter should not be called if the button is disabled");
             SetFlag(FlagMouseOver, true);
             Invalidate();
-            if (!DesignMode && AutoEllipsis && ShowToolTip && textToolTip != null)
+            if (!DesignMode && AutoEllipsis && ShowToolTip && _textToolTip != null)
             {
-                textToolTip.Show(WindowsFormsUtils.TextWithoutMnemonics(Text), this);
+                _textToolTip.Show(WindowsFormsUtils.TextWithoutMnemonics(Text), this);
             }
             // call base last, so if it invokes any listeners that disable the button, we
             // don't have to recheck
@@ -879,9 +860,9 @@ namespace System.Windows.Forms
         protected override void OnMouseLeave(EventArgs eventargs)
         {
             SetFlag(FlagMouseOver, false);
-            if (textToolTip != null)
+            if (_textToolTip != null)
             {
-                textToolTip.Hide(this);
+                _textToolTip.Hide(this);
             }
             Invalidate();
             // call base last, so if it invokes any listeners that disable the button, we
@@ -894,7 +875,6 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseMove(MouseEventArgs mevent)
         {
-            Debug.Assert(Enabled, "ButtonBase.OnMouseMove should not be called if the button is disabled");
             if (mevent.Button != MouseButtons.None && GetFlag(FlagMousePressed))
             {
                 Rectangle r = ClientRectangle;
@@ -925,7 +905,6 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseDown(MouseEventArgs mevent)
         {
-            Debug.Assert(Enabled, "ButtonBase.OnMouseDown should not be called if the button is disabled");
             if (mevent.Button == MouseButtons.Left)
             {
                 SetFlag(FlagMouseDown, true);
@@ -988,14 +967,14 @@ namespace System.Windows.Forms
             return LayoutUtils.UnionSizes(prefSize + Padding.Size, MinimumSize);
         }
 
-        private ButtonBaseAdapter _adapter = null;
+        private ButtonBaseAdapter _adapter;
         private FlatStyle _cachedAdapterType;
 
         internal ButtonBaseAdapter Adapter
         {
             get
             {
-                if (_adapter == null || FlatStyle != _cachedAdapterType)
+                if (_adapter is null || FlatStyle != _cachedAdapterType)
                 {
                     switch (FlatStyle)
                     {
@@ -1039,7 +1018,7 @@ namespace System.Windows.Forms
 
         internal virtual StringFormat CreateStringFormat()
         {
-            if (Adapter == null)
+            if (Adapter is null)
             {
                 Debug.Fail("Adapter not expected to be null at this point");
                 return new StringFormat();
@@ -1049,7 +1028,7 @@ namespace System.Windows.Forms
 
         internal virtual TextFormatFlags CreateTextFormatFlags()
         {
-            if (Adapter == null)
+            if (Adapter is null)
             {
                 Debug.Fail("Adapter not expected to be null at this point");
                 return TextFormatFlags.Default;
@@ -1099,7 +1078,6 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnKeyDown(KeyEventArgs kevent)
         {
-            Debug.Assert(Enabled, "ButtonBase.OnKeyDown should not be called if the button is disabled");
             if (kevent.KeyData == Keys.Space)
             {
                 if (!GetFlag(FlagMouseDown))
@@ -1111,7 +1089,7 @@ namespace System.Windows.Forms
                     //
                     if (!OwnerDraw)
                     {
-                        SendMessage(NativeMethods.BM_SETSTATE, 1, 0);
+                        User32.SendMessageW(this, (User32.WM)User32.BM.SETSTATE, PARAM.FromBool(true));
                     }
                     Invalidate(DownChangeRectangle);
                 }
@@ -1137,7 +1115,7 @@ namespace System.Windows.Forms
                 {
                     SetFlag(FlagMousePressed, false);
                     SetFlag(FlagMouseDown, false);
-                    SendMessage(NativeMethods.BM_SETSTATE, 0, 0);
+                    User32.SendMessageW(this, (User32.WM)User32.BM.SETSTATE, PARAM.FromBool(false));
                 }
                 // Breaking change: specifically filter out Keys.Enter and Keys.Space as the only
                 // two keystrokes to execute OnClick.
@@ -1150,7 +1128,6 @@ namespace System.Windows.Forms
             // call base last, so if it invokes any listeners that disable the button, we
             // don't have to recheck
             base.OnKeyUp(kevent);
-
         }
 
         /// <summary>
@@ -1197,15 +1174,15 @@ namespace System.Windows.Forms
 
         private void SetFlag(int flag, bool value)
         {
-            bool oldValue = ((state & flag) != 0);
+            bool oldValue = ((_state & flag) != 0);
 
             if (value)
             {
-                state |= flag;
+                _state |= flag;
             }
             else
             {
-                state &= ~flag;
+                _state &= ~flag;
             }
 
             if (OwnerDraw && (flag & FlagMouseDown) != 0 && value != oldValue)
@@ -1216,7 +1193,7 @@ namespace System.Windows.Forms
 
         private bool ShouldSerializeImage()
         {
-            return image != null;
+            return _image != null;
         }
 
         private void UpdateOwnerDraw()
@@ -1231,21 +1208,13 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Determines whether to use compatible text rendering engine (GDI+) or not (GDI).
         /// </summary>
-        [
-            DefaultValue(false),
-            SRCategory(nameof(SR.CatBehavior)),
-            SRDescription(nameof(SR.UseCompatibleTextRenderingDescr))
-        ]
+        [DefaultValue(false)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.UseCompatibleTextRenderingDescr))]
         public bool UseCompatibleTextRendering
         {
-            get
-            {
-                return base.UseCompatibleTextRenderingInt;
-            }
-            set
-            {
-                base.UseCompatibleTextRenderingInt = value;
-            }
+            get => base.UseCompatibleTextRenderingInt;
+            set => base.UseCompatibleTextRenderingInt = value;
         }
 
         /// <summary>
@@ -1261,52 +1230,53 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.ButtonUseVisualStyleBackColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.ButtonUseVisualStyleBackColorDescr))]
         public bool UseVisualStyleBackColor
         {
             get
             {
-                if (isEnableVisualStyleBackgroundSet || ((RawBackColor.IsEmpty) && (BackColor == SystemColors.Control)))
+                if (_isEnableVisualStyleBackgroundSet || ((RawBackColor.IsEmpty) && (BackColor == SystemColors.Control)))
                 {
-                    return enableVisualStyleBackground;
+                    return _enableVisualStyleBackground;
                 }
                 else
                 {
                     return false;
                 }
-
             }
             set
             {
-                isEnableVisualStyleBackgroundSet = true;
-                enableVisualStyleBackground = value;
+                if (_isEnableVisualStyleBackgroundSet && value == _enableVisualStyleBackground)
+                {
+                    return;
+                }
+
+                _isEnableVisualStyleBackgroundSet = true;
+                _enableVisualStyleBackground = value;
                 Invalidate();
             }
         }
 
         private void ResetUseVisualStyleBackColor()
         {
-            isEnableVisualStyleBackgroundSet = false;
-            enableVisualStyleBackground = true;
+            _isEnableVisualStyleBackgroundSet = false;
+            _enableVisualStyleBackground = true;
             Invalidate();
         }
 
         private bool ShouldSerializeUseVisualStyleBackColor()
         {
-            return isEnableVisualStyleBackgroundSet;
+            return _isEnableVisualStyleBackgroundSet;
         }
 
         protected override void WndProc(ref Message m)
         {
             switch (m.Msg)
             {
-                // we don't respect this because the code below eats BM_SETSTATE.
-                // so we just invoke the click.
-                //
-                case NativeMethods.BM_CLICK:
+                // We don't respect this because the code below eats BM_SETSTATE.
+                // So we just invoke the click.
+                case (int)User32.BM.CLICK:
                     if (this is IButtonControl)
                     {
                         ((IButtonControl)this).PerformClick();
@@ -1322,14 +1292,14 @@ namespace System.Windows.Forms
             {
                 switch (m.Msg)
                 {
-                    case NativeMethods.BM_SETSTATE:
-                        // Ignore BM_SETSTATE -- Windows gets confused and paints
-                        // things, even though we are ownerdraw.
+                    case (int)User32.BM.SETSTATE:
+                        // Ignore BM_SETSTATE - Windows gets confused and paints things,
+                        // even though we are ownerdraw.
                         break;
 
-                    case WindowMessages.WM_KILLFOCUS:
-                    case WindowMessages.WM_CANCELMODE:
-                    case WindowMessages.WM_CAPTURECHANGED:
+                    case (int)User32.WM.KILLFOCUS:
+                    case (int)User32.WM.CANCELMODE:
+                    case (int)User32.WM.CAPTURECHANGED:
                         if (!GetFlag(FlagInButtonUp) && GetFlag(FlagMousePressed))
                         {
                             SetFlag(FlagMousePressed, false);
@@ -1343,9 +1313,9 @@ namespace System.Windows.Forms
                         base.WndProc(ref m);
                         break;
 
-                    case WindowMessages.WM_LBUTTONUP:
-                    case WindowMessages.WM_MBUTTONUP:
-                    case WindowMessages.WM_RBUTTONUP:
+                    case (int)User32.WM.LBUTTONUP:
+                    case (int)User32.WM.MBUTTONUP:
+                    case (int)User32.WM.RBUTTONUP:
                         try
                         {
                             SetFlag(FlagInButtonUp, true);
@@ -1364,10 +1334,10 @@ namespace System.Windows.Forms
             }
             else
             {
-                switch (m.Msg)
+                switch ((User32.WM)m.Msg)
                 {
-                    case WindowMessages.WM_REFLECT + WindowMessages.WM_COMMAND:
-                        if (NativeMethods.Util.HIWORD(m.WParam) == NativeMethods.BN_CLICKED && !ValidationCancelled)
+                    case User32.WM.REFLECT_COMMAND:
+                        if (PARAM.HIWORD(m.WParam) == (int)User32.BN.CLICKED && !ValidationCancelled)
                         {
                             OnClick(EventArgs.Empty);
                         }
@@ -1378,36 +1348,5 @@ namespace System.Windows.Forms
                 }
             }
         }
-
-        [ComVisible(true)]
-        public class ButtonBaseAccessibleObject : ControlAccessibleObject
-        {
-            public ButtonBaseAccessibleObject(Control owner) : base(owner)
-            {
-            }
-
-            public override void DoDefaultAction()
-            {
-                ((ButtonBase)Owner).OnClick(EventArgs.Empty);
-            }
-
-            public override AccessibleStates State
-            {
-                get
-                {
-                    AccessibleStates state = base.State;
-
-                    ButtonBase owner = (ButtonBase)Owner;
-                    if (owner.OwnerDraw && owner.MouseIsDown)
-                    {
-                        state |= AccessibleStates.Pressed;
-                    }
-
-                    return state;
-                }
-            }
-
-        }
     }
 }
-

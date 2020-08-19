@@ -9,7 +9,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class OSFeatureTests
+    // NB: doesn't require thread affinity
+    public class OSFeatureTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void OSFeature_Ctor_Default()

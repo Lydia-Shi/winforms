@@ -11,16 +11,16 @@ namespace System.Windows.Forms
     /// </summary>
     public class HScrollProperties : ScrollProperties
     {
-        public HScrollProperties(ScrollableControl container) : base(container)
+        public HScrollProperties(ScrollableControl? container) : base(container)
         {
         }
 
-        internal override int PageSize => ParentControl.ClientRectangle.Width;
+        private protected override int GetPageSize(ScrollableControl parent) => parent.ClientRectangle.Width;
 
-        internal override User32.SB Orientation => User32.SB.HORZ;
+        private protected override User32.SB Orientation => User32.SB.HORZ;
 
-        internal override int HorizontalDisplayPosition => -_value;
+        private protected override int GetHorizontalDisplayPosition(ScrollableControl parent) => -_value;
 
-        internal override int VerticalDisplayPosition => ParentControl.DisplayRectangle.Y;
+        private protected override int GetVerticalDisplayPosition(ScrollableControl parent) => parent.DisplayRectangle.Y;
     }
 }

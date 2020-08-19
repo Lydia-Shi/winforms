@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -9,34 +11,33 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms.VisualStyles;
-using static Interop;
 
 namespace System.Windows.Forms
 {
-    public class DataGridViewRowHeaderCell : DataGridViewHeaderCell
+    public partial class DataGridViewRowHeaderCell : DataGridViewHeaderCell
     {
-        private static readonly VisualStyleElement HeaderElement = VisualStyleElement.Header.Item.Normal;
+        private static readonly VisualStyleElement s_headerElement = VisualStyleElement.Header.Item.Normal;
 
         // ColorMap used to map the black color of the resource bitmaps to the fore color in use in the row header cell
-        private static readonly ColorMap[] colorMap = new ColorMap[] { new ColorMap() };
+        private static readonly ColorMap[] s_colorMap = new ColorMap[] { new ColorMap() };
 
-        private static Bitmap rightArrowBmp = null;
-        private static Bitmap leftArrowBmp = null;
-        private static Bitmap rightArrowStarBmp;
-        private static Bitmap leftArrowStarBmp;
+        private static Bitmap s_rightArrowBmp;
+        private static Bitmap s_leftArrowBmp;
+        private static Bitmap s_rightArrowStarBmp;
+        private static Bitmap s_leftArrowStarBmp;
         //private static Bitmap errorBmp = null;
-        private static Bitmap pencilLTRBmp = null;
-        private static Bitmap pencilRTLBmp = null;
-        private static Bitmap starBmp = null;
+        private static Bitmap s_pencilLTRBmp;
+        private static Bitmap s_pencilRTLBmp;
+        private static Bitmap s_starBmp;
 
-        private static readonly Type cellType = typeof(DataGridViewRowHeaderCell);
+        private static readonly Type s_cellType = typeof(DataGridViewRowHeaderCell);
 
-        private const byte DATAGRIDVIEWROWHEADERCELL_iconMarginWidth = 3;      // 3 pixels of margin on the left and right of icons
-        private const byte DATAGRIDVIEWROWHEADERCELL_iconMarginHeight = 2;     // 2 pixels of margin on the top and bottom of icons
-        private const byte DATAGRIDVIEWROWHEADERCELL_contentMarginWidth = 3;   // 3 pixels of margin on the left and right of content
-        private const byte DATAGRIDVIEWROWHEADERCELL_horizontalTextMarginLeft = 1;
-        private const byte DATAGRIDVIEWROWHEADERCELL_horizontalTextMarginRight = 2;
-        private const byte DATAGRIDVIEWROWHEADERCELL_verticalTextMargin = 1;
+        private const byte RowHeaderIconMarginWidth = 3;    // 3 pixels of margin on the left and right of icons
+        private const byte RowHeaderIconMarginHeight = 2;   // 2 pixels of margin on the top and bottom of icons
+        private const byte ContentMarginWidth = 3;          // 3 pixels of margin on the left and right of content
+        private const byte HorizontalTextMarginLeft = 1;
+        private const byte HorizontalTextMarginRight = 2;
+        private const byte VerticalTextMargin = 1;
 
         public DataGridViewRowHeaderCell()
         {
@@ -46,11 +47,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (leftArrowBmp == null)
+                if (s_leftArrowBmp is null)
                 {
-                    leftArrowBmp = GetBitmapFromIcon("DataGridViewRow.left");
+                    s_leftArrowBmp = GetBitmapFromIcon("DataGridViewRow.left");
                 }
-                return leftArrowBmp;
+                return s_leftArrowBmp;
             }
         }
 
@@ -58,11 +59,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (leftArrowStarBmp == null)
+                if (s_leftArrowStarBmp is null)
                 {
-                    leftArrowStarBmp = GetBitmapFromIcon("DataGridViewRow.leftstar");
+                    s_leftArrowStarBmp = GetBitmapFromIcon("DataGridViewRow.leftstar");
                 }
-                return leftArrowStarBmp;
+                return s_leftArrowStarBmp;
             }
         }
 
@@ -70,11 +71,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (pencilLTRBmp == null)
+                if (s_pencilLTRBmp is null)
                 {
-                    pencilLTRBmp = GetBitmapFromIcon("DataGridViewRow.pencil_ltr");
+                    s_pencilLTRBmp = GetBitmapFromIcon("DataGridViewRow.pencil_ltr");
                 }
-                return pencilLTRBmp;
+                return s_pencilLTRBmp;
             }
         }
 
@@ -82,11 +83,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (pencilRTLBmp == null)
+                if (s_pencilRTLBmp is null)
                 {
-                    pencilRTLBmp = GetBitmapFromIcon("DataGridViewRow.pencil_rtl");
+                    s_pencilRTLBmp = GetBitmapFromIcon("DataGridViewRow.pencil_rtl");
                 }
-                return pencilRTLBmp;
+                return s_pencilRTLBmp;
             }
         }
 
@@ -94,11 +95,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (rightArrowBmp == null)
+                if (s_rightArrowBmp is null)
                 {
-                    rightArrowBmp = GetBitmapFromIcon("DataGridViewRow.right");
+                    s_rightArrowBmp = GetBitmapFromIcon("DataGridViewRow.right");
                 }
-                return rightArrowBmp;
+                return s_rightArrowBmp;
             }
         }
 
@@ -106,11 +107,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (rightArrowStarBmp == null)
+                if (s_rightArrowStarBmp is null)
                 {
-                    rightArrowStarBmp = GetBitmapFromIcon("DataGridViewRow.rightstar");
+                    s_rightArrowStarBmp = GetBitmapFromIcon("DataGridViewRow.rightstar");
                 }
-                return rightArrowStarBmp;
+                return s_rightArrowStarBmp;
             }
         }
 
@@ -118,11 +119,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (starBmp == null)
+                if (s_starBmp is null)
                 {
-                    starBmp = GetBitmapFromIcon("DataGridViewRow.star");
+                    s_starBmp = GetBitmapFromIcon("DataGridViewRow.star");
                 }
-                return starBmp;
+                return s_starBmp;
             }
         }
 
@@ -131,7 +132,7 @@ namespace System.Windows.Forms
             DataGridViewRowHeaderCell dataGridViewCell;
             Type thisType = GetType();
 
-            if (thisType == cellType) //performance improvement
+            if (thisType == s_cellType) //performance improvement
             {
                 dataGridViewCell = new DataGridViewRowHeaderCell();
             }
@@ -163,12 +164,12 @@ namespace System.Windows.Forms
 
         private static Bitmap GetBitmapFromIcon(string iconName)
         {
-            Size desiredSize = new Size(iconsWidth, iconsHeight);
+            Size desiredSize = new Size(s_iconsWidth, s_iconsHeight);
             Icon icon = new Icon(new Icon(typeof(DataGridViewHeaderCell), iconName), desiredSize);
             Bitmap b = icon.ToBitmap();
             icon.Dispose();
 
-            if (DpiHelper.IsScalingRequired && (b.Size.Width != iconsWidth || b.Size.Height != iconsHeight))
+            if (DpiHelper.IsScalingRequired && (b.Size.Width != s_iconsWidth || b.Size.Height != s_iconsHeight))
             {
                 Bitmap scaledBitmap = DpiHelper.CreateResizedBitmap(b, desiredSize);
                 if (scaledBitmap != null)
@@ -187,7 +188,7 @@ namespace System.Windows.Forms
                                                       bool inLastRow,
                                                       string format)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return null;
             }
@@ -213,7 +214,8 @@ namespace System.Windows.Forms
                 if (val != null)
                 {
                     sb.Append("<B>");
-                    FormatPlainTextAsHtml(val.ToString(), new StringWriter(sb, CultureInfo.CurrentCulture));
+                    using var sw = new StringWriter(sb, CultureInfo.CurrentCulture);
+                    FormatPlainTextAsHtml(val.ToString(), sw);
                     sb.Append("</B>");
                 }
                 else
@@ -242,7 +244,8 @@ namespace System.Windows.Forms
                     {
                         bool escapeApplied = false;
                         int insertionPoint = sb.Length;
-                        FormatPlainText(val.ToString(), csv, new StringWriter(sb, CultureInfo.CurrentCulture), ref escapeApplied);
+                        using var sw = new StringWriter(sb, CultureInfo.CurrentCulture);
+                        FormatPlainText(val.ToString(), csv, sw, ref escapeApplied);
                         if (escapeApplied)
                         {
                             Debug.Assert(csv);
@@ -272,12 +275,12 @@ namespace System.Windows.Forms
 
         protected override Rectangle GetContentBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex)
         {
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
 
-            if (DataGridView == null || OwningRow == null)
+            if (DataGridView is null || OwningRow is null)
             {
                 return Rectangle.Empty;
             }
@@ -328,12 +331,12 @@ namespace System.Windows.Forms
 
         protected override Rectangle GetErrorIconBounds(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex)
         {
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
 
-            if (DataGridView == null ||
+            if (DataGridView is null ||
                 rowIndex < 0 ||
                 !DataGridView.ShowRowErrors ||
                 string.IsNullOrEmpty(GetErrorText(rowIndex)))
@@ -365,7 +368,7 @@ namespace System.Windows.Forms
 
         protected internal override string GetErrorText(int rowIndex)
         {
-            if (OwningRow == null)
+            if (OwningRow is null)
             {
                 return base.GetErrorText(rowIndex);
             }
@@ -601,12 +604,12 @@ namespace System.Windows.Forms
 
         protected override Size GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex, Size constraintSize)
         {
-            if (DataGridView == null)
+            if (DataGridView is null)
             {
                 return new Size(-1, -1);
             }
 
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
@@ -659,7 +662,7 @@ namespace System.Windows.Forms
             {
                 throw new ArgumentOutOfRangeException(nameof(rowIndex));
             }
-            return Properties.GetObject(PropCellValue);
+            return Properties.GetObject(s_propCellValue);
         }
 
         protected override void Paint(Graphics graphics,
@@ -674,7 +677,7 @@ namespace System.Windows.Forms
             DataGridViewAdvancedBorderStyle advancedBorderStyle,
             DataGridViewPaintParts paintParts)
         {
-            if (cellStyle == null)
+            if (cellStyle is null)
             {
                 throw new ArgumentNullException(nameof(cellStyle));
             }
@@ -801,7 +804,7 @@ namespace System.Windows.Forms
                         }
                     }
                     // update the val bounds
-                    Rectangle rectThemeMargins = DataGridViewHeaderCell.GetThemeMargins(graphics);
+                    Rectangle rectThemeMargins = GetThemeMargins(graphics);
                     if (DataGridView.RightToLeftInternal)
                     {
                         valBounds.X += rectThemeMargins.Height;
@@ -820,10 +823,14 @@ namespace System.Windows.Forms
                 // No visual style applied
                 if (valBounds.Width > 0 && valBounds.Height > 0)
                 {
-                    SolidBrush br = DataGridView.GetCachedBrush((DataGridViewCell.PaintSelectionBackground(paintParts) && cellSelected) ? cellStyle.SelectionBackColor : cellStyle.BackColor);
-                    if (paint && DataGridViewCell.PaintBackground(paintParts) && br.Color.A == 255)
+                    Color brushColor = PaintSelectionBackground(paintParts) && cellSelected
+                        ? cellStyle.SelectionBackColor
+                        : cellStyle.BackColor;
+
+                    if (paint && PaintBackground(paintParts) && !brushColor.HasTransparency())
                     {
-                        graphics.FillRectangle(br, valBounds);
+                        using var brush = brushColor.GetCachedSolidBrushScope();
+                        graphics.FillRectangle(brush, valBounds);
                     }
                 }
 
@@ -851,10 +858,10 @@ namespace System.Windows.Forms
                 if (!string.IsNullOrEmpty(formattedString))
                 {
                     // There is text to display
-                    if (valBounds.Width >= iconsWidth +
-                                           2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth &&
-                        valBounds.Height >= iconsHeight +
-                                            2 * DATAGRIDVIEWROWHEADERCELL_iconMarginHeight)
+                    if (valBounds.Width >= s_iconsWidth +
+                                           2 * RowHeaderIconMarginWidth &&
+                        valBounds.Height >= s_iconsHeight +
+                                            2 * RowHeaderIconMarginHeight)
                     {
                         if (paint && DataGridViewCell.PaintContentBackground(paintParts))
                         {
@@ -915,24 +922,24 @@ namespace System.Windows.Forms
                         }
                         if (!DataGridView.RightToLeftInternal)
                         {
-                            valBounds.X += iconsWidth + 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth;
+                            valBounds.X += s_iconsWidth + 2 * RowHeaderIconMarginWidth;
                         }
-                        valBounds.Width -= iconsWidth + 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth;
+                        valBounds.Width -= s_iconsWidth + 2 * RowHeaderIconMarginWidth;
                         Debug.Assert(valBounds.Width >= 0);
                         Debug.Assert(valBounds.Height >= 0);
                     }
                     // Second priority is text
                     // Font independent margins
-                    valBounds.Offset(DATAGRIDVIEWROWHEADERCELL_horizontalTextMarginLeft + DATAGRIDVIEWROWHEADERCELL_contentMarginWidth, DATAGRIDVIEWROWHEADERCELL_verticalTextMargin);
-                    valBounds.Width -= DATAGRIDVIEWROWHEADERCELL_horizontalTextMarginLeft + 2 * DATAGRIDVIEWROWHEADERCELL_contentMarginWidth + DATAGRIDVIEWROWHEADERCELL_horizontalTextMarginRight;
-                    valBounds.Height -= 2 * DATAGRIDVIEWROWHEADERCELL_verticalTextMargin;
+                    valBounds.Offset(HorizontalTextMarginLeft + ContentMarginWidth, VerticalTextMargin);
+                    valBounds.Width -= HorizontalTextMarginLeft + 2 * ContentMarginWidth + HorizontalTextMarginRight;
+                    valBounds.Height -= 2 * VerticalTextMargin;
                     if (valBounds.Width > 0 && valBounds.Height > 0)
                     {
                         TextFormatFlags flags = DataGridViewUtilities.ComputeTextFormatFlagsForCellStyleAlignment(DataGridView.RightToLeftInternal, cellStyle.Alignment, cellStyle.WrapMode);
-                        if (DataGridView.ShowRowErrors && valBounds.Width > iconsWidth + 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth)
+                        if (DataGridView.ShowRowErrors && valBounds.Width > s_iconsWidth + 2 * RowHeaderIconMarginWidth)
                         {
                             // Check if the text fits if we remove the room required for the row error icon
-                            Size maxBounds = new Size(valBounds.Width - iconsWidth - 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth, valBounds.Height);
+                            Size maxBounds = new Size(valBounds.Width - s_iconsWidth - 2 * RowHeaderIconMarginWidth, valBounds.Height);
                             if (DataGridViewCell.TextFitsInBounds(graphics,
                                                                   formattedString,
                                                                   cellStyle.Font,
@@ -942,9 +949,9 @@ namespace System.Windows.Forms
                                 // There is enough room for both the text and the row error icon, so use it all.
                                 if (DataGridView.RightToLeftInternal)
                                 {
-                                    valBounds.X += iconsWidth + 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth;
+                                    valBounds.X += s_iconsWidth + 2 * RowHeaderIconMarginWidth;
                                 }
-                                valBounds.Width -= iconsWidth + 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth;
+                                valBounds.Width -= s_iconsWidth + 2 * RowHeaderIconMarginWidth;
                             }
                         }
 
@@ -979,8 +986,8 @@ namespace System.Windows.Forms
                         }
                     }
                     // Third priority is the row error icon, which may be painted on top of text
-                    if (errorBounds.Width >= 3 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth +
-                                             2 * iconsWidth)
+                    if (errorBounds.Width >= 3 * RowHeaderIconMarginWidth +
+                                             2 * s_iconsWidth)
                     {
                         // There is enough horizontal room for the error icon and the glyph
                         if (paint && DataGridView.ShowRowErrors && DataGridViewCell.PaintErrorIcon(paintParts))
@@ -999,8 +1006,8 @@ namespace System.Windows.Forms
                 else
                 {
                     // There is no text to display
-                    if (valBounds.Width >= iconsWidth + 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth &&
-                        valBounds.Height >= iconsHeight + 2 * DATAGRIDVIEWROWHEADERCELL_iconMarginHeight)
+                    if (valBounds.Width >= s_iconsWidth + 2 * RowHeaderIconMarginWidth &&
+                        valBounds.Height >= s_iconsHeight + 2 * RowHeaderIconMarginHeight)
                     {
                         if (paint && DataGridViewCell.PaintContentBackground(paintParts))
                         {
@@ -1061,8 +1068,8 @@ namespace System.Windows.Forms
                         }
                     }
 
-                    if (errorBounds.Width >= 3 * DATAGRIDVIEWROWHEADERCELL_iconMarginWidth +
-                                             2 * iconsWidth)
+                    if (errorBounds.Width >= 3 * RowHeaderIconMarginWidth +
+                                             2 * s_iconsWidth)
                     {
                         // There is enough horizontal room for the error icon
                         if (paint && DataGridView.ShowRowErrors && DataGridViewCell.PaintErrorIcon(paintParts))
@@ -1087,26 +1094,26 @@ namespace System.Windows.Forms
         private void PaintIcon(Graphics g, Bitmap bmp, Rectangle bounds, Color foreColor)
         {
             Rectangle bmpRect = new Rectangle(DataGridView.RightToLeftInternal ?
-                                              bounds.Right - DATAGRIDVIEWROWHEADERCELL_iconMarginWidth - iconsWidth :
-                                              bounds.Left + DATAGRIDVIEWROWHEADERCELL_iconMarginWidth,
-                                              bounds.Y + (bounds.Height - iconsHeight) / 2,
-                                              iconsWidth,
-                                              iconsHeight);
-            colorMap[0].NewColor = foreColor;
-            colorMap[0].OldColor = Color.Black;
+                                              bounds.Right - RowHeaderIconMarginWidth - s_iconsWidth :
+                                              bounds.Left + RowHeaderIconMarginWidth,
+                                              bounds.Y + (bounds.Height - s_iconsHeight) / 2,
+                                              s_iconsWidth,
+                                              s_iconsHeight);
+            s_colorMap[0].NewColor = foreColor;
+            s_colorMap[0].OldColor = Color.Black;
 
             ImageAttributes attr = new ImageAttributes();
-            attr.SetRemapTable(colorMap, ColorAdjustType.Bitmap);
-            g.DrawImage(bmp, bmpRect, 0, 0, iconsWidth, iconsHeight, GraphicsUnit.Pixel, attr);
+            attr.SetRemapTable(s_colorMap, ColorAdjustType.Bitmap);
+            g.DrawImage(bmp, bmpRect, 0, 0, s_iconsWidth, s_iconsHeight, GraphicsUnit.Pixel, attr);
             attr.Dispose();
         }
 
         protected override bool SetValue(int rowIndex, object value)
         {
             object originalValue = GetValue(rowIndex);
-            if (value != null || Properties.ContainsObject(PropCellValue))
+            if (value != null || Properties.ContainsObject(s_propCellValue))
             {
-                Properties.SetObject(PropCellValue, value);
+                Properties.SetObject(s_propCellValue, value);
             }
             if (DataGridView != null && originalValue != value)
             {
@@ -1120,347 +1127,6 @@ namespace System.Windows.Forms
         public override string ToString()
         {
             return "DataGridViewRowHeaderCell { RowIndex=" + RowIndex.ToString(CultureInfo.CurrentCulture) + " }";
-        }
-
-        private class DataGridViewRowHeaderCellRenderer
-        {
-            private static VisualStyleRenderer visualStyleRenderer;
-
-            private DataGridViewRowHeaderCellRenderer()
-            {
-            }
-
-            public static VisualStyleRenderer VisualStyleRenderer
-            {
-                get
-                {
-                    if (visualStyleRenderer == null)
-                    {
-                        visualStyleRenderer = new VisualStyleRenderer(HeaderElement);
-                    }
-
-                    return visualStyleRenderer;
-                }
-            }
-
-            public static void DrawHeader(Graphics g, Rectangle bounds, int headerState)
-            {
-                VisualStyleRenderer.SetParameters(HeaderElement.ClassName, HeaderElement.Part, headerState);
-                VisualStyleRenderer.DrawBackground(g, bounds, Rectangle.Truncate(g.ClipBounds));
-            }
-        }
-
-        protected class DataGridViewRowHeaderCellAccessibleObject : DataGridViewCellAccessibleObject
-        {
-            public DataGridViewRowHeaderCellAccessibleObject(DataGridViewRowHeaderCell owner) : base(owner)
-            {
-            }
-
-            public override Rectangle Bounds
-            {
-                get
-                {
-                    if (Owner.OwningRow == null)
-                    {
-                        return Rectangle.Empty;
-                    }
-
-                    // use the parent row acc obj bounds
-                    Rectangle rowRect = ParentPrivate.Bounds;
-                    Rectangle cellRect = rowRect;
-                    cellRect.Width = Owner.DataGridView.RowHeadersWidth;
-                    if (Owner.DataGridView.RightToLeft == RightToLeft.Yes)
-                    {
-                        cellRect.X = rowRect.Right - cellRect.Width;
-                    }
-
-                    return cellRect;
-                }
-            }
-
-            public override string DefaultAction
-            {
-                get
-                {
-                    if (Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
-                        Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect)
-                    {
-                        return SR.DataGridView_RowHeaderCellAccDefaultAction;
-                    }
-                    else
-                    {
-                        return string.Empty;
-                    }
-                }
-            }
-
-            public override string Name
-            {
-                get
-                {
-                    if (ParentPrivate != null)
-                    {
-                        return ParentPrivate.Name;
-                    }
-                    else
-                    {
-                        return string.Empty;
-                    }
-                }
-            }
-
-            public override AccessibleObject Parent
-            {
-                get
-                {
-                    return ParentPrivate;
-                }
-            }
-
-            private AccessibleObject ParentPrivate
-            {
-                get
-                {
-                    if (Owner.OwningRow == null)
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        return Owner.OwningRow.AccessibilityObject;
-                    }
-                }
-            }
-
-            public override AccessibleRole Role
-            {
-                get
-                {
-                    return AccessibleRole.RowHeader;
-                }
-            }
-
-            public override AccessibleStates State
-            {
-                get
-                {
-                    AccessibleStates resultState = AccessibleStates.Selectable;
-
-                    // get the Offscreen state from the base method.
-                    AccessibleStates state = base.State;
-                    if ((state & AccessibleStates.Offscreen) == AccessibleStates.Offscreen)
-                    {
-                        resultState |= AccessibleStates.Offscreen;
-                    }
-
-                    if (Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
-                        Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect)
-                    {
-                        if (Owner.OwningRow != null && Owner.OwningRow.Selected)
-                        {
-                            resultState |= AccessibleStates.Selected;
-                        }
-                    }
-
-                    return resultState;
-                }
-            }
-
-            public override string Value
-            {
-                get
-                {
-                    return string.Empty;
-                }
-            }
-
-            public override void DoDefaultAction()
-            {
-                if ((Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
-                    Owner.DataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect) &&
-                    Owner.OwningRow != null)
-                {
-                    Owner.OwningRow.Selected = true;
-                }
-            }
-
-            public override AccessibleObject Navigate(AccessibleNavigation navigationDirection)
-            {
-                Debug.Assert(Owner.DataGridView.RowHeadersVisible, "if the rows are not visible how did you get the row headers acc obj?");
-                switch (navigationDirection)
-                {
-                    case AccessibleNavigation.Next:
-                        if (Owner.OwningRow != null && Owner.DataGridView.Columns.GetColumnCount(DataGridViewElementStates.Visible) > 0)
-                        {
-                            // go to the next sibling
-                            return ParentPrivate.GetChild(1);
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    case AccessibleNavigation.Down:
-                        if (Owner.OwningRow == null)
-                        {
-                            return null;
-                        }
-                        else
-                        {
-                            if (Owner.OwningRow.Index == Owner.DataGridView.Rows.GetLastRow(DataGridViewElementStates.Visible))
-                            {
-                                return null;
-                            }
-                            else
-                            {
-                                int nextVisibleRow = Owner.DataGridView.Rows.GetNextRow(Owner.OwningRow.Index, DataGridViewElementStates.Visible);
-                                int actualDisplayIndex = Owner.DataGridView.Rows.GetRowCount(DataGridViewElementStates.Visible, 0, nextVisibleRow);
-
-                                if (Owner.DataGridView.ColumnHeadersVisible)
-                                {
-                                    // + 1 because the first child in the data grid view acc obj is the top row header acc obj
-                                    return Owner.DataGridView.AccessibilityObject.GetChild(1 + actualDisplayIndex).GetChild(0);
-                                }
-                                else
-                                {
-                                    return Owner.DataGridView.AccessibilityObject.GetChild(actualDisplayIndex).GetChild(0);
-                                }
-                            }
-                        }
-                    case AccessibleNavigation.Previous:
-                        return null;
-                    case AccessibleNavigation.Up:
-                        if (Owner.OwningRow == null)
-                        {
-                            return null;
-                        }
-                        else
-                        {
-                            if (Owner.OwningRow.Index == Owner.DataGridView.Rows.GetFirstRow(DataGridViewElementStates.Visible))
-                            {
-                                if (Owner.DataGridView.ColumnHeadersVisible)
-                                {
-                                    // Return the top left header cell accessible object.
-                                    Debug.Assert(Owner.DataGridView.TopLeftHeaderCell.AccessibilityObject == Owner.DataGridView.AccessibilityObject.GetChild(0).GetChild(0));
-                                    return Owner.DataGridView.AccessibilityObject.GetChild(0).GetChild(0);
-                                }
-                                else
-                                {
-                                    return null;
-                                }
-                            }
-                            else
-                            {
-                                int previousVisibleRow = Owner.DataGridView.Rows.GetPreviousRow(Owner.OwningRow.Index, DataGridViewElementStates.Visible);
-                                int actualDisplayIndex = Owner.DataGridView.Rows.GetRowCount(DataGridViewElementStates.Visible, 0, previousVisibleRow);
-                                if (Owner.DataGridView.ColumnHeadersVisible)
-                                {
-                                    // + 1 because the first child in the data grid view acc obj is the top row header acc obj
-                                    return Owner.DataGridView.AccessibilityObject.GetChild(actualDisplayIndex + 1).GetChild(0);
-                                }
-                                else
-                                {
-                                    return Owner.DataGridView.AccessibilityObject.GetChild(actualDisplayIndex).GetChild(0);
-                                }
-                            }
-                        }
-                    default:
-                        return null;
-                }
-            }
-
-            public override void Select(AccessibleSelection flags)
-            {
-                if (Owner == null)
-                {
-                    throw new InvalidOperationException(SR.DataGridViewCellAccessibleObject_OwnerNotSet);
-                }
-
-                DataGridViewRowHeaderCell dataGridViewCell = (DataGridViewRowHeaderCell)Owner;
-                DataGridView dataGridView = dataGridViewCell.DataGridView;
-
-                if (dataGridView == null)
-                {
-                    return;
-                }
-                if ((flags & AccessibleSelection.TakeFocus) == AccessibleSelection.TakeFocus)
-                {
-                    dataGridView.Focus();
-                }
-                if (dataGridViewCell.OwningRow != null &&
-                    (dataGridView.SelectionMode == DataGridViewSelectionMode.FullRowSelect ||
-                     dataGridView.SelectionMode == DataGridViewSelectionMode.RowHeaderSelect))
-                {
-                    if ((flags & (AccessibleSelection.TakeSelection | AccessibleSelection.AddSelection)) != 0)
-                    {
-                        dataGridViewCell.OwningRow.Selected = true;
-                    }
-                    else if ((flags & AccessibleSelection.RemoveSelection) == AccessibleSelection.RemoveSelection)
-                    {
-                        dataGridViewCell.OwningRow.Selected = false;
-                    }
-                }
-            }
-
-            #region IRawElementProviderFragment Implementation
-
-            internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
-            {
-                if (Owner.OwningRow == null)
-                {
-                    return null;
-                }
-
-                switch (direction)
-                {
-                    case UiaCore.NavigateDirection.Parent:
-                        return Owner.OwningRow.AccessibilityObject;
-                    case UiaCore.NavigateDirection.NextSibling:
-                        if (Owner.DataGridView.Columns.GetColumnCount(DataGridViewElementStates.Visible) > 0)
-                        {
-                            // go to the next sibling
-                            return Owner.OwningRow.AccessibilityObject.GetChild(1);
-                        }
-                        else
-                        {
-                            return null;
-                        }
-                    case UiaCore.NavigateDirection.PreviousSibling:
-                    default:
-                        return null;
-                }
-            }
-
-            #endregion
-
-            #region IRawElementProviderSimple Implementation
-
-            internal override object GetPropertyValue(UiaCore.UIA propertyId)
-            {
-                switch (propertyId)
-                {
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.HeaderControlTypeId;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return Owner.DataGridView.Enabled;
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return Help ?? string.Empty;
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return (State & AccessibleStates.Focusable) == AccessibleStates.Focusable;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                        return false;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return (State & AccessibleStates.Offscreen) == AccessibleStates.Offscreen;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                        return string.Empty;
-                }
-
-                return base.GetPropertyValue(propertyId);
-            }
-
-            #endregion
         }
     }
 }

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 
@@ -10,7 +12,7 @@ namespace System.Windows.Forms
     [ListBindable(false)]
     public class DataGridViewSelectedColumnCollection : BaseCollection, IList
     {
-        readonly ArrayList items = new ArrayList();
+        private readonly ArrayList _items = new ArrayList();
 
         int IList.Add(object value)
         {
@@ -24,12 +26,12 @@ namespace System.Windows.Forms
 
         bool IList.Contains(object value)
         {
-            return items.Contains(value);
+            return _items.Contains(value);
         }
 
         int IList.IndexOf(object value)
         {
-            return items.IndexOf(value);
+            return _items.IndexOf(value);
         }
 
         void IList.Insert(int index, object value)
@@ -59,18 +61,18 @@ namespace System.Windows.Forms
 
         object IList.this[int index]
         {
-            get { return items[index]; }
+            get { return _items[index]; }
             set { throw new NotSupportedException(SR.DataGridView_ReadOnlyCollection); }
         }
 
         void ICollection.CopyTo(Array array, int index)
         {
-            items.CopyTo(array, index);
+            _items.CopyTo(array, index);
         }
 
         int ICollection.Count
         {
-            get { return items.Count; }
+            get { return _items.Count; }
         }
 
         bool ICollection.IsSynchronized
@@ -85,7 +87,7 @@ namespace System.Windows.Forms
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return items.GetEnumerator();
+            return _items.GetEnumerator();
         }
 
         internal DataGridViewSelectedColumnCollection()
@@ -96,7 +98,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return items;
+                return _items;
             }
         }
 
@@ -104,7 +106,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return (DataGridViewColumn)items[index];
+                return (DataGridViewColumn)_items[index];
             }
         }
 
@@ -113,12 +115,10 @@ namespace System.Windows.Forms
         /// </summary>
         internal int Add(DataGridViewColumn dataGridViewColumn)
         {
-            return items.Add(dataGridViewColumn);
+            return _items.Add(dataGridViewColumn);
         }
 
-        [
-            EditorBrowsable(EditorBrowsableState.Never)
-        ]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public void Clear()
         {
             throw new NotSupportedException(SR.DataGridView_ReadOnlyCollection);
@@ -129,12 +129,12 @@ namespace System.Windows.Forms
         /// </summary>
         public bool Contains(DataGridViewColumn dataGridViewColumn)
         {
-            return items.IndexOf(dataGridViewColumn) != -1;
+            return _items.IndexOf(dataGridViewColumn) != -1;
         }
 
         public void CopyTo(DataGridViewColumn[] array, int index)
         {
-            items.CopyTo(array, index);
+            _items.CopyTo(array, index);
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]

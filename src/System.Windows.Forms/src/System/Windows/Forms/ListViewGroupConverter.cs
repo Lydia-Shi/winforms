@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
@@ -72,7 +74,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            if (value == null || value.Equals(SR.toStringNone))
+            if (value is null || value.Equals(SR.toStringNone))
             {
                 return null;
             }
@@ -89,7 +91,7 @@ namespace System.Windows.Forms
         /// </summary>
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (destinationType == null)
+            if (destinationType is null)
             {
                 throw new ArgumentNullException(nameof(destinationType));
             }
@@ -105,7 +107,7 @@ namespace System.Windows.Forms
                 return new InstanceDescriptor(ctor, new object[] { group.Header, group.HeaderAlignment }, false);
             }
 
-            if (destinationType == typeof(string) && value == null)
+            if (destinationType == typeof(string) && value is null)
             {
                 return SR.toStringNone;
             }

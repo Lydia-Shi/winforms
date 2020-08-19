@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Specialized;
 using System.ComponentModel;
 
@@ -14,9 +16,9 @@ namespace System.Windows.Forms
         private static readonly int stateUseDefaultRenderer = BitVector32.CreateMask();
         private static readonly int stateAttachedRendererChanged = BitVector32.CreateMask(stateUseDefaultRenderer);
 
-        private ToolStripRenderer renderer = null;
+        private ToolStripRenderer renderer;
         private Type currentRendererType = typeof(Type);
-        private BitVector32 state = new BitVector32();
+        private BitVector32 state;
 
         private readonly ToolStripRenderMode defaultRenderMode = ToolStripRenderMode.ManagerRenderMode;
 
@@ -36,7 +38,6 @@ namespace System.Windows.Forms
             {
                 OnControlVisibleChanged(owner, EventArgs.Empty);
             }
-
         }
 
         public ToolStripRenderer Renderer
@@ -51,12 +52,11 @@ namespace System.Windows.Forms
                 // doesn't have to be bogged down by checks for null.
 
                 state[stateUseDefaultRenderer] = false;
-                if (renderer == null)
+                if (renderer is null)
                 {
                     Renderer = ToolStripManager.CreateRenderer(RenderMode);
                 }
                 return renderer;
-
             }
             set
             {
@@ -64,7 +64,7 @@ namespace System.Windows.Forms
                 // will autogenerate a new ToolStripRenderer.
                 if (renderer != value)
                 {
-                    state[stateUseDefaultRenderer] = (value == null);
+                    state[stateUseDefaultRenderer] = (value is null);
                     renderer = value;
                     currentRendererType = (renderer != null) ? renderer.GetType() : typeof(Type);
 
@@ -87,16 +87,15 @@ namespace System.Windows.Forms
                 }
                 // check the type of the currently set renderer.
                 // types are cached as this may be called frequently.
-                if (currentRendererType == ToolStripManager.ProfessionalRendererType)
+                if (currentRendererType == ToolStripManager.s_professionalRendererType)
                 {
                     return ToolStripRenderMode.Professional;
                 }
-                if (currentRendererType == ToolStripManager.SystemRendererType)
+                if (currentRendererType == ToolStripManager.s_systemRendererType)
                 {
                     return ToolStripRenderMode.System;
                 }
                 return ToolStripRenderMode.Custom;
-
             }
             set
             {
@@ -181,6 +180,5 @@ namespace System.Windows.Forms
         {
             RenderMode = defaultRenderMode;
         }
-
     }
 }

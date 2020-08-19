@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 
 namespace System.Windows.Forms.ButtonInternal
@@ -18,7 +20,7 @@ namespace System.Windows.Forms.ButtonInternal
                 return;
             }
 
-            ColorData colors = PaintFlatRender(e.Graphics).Calculate();
+            ColorData colors = PaintFlatRender(e).Calculate();
             if (Control.Enabled)
             {
                 PaintFlatWorker(e, colors.windowText, colors.highlight, colors.windowFrame, colors);
@@ -37,7 +39,7 @@ namespace System.Windows.Forms.ButtonInternal
                 return;
             }
 
-            ColorData colors = PaintFlatRender(e.Graphics).Calculate();
+            ColorData colors = PaintFlatRender(e).Calculate();
             if (Control.Enabled)
             {
                 PaintFlatWorker(e, colors.windowText, colors.lowHighlight, colors.windowFrame, colors);
@@ -56,7 +58,7 @@ namespace System.Windows.Forms.ButtonInternal
                 return;
             }
 
-            ColorData colors = PaintFlatRender(e.Graphics).Calculate();
+            ColorData colors = PaintFlatRender(e).Calculate();
             if (Control.Enabled)
             {
                 PaintFlatWorker(e, colors.windowText, colors.highlight, colors.windowFrame, colors);
@@ -69,12 +71,18 @@ namespace System.Windows.Forms.ButtonInternal
 
         private void PaintFlatWorker(PaintEventArgs e, Color checkColor, Color checkBackground, Color checkBorder, ColorData colors)
         {
-            Graphics g = e.Graphics;
             LayoutData layout = Layout(e).Layout();
             PaintButtonBackground(e, Control.ClientRectangle, null);
 
             PaintImage(e, layout);
-            DrawCheckFlat(e, layout, checkColor, colors.options.highContrast ? colors.buttonFace : checkBackground, checkBorder, colors);
+            DrawCheckFlat(
+                e,
+                layout,
+                checkColor,
+                colors.options.HighContrast ? colors.buttonFace : checkBackground,
+                checkBorder,
+                colors);
+
             AdjustFocusRectangle(layout);
             PaintField(e, layout, colors, checkColor, true);
         }
@@ -97,7 +105,7 @@ namespace System.Windows.Forms.ButtonInternal
         protected override LayoutOptions Layout(PaintEventArgs e)
         {
             LayoutOptions layout = CommonLayout();
-            layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio(e.Graphics));
+            layout.checkSize = (int)(flatCheckSize * GetDpiScaleRatio());
             layout.shadowedText = false;
 
             return layout;

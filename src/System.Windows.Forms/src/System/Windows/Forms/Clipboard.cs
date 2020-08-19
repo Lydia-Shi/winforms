@@ -2,13 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using static Interop;
 using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
@@ -20,52 +20,6 @@ namespace System.Windows.Forms
     /// </summary>
     public static class Clipboard
     {
-        internal static bool IsFormatValid(ReadOnlySpan<string> formats)
-        {
-            if (formats.Length <= 4)
-            {
-                for (int i = 0; i < formats.Length; i++)
-                {
-                    switch (formats[i])
-                    {
-                        case "Text":
-                        case "UnicodeText":
-                        case "System.String":
-                        case "Csv":
-                            break;
-                        default:
-                            return false;
-
-                    }
-                }
-                return true;
-            }
-
-            return false;
-        }
-
-        internal static bool IsFormatValid(FORMATETC[] formats)
-        {
-            Debug.Assert(formats != null, "Null returned from GetFormats");
-            if (formats.Length <= 4)
-            {
-                for (int i = 0; i < formats.Length; i++)
-                {
-                    short format = formats[i].cfFormat;
-                    if (format != (short)User32.CF.TEXT &&
-                        format != (short)User32.CF.UNICODETEXT &&
-                        format != DataFormats.GetFormat("System.String").Id &&
-                        format != DataFormats.GetFormat("Csv").Id)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-
-            return false;
-        }
-
         /// <summary>
         ///  Places nonpersistent data on the system <see cref='Clipboard'/>.
         /// </summary>
@@ -93,7 +47,7 @@ namespace System.Windows.Forms
                 throw new Threading.ThreadStateException(SR.ThreadMustBeSTA);
             }
 
-            if (data == null)
+            if (data is null)
             {
                 throw new ArgumentNullException(nameof(data));
             }
@@ -112,12 +66,6 @@ namespace System.Windows.Forms
             if (!(data is IComDataObject))
             {
                 dataObject = new DataObject(data);
-            }
-
-            // Compute the format of the "data" passed in iff setText == true;
-            if (dataObject != null)
-            {
-                dataObject.RestrictedFormats = false;
             }
 
             HRESULT hr;
@@ -185,7 +133,7 @@ namespace System.Windows.Forms
                 {
                     throw new ThreadStateException(SR.ThreadMustBeSTA);
                 }
-                
+
                 return null;
             }
 
@@ -223,7 +171,7 @@ namespace System.Windows.Forms
                 {
                     return ido;
                 }
-                
+
                 return new DataObject(dataObject);
             }
 
@@ -248,6 +196,11 @@ namespace System.Windows.Forms
 
         public static bool ContainsData(string format)
         {
+            if (string.IsNullOrWhiteSpace(format))
+            {
+                return false;
+            }
+
             IDataObject dataObject = Clipboard.GetDataObject();
             if (dataObject != null)
             {
@@ -310,6 +263,11 @@ namespace System.Windows.Forms
 
         public static object GetData(string format)
         {
+            if (string.IsNullOrWhiteSpace(format))
+            {
+                return null;
+            }
+
             IDataObject dataObject = Clipboard.GetDataObject();
             if (dataObject != null)
             {
@@ -369,7 +327,7 @@ namespace System.Windows.Forms
 
         public static void SetAudio(byte[] audioBytes)
         {
-            if (audioBytes == null)
+            if (audioBytes is null)
             {
                 throw new ArgumentNullException(nameof(audioBytes));
             }
@@ -379,7 +337,7 @@ namespace System.Windows.Forms
 
         public static void SetAudio(Stream audioStream)
         {
-            if (audioStream == null)
+            if (audioStream is null)
             {
                 throw new ArgumentNullException(nameof(audioStream));
             }
@@ -391,6 +349,16 @@ namespace System.Windows.Forms
 
         public static void SetData(string format, object data)
         {
+            if (string.IsNullOrWhiteSpace(format))
+            {
+                if (format is null)
+                {
+                    throw new ArgumentNullException(nameof(format));
+                }
+
+                throw new ArgumentException(SR.DataObjectWhitespaceEmptyFormatNotAllowed, nameof(format));
+            }
+
             // Note: We delegate argument checking to IDataObject.SetData, if it wants to do so.
             IDataObject dataObject = new DataObject();
             dataObject.SetData(format, data);
@@ -399,7 +367,7 @@ namespace System.Windows.Forms
 
         public static void SetFileDropList(StringCollection filePaths)
         {
-            if (filePaths == null)
+            if (filePaths is null)
             {
                 throw new ArgumentNullException(nameof(filePaths));
             }
@@ -415,7 +383,7 @@ namespace System.Windows.Forms
                 {
                     Path.GetFullPath(path);
                 }
-                catch (Exception e) when (!ClientUtils.IsSecurityOrCriticalException(e))
+                catch (Exception e) when (!ClientUtils.IsCriticalException(e))
                 {
                     throw new ArgumentException(string.Format(SR.Clipboard_InvalidPath, path, "filePaths"), e);
                 }
@@ -433,7 +401,7 @@ namespace System.Windows.Forms
 
         public static void SetImage(Image image)
         {
-            if (image == null)
+            if (image is null)
             {
                 throw new ArgumentNullException(nameof(image));
             }

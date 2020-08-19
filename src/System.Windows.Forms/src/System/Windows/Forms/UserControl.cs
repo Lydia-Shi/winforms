@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
 
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -12,20 +13,15 @@ using static Interop;
 
 namespace System.Windows.Forms
 {
-
     /// <summary>
     ///  Represents an empty control that can be used in the Forms Designer to create other  controls.   By extending form, UserControl inherits all of
     ///  the standard positioning and mnemonic handling code that is necessary
     ///  in a user control.
     /// </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    Designer("System.Windows.Forms.Design.UserControlDocumentDesigner, " + AssemblyRef.SystemDesign, typeof(IRootDesigner)),
-    Designer("System.Windows.Forms.Design.ControlDesigner, " + AssemblyRef.SystemDesign),
-    DesignerCategory("UserControl"),
-    DefaultEvent(nameof(Load))
-    ]
+    [Designer("System.Windows.Forms.Design.UserControlDocumentDesigner, " + AssemblyRef.SystemDesign, typeof(IRootDesigner))]
+    [Designer("System.Windows.Forms.Design.ControlDesigner, " + AssemblyRef.SystemDesign)]
+    [DesignerCategory("UserControl")]
+    [DefaultEvent(nameof(Load))]
     public class UserControl : ContainerControl
     {
         private static readonly object EVENT_LOAD = new object();
@@ -47,24 +43,20 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Override to re-expose AutoSize.
         /// </summary>
-        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public override bool AutoSize
         {
-            get
-            {
-                return base.AutoSize;
-            }
-            set
-            {
-                base.AutoSize = value;
-            }
+            get => base.AutoSize;
+            set => base.AutoSize = value;
         }
 
         /// <summary>
         ///  Re-expose AutoSizeChanged.
         /// </summary>
-        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always)]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public new event EventHandler AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
@@ -74,13 +66,11 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Allows the control to optionally shrink when AutoSize is true.
         /// </summary>
-        [
-        SRDescription(nameof(SR.ControlAutoSizeModeDescr)),
-        SRCategory(nameof(SR.CatLayout)),
-        Browsable(true),
-        DefaultValue(AutoSizeMode.GrowOnly),
-        Localizable(true)
-        ]
+        [SRDescription(nameof(SR.ControlAutoSizeModeDescr))]
+        [SRCategory(nameof(SR.CatLayout))]
+        [Browsable(true)]
+        [DefaultValue(AutoSizeMode.GrowOnly)]
+        [Localizable(true)]
         public AutoSizeMode AutoSizeMode
         {
             get
@@ -97,7 +87,7 @@ namespace System.Windows.Forms
                 if (GetAutoSizeMode() != value)
                 {
                     SetAutoSizeMode(value);
-                    Control toLayout = DesignMode || ParentInternal == null ? this : ParentInternal;
+                    Control toLayout = DesignMode || ParentInternal is null ? this : ParentInternal;
 
                     if (toLayout != null)
                     {
@@ -117,26 +107,16 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Indicates whether controls in this container will be automatically validated when the focus changes.
         /// </summary>
-        [
-        Browsable(true),
-        EditorBrowsable(EditorBrowsableState.Always),
-        ]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public override AutoValidate AutoValidate
         {
-            get
-            {
-                return base.AutoValidate;
-            }
-            set
-            {
-                base.AutoValidate = value;
-            }
+            get => base.AutoValidate;
+            set => base.AutoValidate = value;
         }
 
-        [
-        Browsable(true),
-        EditorBrowsable(EditorBrowsableState.Always),
-        ]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public new event EventHandler AutoValidateChanged
         {
             add => base.AutoValidateChanged += value;
@@ -147,12 +127,11 @@ namespace System.Windows.Forms
         ///
         ///  Indicates the borderstyle for the UserControl.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(BorderStyle.None),
-        SRDescription(nameof(SR.UserControlBorderStyleDescr)),
-        Browsable(true), EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(BorderStyle.None)]
+        [SRDescription(nameof(SR.UserControlBorderStyleDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public BorderStyle BorderStyle
         {
             get
@@ -219,31 +198,26 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Occurs before the control becomes visible.
         /// </summary>
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.UserControlOnLoadDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.UserControlOnLoadDescr))]
         public event EventHandler Load
         {
             add => Events.AddHandler(EVENT_LOAD, value);
             remove => Events.RemoveHandler(EVENT_LOAD, value);
         }
 
-        [
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
-        Bindable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Bindable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
-            get
-            {
-                return base.Text;
-            }
-            set
-            {
-                base.Text = value;
-            }
+            get => base.Text;
+            set => base.Text = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler TextChanged
         {
             add => base.TextChanged += value;
@@ -255,7 +229,8 @@ namespace System.Windows.Forms
         ///  equivalent to calling ValidateChildren(ValidationConstraints.Selectable). See <see cref='ValidationConstraints.Selectable'/>
         ///  for details of exactly which child controls will be validated.
         /// </summary>
-        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always)]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public override bool ValidateChildren()
         {
             return base.ValidateChildren();
@@ -263,9 +238,10 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Validates all the child controls in the container. Exactly which controls are
-        ///  validated and which controls are skipped is determined by <paramref name="flags"/>.
+        ///  validated and which controls are skipped is determined by <paramref name="validationConstraints"/>.
         /// </summary>
-        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always)]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public override bool ValidateChildren(ValidationConstraints validationConstraints)
         {
             return base.ValidateChildren(validationConstraints);
@@ -337,7 +313,7 @@ namespace System.Windows.Forms
         {
             if (!HostedInWin32DialogManager)
             {
-                if (ActiveControl == null)
+                if (ActiveControl is null)
                 {
                     SelectNextControl(null, true, true, true, false);
                 }
@@ -346,15 +322,14 @@ namespace System.Windows.Forms
             {
                 base.WndProc(ref m);
             }
-
         }
 
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_SETFOCUS:
+                case User32.WM.SETFOCUS:
                     WmSetFocus(ref m);
                     break;
                 default:

@@ -2,15 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using System.Windows.Forms.VisualStyles;
+using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  This is a rendering class for the ComboBox control.
     /// </summary>
-    public sealed class ComboBoxRenderer
+    public static class ComboBoxRenderer
     {
         //Make this per-thread, so that different threads can safely use these methods.
         [ThreadStatic]
@@ -18,22 +21,11 @@ namespace System.Windows.Forms
         private static readonly VisualStyleElement ComboBoxElement = VisualStyleElement.ComboBox.DropDownButton.Normal;
         private static readonly VisualStyleElement TextBoxElement = VisualStyleElement.TextBox.TextEdit.Normal;
 
-        //cannot instantiate
-        private ComboBoxRenderer()
-        {
-        }
-
         /// <summary>
         ///  Returns true if this class is supported for the current OS and user/application settings,
         ///  otherwise returns false.
         /// </summary>
-        public static bool IsSupported
-        {
-            get
-            {
-                return VisualStyleRenderer.IsSupported; // no downlevel support
-            }
-        }
+        public static bool IsSupported => VisualStyleRenderer.IsSupported; // no downlevel support
 
         private static void DrawBackground(Graphics g, Rectangle bounds, ComboBoxState state)
         {
@@ -58,7 +50,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawTextBox(Graphics g, Rectangle bounds, ComboBoxState state)
         {
-            if (visualStyleRenderer == null)
+            if (visualStyleRenderer is null)
             {
                 visualStyleRenderer = new VisualStyleRenderer(TextBoxElement.ClassName, TextBoxElement.Part, (int)state);
             }
@@ -91,7 +83,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawTextBox(Graphics g, Rectangle bounds, string comboBoxText, Font font, TextFormatFlags flags, ComboBoxState state)
         {
-            if (visualStyleRenderer == null)
+            if (visualStyleRenderer is null)
             {
                 visualStyleRenderer = new VisualStyleRenderer(TextBoxElement.ClassName, TextBoxElement.Part, (int)state);
             }
@@ -110,7 +102,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawTextBox(Graphics g, Rectangle bounds, string comboBoxText, Font font, Rectangle textBounds, TextFormatFlags flags, ComboBoxState state)
         {
-            if (visualStyleRenderer == null)
+            if (visualStyleRenderer is null)
             {
                 visualStyleRenderer = new VisualStyleRenderer(TextBoxElement.ClassName, TextBoxElement.Part, (int)state);
             }
@@ -129,19 +121,20 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawDropDownButton(Graphics g, Rectangle bounds, ComboBoxState state)
         {
-            DrawDropDownButtonForHandle(g, bounds, state, IntPtr.Zero);
+            using var hdc = new DeviceContextHdcScope(g);
+            DrawDropDownButtonForHandle(hdc, bounds, state, IntPtr.Zero);
         }
 
         /// <summary>
         ///  Renders a ComboBox drop-down button in per-monitor scenario.
         /// </summary>
-        /// <param name="g">graphics object</param>
+        /// <param name="hdc">device context</param>
         /// <param name="bounds">dropdown button bounds</param>
         /// <param name="state"> state</param>
         /// <param name="handle"> handle of the control</param>
-        internal static void DrawDropDownButtonForHandle(Graphics g, Rectangle bounds, ComboBoxState state, IntPtr handle)
+        internal static void DrawDropDownButtonForHandle(Gdi32.HDC hdc, Rectangle bounds, ComboBoxState state, IntPtr handle)
         {
-            if (visualStyleRenderer == null)
+            if (visualStyleRenderer is null)
             {
                 visualStyleRenderer = new VisualStyleRenderer(ComboBoxElement.ClassName, ComboBoxElement.Part, (int)state);
             }
@@ -150,7 +143,7 @@ namespace System.Windows.Forms
                 visualStyleRenderer.SetParameters(ComboBoxElement.ClassName, ComboBoxElement.Part, (int)state);
             }
 
-            visualStyleRenderer.DrawBackground(g, bounds, handle);
+            visualStyleRenderer.DrawBackground(hdc, bounds, handle);
         }
     }
 }

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -14,8 +16,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Represents a Windows progress bar control.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(Value))]
     [DefaultBindingProperty(nameof(Value))]
     [SRDescription(nameof(SR.DescriptionProgressBar))]
@@ -51,7 +51,7 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = NativeMethods.WC_PROGRESS;
+                cp.ClassName = ComCtl32.WindowClasses.WC_PROGRESS;
                 if (Style == ProgressBarStyle.Continuous)
                 {
                     cp.Style |= (int)ComCtl32.PBS.SMOOTH;
@@ -241,11 +241,11 @@ namespace System.Windows.Forms
             {
                 if (_marqueeAnimationSpeed == 0)
                 {
-                    SendMessage((int)ComCtl32.PBM.SETMARQUEE, 0, _marqueeAnimationSpeed);
+                    User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETMARQUEE, IntPtr.Zero, (IntPtr)_marqueeAnimationSpeed);
                 }
                 else
                 {
-                    SendMessage((int)ComCtl32.PBM.SETMARQUEE, 1, _marqueeAnimationSpeed);
+                    User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETMARQUEE, (IntPtr)1, (IntPtr)_marqueeAnimationSpeed);
                 }
             }
         }
@@ -284,7 +284,7 @@ namespace System.Windows.Forms
 
                     if (IsHandleCreated)
                     {
-                        SendMessage((int)ComCtl32.PBM.SETRANGE32, _minimum, _maximum);
+                        User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETRANGE32, (IntPtr)_minimum, (IntPtr)_maximum);
                         UpdatePos();
                     }
                 }
@@ -325,7 +325,7 @@ namespace System.Windows.Forms
 
                     if (IsHandleCreated)
                     {
-                        SendMessage((int)ComCtl32.PBM.SETRANGE32, _minimum, _maximum);
+                        User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETRANGE32, (IntPtr)_minimum, (IntPtr)_maximum);
                         UpdatePos();
                     }
                 }
@@ -337,7 +337,7 @@ namespace System.Windows.Forms
             base.OnBackColorChanged(e);
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.PBM.SETBKCOLOR, IntPtr.Zero, (IntPtr)ColorTranslator.ToWin32(BackColor));
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
             }
         }
 
@@ -346,7 +346,7 @@ namespace System.Windows.Forms
             base.OnForeColorChanged(e);
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.PBM.SETBARCOLOR, IntPtr.Zero, (IntPtr)ColorTranslator.ToWin32(ForeColor));
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETBARCOLOR, IntPtr.Zero, PARAM.FromColor(ForeColor));
             }
         }
 
@@ -415,7 +415,7 @@ namespace System.Windows.Forms
                 _step = value;
                 if (IsHandleCreated)
                 {
-                    SendMessage((int)ComCtl32.PBM.SETSTEP, _step, 0);
+                    User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETSTEP, (IntPtr)_step);
                 }
             }
         }
@@ -546,7 +546,7 @@ namespace System.Windows.Forms
         {
             if (!RecreatingHandle)
             {
-                IntPtr userCookie = ThemingScope.Activate();
+                IntPtr userCookie = ThemingScope.Activate(Application.UseVisualStyles);
                 try
                 {
                     var icc = new ComCtl32.INITCOMMONCONTROLSEX
@@ -597,11 +597,11 @@ namespace System.Windows.Forms
             base.OnHandleCreated(e);
             if (IsHandleCreated)
             {
-                SendMessage((int)ComCtl32.PBM.SETRANGE32, _minimum, _maximum);
-                SendMessage((int)ComCtl32.PBM.SETSTEP, _step, 0);
-                SendMessage((int)ComCtl32.PBM.SETPOS, _value, 0);
-                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.PBM.SETBKCOLOR, IntPtr.Zero, (IntPtr)ColorTranslator.ToWin32(BackColor));
-                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.PBM.SETBARCOLOR, IntPtr.Zero, (IntPtr)ColorTranslator.ToWin32(ForeColor));
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETRANGE32, (IntPtr)_minimum, (IntPtr)_maximum);
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETSTEP, (IntPtr)_step);
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETPOS, (IntPtr)_value);
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETBARCOLOR, IntPtr.Zero, PARAM.FromColor(ForeColor));
             }
             StartMarquee();
             SystemEvents.UserPreferenceChanged += new UserPreferenceChangedEventHandler(UserPreferenceChangedHandler);
@@ -680,7 +680,7 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                SendMessage((int)ComCtl32.PBM.SETPOS, _value, 0);
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETPOS, (IntPtr)_value);
             }
         }
 
@@ -692,8 +692,8 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.PBM.SETBARCOLOR, IntPtr.Zero, (IntPtr)ColorTranslator.ToWin32(ForeColor));
-                User32.SendMessageW(this, (User32.WindowMessage)ComCtl32.PBM.SETBKCOLOR, IntPtr.Zero, (IntPtr)ColorTranslator.ToWin32(BackColor));
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETBARCOLOR, IntPtr.Zero, PARAM.FromColor(ForeColor));
+                User32.SendMessageW(this, (User32.WM)ComCtl32.PBM.SETBKCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
             }
         }
 
@@ -707,7 +707,6 @@ namespace System.Windows.Forms
         protected override AccessibleObject CreateAccessibilityInstance()
             => new ProgressBarAccessibleObject(this);
 
-        [ComVisible(true)]
         internal class ProgressBarAccessibleObject : ControlAccessibleObject
         {
             internal ProgressBarAccessibleObject(ProgressBar owner) : base(owner)

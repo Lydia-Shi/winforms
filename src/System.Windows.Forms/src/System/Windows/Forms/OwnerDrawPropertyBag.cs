@@ -2,8 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using System.Runtime.Serialization;
+using static Interop;
 
 namespace System.Windows.Forms
 {
@@ -13,7 +16,7 @@ namespace System.Windows.Forms
     [Serializable] // This class is participating in resx serialization scenarios for listview/treeview items.
     public class OwnerDrawPropertyBag : MarshalByRefObject, ISerializable
     {
-        private Control.FontHandleWrapper _fontWrapper = null;
+        private Control.FontHandleWrapper _fontWrapper;
         private static readonly object s_internalSyncObject = new object();
 
         protected OwnerDrawPropertyBag(SerializationInfo info, StreamingContext context)
@@ -45,11 +48,11 @@ namespace System.Windows.Forms
 
         public Color BackColor { get; set; }
 
-        internal IntPtr FontHandle
+        internal Gdi32.HFONT FontHandle
         {
             get
             {
-                if (_fontWrapper == null)
+                if (_fontWrapper is null)
                 {
                     _fontWrapper = new Control.FontHandleWrapper(Font);
                 }
@@ -61,7 +64,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Returns whether or not this property bag contains all default values (is empty)
         /// </summary>
-        public virtual bool IsEmpty() => Font == null && ForeColor.IsEmpty && BackColor.IsEmpty;
+        public virtual bool IsEmpty() => Font is null && ForeColor.IsEmpty && BackColor.IsEmpty;
 
         /// <summary>
         ///  Copies the bag. Always returns a valid ODPB object
@@ -71,7 +74,7 @@ namespace System.Windows.Forms
             lock (s_internalSyncObject)
             {
                 var result = new OwnerDrawPropertyBag();
-                if (value == null)
+                if (value is null)
                 {
                     return result;
                 }

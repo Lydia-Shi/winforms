@@ -7,7 +7,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class MaskInputRejectedEventArgsTests
+    // NB: doesn't require thread affinity
+    public class MaskInputRejectedEventArgsTests : IClassFixture<ThreadExceptionFixture>
     {
         [Theory]
         [InlineData(-2, MaskedTextResultHint.Unknown)]

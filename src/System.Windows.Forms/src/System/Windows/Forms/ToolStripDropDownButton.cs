@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -18,7 +20,7 @@ namespace System.Windows.Forms
     public class ToolStripDropDownButton : ToolStripDropDownItem
     {
         private bool showDropDownArrow = true;
-        private byte openMouseId = 0;
+        private byte openMouseId;
 
         /// <summary>
         ///  Constructs a ToolStripButton that can display a popup.
@@ -60,14 +62,8 @@ namespace System.Windows.Forms
         [DefaultValue(true)]
         public new bool AutoToolTip
         {
-            get
-            {
-                return base.AutoToolTip;
-            }
-            set
-            {
-                base.AutoToolTip = value;
-            }
+            get => base.AutoToolTip;
+            set => base.AutoToolTip = value;
         }
 
         protected override bool DefaultAutoToolTip
@@ -78,11 +74,9 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        DefaultValue(true),
-        SRDescription(nameof(SR.ToolStripDropDownButtonShowDropDownArrowDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.ToolStripDropDownButtonShowDropDownArrowDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public bool ShowDropDownArrow
         {
             get
@@ -102,7 +96,7 @@ namespace System.Windows.Forms
         ///  Creates an instance of the object that defines how image and text
         ///  gets laid out in the ToolStripItem
         /// </summary>
-        internal override ToolStripItemInternalLayout CreateInternalLayout()
+        private protected override ToolStripItemInternalLayout CreateInternalLayout()
         {
             return new ToolStripDropDownButtonInternalLayout(this);
         }
@@ -137,7 +131,7 @@ namespace System.Windows.Forms
                 {
                     // opening should happen on mouse down.
                     Debug.Assert(ParentInternal != null, "Parent is null here, not going to get accurate ID");
-                    openMouseId = (ParentInternal == null) ? (byte)0 : ParentInternal.GetMouseId();
+                    openMouseId = (ParentInternal is null) ? (byte)0 : ParentInternal.GetMouseId();
                     ShowDropDown(/*mousePush =*/true);
                 }
             }
@@ -150,7 +144,7 @@ namespace System.Windows.Forms
                 (e.Button == MouseButtons.Left))
             {
                 Debug.Assert(ParentInternal != null, "Parent is null here, not going to get accurate ID");
-                byte closeMouseId = (ParentInternal == null) ? (byte)0 : ParentInternal.GetMouseId();
+                byte closeMouseId = (ParentInternal is null) ? (byte)0 : ParentInternal.GetMouseId();
                 if (closeMouseId != openMouseId)
                 {
                     openMouseId = 0;  // reset the mouse id, we should never get this value from toolstrip.
@@ -220,10 +214,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  An implementation of Accessibleobject for use with ToolStripDropDownButton
         /// </summary>
-        [Runtime.InteropServices.ComVisible(true)]
         internal class ToolStripDropDownButtonAccessibleObject : ToolStripDropDownItemAccessibleObject
         {
-            private readonly ToolStripDropDownButton ownerItem = null;
+            private readonly ToolStripDropDownButton ownerItem;
 
             public ToolStripDropDownButtonAccessibleObject(ToolStripDropDownButton ownerItem)
                 : base(ownerItem)
@@ -244,7 +237,8 @@ namespace System.Windows.Forms
             }
         }
 
-        internal class ToolStripDropDownButtonInternalLayout : ToolStripItemInternalLayout {
+        private protected class ToolStripDropDownButtonInternalLayout : ToolStripItemInternalLayout
+        {
             private ToolStripDropDownButton    ownerItem;
             private static readonly Size       dropDownArrowSizeUnscaled = new Size(5, 3);
             private static Size                dropDownArrowSize = dropDownArrowSizeUnscaled;
@@ -270,7 +264,6 @@ namespace System.Windows.Forms
 
             public override Size GetPreferredSize(Size constrainingSize)
             {
-
                 Size preferredSize = base.GetPreferredSize(constrainingSize);
                 if (ownerItem.ShowDropDownArrow)
                 {
@@ -292,10 +285,8 @@ namespace System.Windows.Forms
 
                 if (ownerItem.ShowDropDownArrow)
                 {
-
                     if (ownerItem.TextDirection == ToolStripTextDirection.Horizontal)
                     {
-
                         // We're rendering horizontal....  make sure to take care of RTL issues.
 
                         int widthOfDropDown = dropDownArrowSize.Width + scaledDropDownArrowPadding.Horizontal;
@@ -303,7 +294,6 @@ namespace System.Windows.Forms
 
                         if (ownerItem.RightToLeft == RightToLeft.Yes)
                         {
-
                             // if RightToLeft.Yes: [ v | rest of drop down button ]
                             options.client.Offset(widthOfDropDown, 0);
                             dropDownArrowRect = new Rectangle(scaledDropDownArrowPadding.Left, 0, dropDownArrowSize.Width, ownerItem.Bounds.Height);
@@ -312,7 +302,6 @@ namespace System.Windows.Forms
                         {
                             // if RightToLeft.No [ rest of drop down button | v ]
                             dropDownArrowRect = new Rectangle(options.client.Right, 0, dropDownArrowSize.Width, ownerItem.Bounds.Height);
-
                         }
                     }
                     else
@@ -324,9 +313,7 @@ namespace System.Windows.Forms
 
                         //  [ rest of button / v]
                         dropDownArrowRect = new Rectangle(0, options.client.Bottom + scaledDropDownArrowPadding.Top, ownerItem.Bounds.Width - 1, dropDownArrowSize.Height);
-
                     }
-
                 }
                 return options;
             }
@@ -338,10 +325,6 @@ namespace System.Windows.Forms
                     return dropDownArrowRect;
                 }
             }
-
         }
-
     }
 }
-
-

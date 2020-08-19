@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     /// <summary>
@@ -35,7 +37,7 @@ namespace System.Windows.Forms
             }
 
             object featureId = c?.GetField(featureConstName)?.GetValue(null);
-            if (featureId == null || !typeof(IFeatureSupport).IsAssignableFrom(c))
+            if (featureId is null || !typeof(IFeatureSupport).IsAssignableFrom(c))
             {
                 return false;
             }
@@ -59,7 +61,7 @@ namespace System.Windows.Forms
             }
 
             object featureId = c?.GetField(featureConstName)?.GetValue(null);
-            if (featureId == null || !typeof(IFeatureSupport).IsAssignableFrom(c))
+            if (featureId is null || !typeof(IFeatureSupport).IsAssignableFrom(c))
             {
                 return null;
             }
@@ -80,7 +82,7 @@ namespace System.Windows.Forms
         public virtual bool IsPresent(object feature, Version minimumVersion)
         {
             Version ver = GetVersionPresent(feature);
-            if (ver == null)
+            if (ver is null)
             {
                 return false;
             }

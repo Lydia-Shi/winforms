@@ -12,7 +12,7 @@ namespace System.Windows.Forms.Design
     {
         private StringCollection _groupOrdering;
         private ContextMenuStripGroupCollection _groups;
-        private bool _populated = false;
+        private bool _populated;
 
         public bool Populated
         {
@@ -27,7 +27,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_groups == null)
+                if (_groups is null)
                 {
                     _groups = new ContextMenuStripGroupCollection();
                 }
@@ -38,7 +38,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_groupOrdering == null)
+                if (_groupOrdering is null)
                 {
                     _groupOrdering = new StringCollection();
                 }

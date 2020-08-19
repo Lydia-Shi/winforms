@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -10,10 +12,8 @@ using System.Text;
 
 namespace System.Windows.Forms
 {
-    [
-        TypeConverter(typeof(DataGridViewCellStyleConverter)),
-        Editor("System.Windows.Forms.Design.DataGridViewCellStyleEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))
-    ]
+    [TypeConverter(typeof(DataGridViewCellStyleConverter))]
+    [Editor("System.Windows.Forms.Design.DataGridViewCellStyleEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
     public class DataGridViewCellStyle : ICloneable
     {
         private static readonly int PropAlignment = PropertyStore.CreateKey();
@@ -45,7 +45,7 @@ namespace System.Windows.Forms
 
         public DataGridViewCellStyle(DataGridViewCellStyle dataGridViewCellStyle)
         {
-            if (dataGridViewCellStyle == null)
+            if (dataGridViewCellStyle is null)
             {
                 throw new ArgumentNullException(nameof(dataGridViewCellStyle));
             }
@@ -69,12 +69,9 @@ namespace System.Windows.Forms
             PaddingInternal = dataGridViewCellStyle.Padding;
         }
 
-        [
-            SRDescription(nameof(SR.DataGridViewCellStyleAlignmentDescr)),
-            //Localizable(true),
-            DefaultValue(DataGridViewContentAlignment.NotSet),
-            SRCategory(nameof(SR.CatLayout))
-        ]
+        [SRDescription(nameof(SR.DataGridViewCellStyleAlignmentDescr))]
+        [DefaultValue(DataGridViewContentAlignment.NotSet)]
+        [SRCategory(nameof(SR.CatLayout))]
         public DataGridViewContentAlignment Alignment
         {
             get
@@ -121,9 +118,7 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Color BackColor
         {
             get
@@ -144,11 +139,9 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(false),
-            EditorBrowsable(EditorBrowsableState.Advanced),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object DataSourceNullValue
         {
             get
@@ -179,17 +172,15 @@ namespace System.Windows.Forms
                     Properties.SetObject(PropDataSourceNullValue, value);
                 }
 
-                Debug.Assert((oldDataSourceNullValue == null && DataSourceNullValue != null) ||
-                             (oldDataSourceNullValue != null && DataSourceNullValue == null) ||
+                Debug.Assert((oldDataSourceNullValue is null && DataSourceNullValue != null) ||
+                             (oldDataSourceNullValue != null && DataSourceNullValue is null) ||
                              (oldDataSourceNullValue != DataSourceNullValue && !oldDataSourceNullValue.Equals(DataSourceNullValue)));
 
                 OnPropertyChanged(DataGridViewCellStylePropertyInternal.Other);
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Font Font
         {
             get
@@ -203,8 +194,8 @@ namespace System.Windows.Forms
                 {
                     Properties.SetObject(PropFont, value);
                 }
-                if ((f == null && value != null) ||
-                    (f != null && value == null) ||
+                if ((f is null && value != null) ||
+                    (f != null && value is null) ||
                     (f != null && value != null && !f.Equals(Font)))
                 {
                     OnPropertyChanged(DataGridViewCellStylePropertyInternal.Font);
@@ -212,9 +203,7 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Color ForeColor
         {
             get
@@ -235,18 +224,16 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(""),
-            Editor("System.Windows.Forms.Design.FormatStringEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-            SRCategory(nameof(SR.CatBehavior)),
-            EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
+        [DefaultValue("")]
+        [Editor("System.Windows.Forms.Design.FormatStringEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public string Format
         {
             get
             {
                 object format = Properties.GetObject(PropFormat);
-                if (format == null)
+                if (format is null)
                 {
                     return string.Empty;
                 }
@@ -269,16 +256,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(false),
-            EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public IFormatProvider FormatProvider
         {
             get
             {
                 object formatProvider = Properties.GetObject(PropFormatProvider);
-                if (formatProvider == null)
+                if (formatProvider is null)
                 {
                     return System.Globalization.CultureInfo.CurrentCulture;
                 }
@@ -298,10 +283,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(false),
-            EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public bool IsDataSourceNullValueDefault
         {
             get
@@ -314,22 +297,18 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(false),
-            EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public bool IsFormatProviderDefault
         {
             get
             {
-                return Properties.GetObject(PropFormatProvider) == null;
+                return Properties.GetObject(PropFormatProvider) is null;
             }
         }
 
-        [
-            Browsable(false),
-            EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         public bool IsNullValueDefault
         {
             get
@@ -376,17 +355,15 @@ namespace System.Windows.Forms
                     Properties.SetObject(PropNullValue, value);
                 }
 
-                Debug.Assert((oldNullValue == null && NullValue != null) ||
-                             (oldNullValue != null && NullValue == null) ||
+                Debug.Assert((oldNullValue is null && NullValue != null) ||
+                             (oldNullValue != null && NullValue is null) ||
                              (oldNullValue != NullValue && !oldNullValue.Equals(NullValue)));
 
                 OnPropertyChanged(DataGridViewCellStylePropertyInternal.Other);
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatLayout))
-        ]
+        [SRCategory(nameof(SR.CatLayout))]
         public Padding Padding
         {
             get => Properties.GetPadding(PropPadding, out _);
@@ -447,9 +424,7 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Color SelectionBackColor
         {
             get
@@ -470,9 +445,7 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Color SelectionForeColor
         {
             get
@@ -493,10 +466,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object Tag
         {
             get
@@ -512,11 +483,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(DataGridViewTriState.NotSet),
-            SRCategory(nameof(SR.CatLayout))
-
-        ]
+        [DefaultValue(DataGridViewTriState.NotSet)]
+        [SRCategory(nameof(SR.CatLayout))]
         public DataGridViewTriState WrapMode
         {
             get
@@ -560,7 +528,7 @@ namespace System.Windows.Forms
 
         public virtual void ApplyStyle(DataGridViewCellStyle dataGridViewCellStyle)
         {
-            if (dataGridViewCellStyle == null)
+            if (dataGridViewCellStyle is null)
             {
                 throw new ArgumentNullException(nameof(dataGridViewCellStyle));
             }
@@ -694,37 +662,6 @@ namespace System.Windows.Forms
             {
                 dataGridView.OnCellStyleContentChanged(this, property);
             }
-
-            /*
-            if ((this.scope & DataGridViewCellStyleScopeInternal.Cell) == DataGridViewCellStyleScopeInternal.Cell)
-            {
-                this.dataGridView.OnDataGridViewCellsStyleChanged(EventArgs.Empty);
-            }
-
-            if ((this.scope & DataGridViewCellStyleScopeInternal.ColumnDefault) == DataGridViewCellStyleScopeInternal.ColumnDefault)
-            {
-                this.dataGridView.OnDataGridViewColumnsDefaultCellStyleChanged(EventArgs.Empty);
-            }
-
-            if ((this.scope & DataGridViewCellStyleScopeInternal.RowDefault) == DataGridViewCellStyleScopeInternal.RowDefault)
-            {
-                this.dataGridView.OnDataGridViewRowsDefaultCellStyleChanged(EventArgs.Empty);
-            }
-
-            if ((this.scope & DataGridViewCellStyleScopeInternal.DataGridViewDefault) == DataGridViewCellStyleScopeInternal.DataGridViewDefault)
-            {
-                this.dataGridView.OnDefaultCellStyleChanged(EventArgs.Empty);
-            }
-
-            if ((this.scope & DataGridViewCellStyleScopeInternal.DataGridViewColumnHeadersDefault) == DataGridViewCellStyleScopeInternal.DataGridViewColumnHeadersDefault)
-            {
-                this.dataGridView.OnColumnHeadersDefaultCellStyleChanged(EventArgs.Empty);
-            }
-
-            if ((this.scope & DataGridViewCellStyleScopeInternal.DataGridViewRowHeadersDefault) == DataGridViewCellStyleScopeInternal.DataGridViewRowHeadersDefault)
-            {
-                this.dataGridView.OnRowHeadersDefaultCellStyleChanged(EventArgs.Empty);
-            }*/
         }
 
         internal void RemoveScope(DataGridViewCellStyleScopes scope)

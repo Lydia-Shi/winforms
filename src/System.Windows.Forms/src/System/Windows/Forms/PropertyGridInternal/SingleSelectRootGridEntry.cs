@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -16,10 +18,10 @@ namespace System.Windows.Forms.PropertyGridInternal
         protected string objValueClassName;
         protected GridEntry propDefault;
         protected IDesignerHost host;
-        protected IServiceProvider baseProvider = null;
-        protected PropertyTab tab = null;
-        protected PropertyGridView gridEntryHost = null;
-        protected AttributeCollection browsableAttributes = null;
+        protected IServiceProvider baseProvider;
+        protected PropertyTab tab;
+        protected PropertyGridView gridEntryHost;
+        protected AttributeCollection browsableAttributes;
         private IComponentChangeService changeService;
         protected bool forceReadOnlyChecked;
 
@@ -51,7 +53,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (browsableAttributes == null)
+                if (browsableAttributes is null)
                 {
                     browsableAttributes = new AttributeCollection(new Attribute[] { BrowsableAttribute.Yes });
                 }
@@ -59,7 +61,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     ResetBrowsableAttributes();
                     return;
@@ -104,7 +106,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (changeService == null)
+                if (changeService is null)
                 {
                     changeService = (IComponentChangeService)GetService(typeof(IComponentChangeService));
                 }
@@ -201,7 +203,6 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-
                 HelpKeywordAttribute helpAttribute = (HelpKeywordAttribute)TypeDescriptor.GetAttributes(objValue)[typeof(HelpKeywordAttribute)];
 
                 if (helpAttribute != null && !helpAttribute.IsDefaultAttribute())
@@ -220,19 +221,19 @@ namespace System.Windows.Forms.PropertyGridInternal
                 if (objValue is IComponent)
                 {
                     ISite site = ((IComponent)objValue).Site;
-                    if (site == null)
+                    if (site is null)
                     {
                         return objValue.GetType().Name;
                     }
-                    else
-                    {
-                        return site.Name;
-                    }
+
+                    return site.Name;
                 }
-                else if (objValue != null)
+
+                if (objValue != null)
                 {
                     return objValue.ToString();
                 }
+
                 return null;
             }
         }
@@ -287,7 +288,7 @@ namespace System.Windows.Forms.PropertyGridInternal
             {
                 service = host.GetService(serviceType);
             }
-            if (service == null && baseProvider != null)
+            if (service is null && baseProvider != null)
             {
                 service = baseProvider.GetService(serviceType);
             }
@@ -309,7 +310,6 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             if (((PropertySort &= PropertySort.Categorized) != 0) != fCategories)
             {
-
                 if (fCategories)
                 {
                     PropertySort |= PropertySort.Categorized;
@@ -331,13 +331,11 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             if (Children.Count > 0)
             {
-
                 GridEntry[] childEntries = new GridEntry[Children.Count];
                 Children.CopyTo(childEntries, 0);
 
                 if ((PropertySort & PropertySort.Categorized) != 0)
                 {
-
                     // first, walk through all the entires and
                     // group them by their category by adding
                     // them to a hashtable of arraylists.
@@ -351,7 +349,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                         {
                             string category = pe.PropertyCategory;
                             ArrayList bin = (ArrayList)bins[category];
-                            if (bin == null)
+                            if (bin is null)
                             {
                                 bin = new ArrayList();
                                 bins[category] = bin;
@@ -390,7 +388,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                     childEntries = new GridEntry[propList.Count];
                     propList.CopyTo(childEntries, 0);
-                    StringSorter.Sort(childEntries);
+                    Array.Sort(childEntries, GridEntryComparer.Default);
 
                     ChildCollection.Clear();
                     ChildCollection.AddRange(childEntries);

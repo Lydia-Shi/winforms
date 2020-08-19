@@ -7,7 +7,8 @@ using Xunit;
 
 namespace System.Windows.Forms.VisualStyles.Tests
 {
-    public class VisualStyleInformationTests
+    // NB: doesn't require thread affinity
+    public class VisualStyleInformationTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void VisualStyleInformation_Author_Get_ReturnsExpected()
@@ -151,7 +152,6 @@ namespace System.Windows.Forms.VisualStyles.Tests
             Assert.NotNull(url);
             Assert.Equal(url, VisualStyleInformation.Url);
             Assert.DoesNotContain('\0', url);
-
         }
 
         [Fact]

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,14 +14,12 @@ using System.Drawing;
 namespace System.Windows.Forms
 {
     /// <summary>
-    ///  Represents a collection of <see cref='DataGridViewRow'/> objects in the <see cref='DataGrid'/>
-    ///  control.
+    ///  Represents a collection of <see cref='DataGridViewRow'/> objects in the
+    ///  <see cref='DataGridView'/> control.
     /// </summary>
-    [
-        ListBindable(false),
-        DesignerSerializer("System.Windows.Forms.Design.DataGridViewRowCollectionCodeDomSerializer, " + AssemblyRef.SystemDesign,
-                                    "System.ComponentModel.Design.Serialization.CodeDomSerializer, " + AssemblyRef.SystemDesign),
-    ]
+    [ListBindable(false)]
+    [DesignerSerializer("System.Windows.Forms.Design.DataGridViewRowCollectionCodeDomSerializer, " + AssemblyRef.SystemDesign,
+                        "System.ComponentModel.Design.Serialization.CodeDomSerializer, " + AssemblyRef.SystemDesign)]
     public class DataGridViewRowCollection : ICollection, IList
     {
 #if DEBUG
@@ -296,7 +296,7 @@ namespace System.Windows.Forms
             Debug.Assert(dataGridViewRow.Cells.Count == DataGridView.Columns.Count);
             if (newRow)
             {
-                Debug.Assert(values == null);
+                Debug.Assert(values is null);
                 // Note that we allow the 'new' row to be frozen.
                 Debug.Assert((dataGridViewRow.State & (DataGridViewElementStates.Selected | DataGridViewElementStates.Displayed)) == 0);
                 // Make sure the 'new row' is visible even when the row template isn't
@@ -344,7 +344,7 @@ namespace System.Windows.Forms
             Debug.Assert((rowState & (DataGridViewElementStates.Selected | DataGridViewElementStates.Displayed)) == 0);
             rowStates.Add(rowState);
 #if DEBUG
-            DataGridView.dataStoreAccessAllowed = false;
+            DataGridView._dataStoreAccessAllowed = false;
             cachedRowHeightsAccessAllowed = false;
             cachedRowCountsAccessAllowed = false;
 #endif
@@ -361,17 +361,10 @@ namespace System.Windows.Forms
         public virtual int Add(params object[] values)
         {
             Debug.Assert(DataGridView != null);
-            if (values == null)
+            if (values is null)
             {
                 throw new ArgumentNullException(nameof(values));
             }
-
-            /* Intentionally not being strict about this. We just take what we get.
-            if (values.Length != this.DataGridView.Columns.Count)
-            {
-                // DataGridView_WrongValueCount=The array of cell values provided does not contain as many items as there are columns.
-                throw new ArgumentException(SR.DataGridView_WrongValueCount, "values");
-            }*/
 
             if (DataGridView.VirtualMode)
             {
@@ -388,14 +381,6 @@ namespace System.Windows.Forms
                 throw new InvalidOperationException(SR.DataGridView_ForbiddenOperationInEventHandler);
             }
 
-            /* Microsoft: Add once databinding is implemented
-            foreach (DataGridViewColumn dataGridViewColumn in this.DataGridView.Columns)
-            {
-                if (dataGridViewColumn.DataBound)
-                {
-                    throw new InvalidOperationException(SR.DataGridView_InvalidOperationInDataBoundMode);
-                }
-            }*/
             return AddInternal(false /*newRow*/, values);
         }
 
@@ -487,7 +472,7 @@ namespace System.Windows.Forms
         {
             Debug.Assert(DataGridView != null);
 
-            if (dataGridViewRow == null)
+            if (dataGridViewRow is null)
             {
                 throw new ArgumentNullException(nameof(dataGridViewRow));
             }
@@ -501,7 +486,7 @@ namespace System.Windows.Forms
             }
             if (dataGridViewRow.Cells.Count > DataGridView.Columns.Count)
             {
-                throw new ArgumentException(SR.DataGridViewRowCollection_TooManyCells, "dataGridViewRow");
+                throw new ArgumentException(SR.DataGridViewRowCollection_TooManyCells, nameof(dataGridViewRow));
             }
 
             if (dataGridViewRow.Selected)
@@ -545,7 +530,7 @@ namespace System.Windows.Forms
             rowStates.Add(dataGridViewRow.State);
             Debug.Assert(rowStates.Count == SharedList.Count);
 #if DEBUG
-            DataGridView.dataStoreAccessAllowed = false;
+            DataGridView._dataStoreAccessAllowed = false;
             cachedRowHeightsAccessAllowed = false;
             cachedRowCountsAccessAllowed = false;
 #endif
@@ -606,7 +591,7 @@ namespace System.Windows.Forms
                 index = SharedList.Add(rowTemplate);
                 rowStates.Add(rowState);
 #if DEBUG
-                DataGridView.dataStoreAccessAllowed = false;
+                DataGridView._dataStoreAccessAllowed = false;
                 cachedRowHeightsAccessAllowed = false;
                 cachedRowCountsAccessAllowed = false;
 #endif
@@ -686,7 +671,7 @@ namespace System.Windows.Forms
                 index = SharedList.Add(rowTemplate);
                 rowStates.Add(rowTemplateState);
 #if DEBUG
-                DataGridView.dataStoreAccessAllowed = false;
+                DataGridView._dataStoreAccessAllowed = false;
                 cachedRowHeightsAccessAllowed = false;
                 cachedRowCountsAccessAllowed = false;
 #endif
@@ -716,7 +701,7 @@ namespace System.Windows.Forms
                         index = SharedList.Add(rowTemplate2);
                         rowStates.Add(rowTemplateState);
 #if DEBUG
-                        DataGridView.dataStoreAccessAllowed = false;
+                        DataGridView._dataStoreAccessAllowed = false;
                         cachedRowHeightsAccessAllowed = false;
                         cachedRowCountsAccessAllowed = false;
 #endif
@@ -780,7 +765,7 @@ namespace System.Windows.Forms
             DataGridView.OnAddingRow(dataGridViewRow, rowState, true /*checkFrozenState*/);   // will throw an exception if the addition is illegal
 
 #if DEBUG
-            DataGridView.dataStoreAccessAllowed = false;
+            DataGridView._dataStoreAccessAllowed = false;
             cachedRowHeightsAccessAllowed = false;
             cachedRowCountsAccessAllowed = false;
 #endif
@@ -792,7 +777,7 @@ namespace System.Windows.Forms
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual void AddRange(params DataGridViewRow[] dataGridViewRows)
         {
-            if (dataGridViewRows == null)
+            if (dataGridViewRows is null)
             {
                 throw new ArgumentNullException(nameof(dataGridViewRows));
             }
@@ -849,7 +834,7 @@ namespace System.Windows.Forms
                 Debug.Assert((dataGridViewRow.State & (DataGridViewElementStates.Selected | DataGridViewElementStates.Displayed)) == 0);
                 rowStates.Add(dataGridViewRow.State);
 #if DEBUG
-                DataGridView.dataStoreAccessAllowed = false;
+                DataGridView._dataStoreAccessAllowed = false;
                 cachedRowHeightsAccessAllowed = false;
                 cachedRowCountsAccessAllowed = false;
 #endif
@@ -902,7 +887,7 @@ namespace System.Windows.Forms
                 SharedList.Clear();
                 rowStates.Clear();
 #if DEBUG
-                DataGridView.dataStoreAccessAllowed = false;
+                DataGridView._dataStoreAccessAllowed = false;
                 cachedRowHeightsAccessAllowed = false;
                 cachedRowCountsAccessAllowed = false;
 #endif
@@ -1390,17 +1375,10 @@ namespace System.Windows.Forms
         {
             Debug.Assert(DataGridView != null);
 
-            if (values == null)
+            if (values is null)
             {
                 throw new ArgumentNullException(nameof(values));
             }
-
-            /* Intentionally not being strict about this. We just take what we get.
-            if (values.Length != this.DataGridView.Columns.Count)
-            {
-                // DataGridView_WrongValueCount=The array of cell values provided does not contain as many items as there are columns.
-                throw new ArgumentException(SR.DataGridView_WrongValueCount, "values");
-            }*/
 
             if (DataGridView.VirtualMode)
             {
@@ -1504,7 +1482,7 @@ namespace System.Windows.Forms
                 throw new ArgumentOutOfRangeException(nameof(rowIndex), SR.DataGridViewRowCollection_RowIndexOutOfRange);
             }
 
-            if (dataGridViewRow == null)
+            if (dataGridViewRow is null)
             {
                 throw new ArgumentNullException(nameof(dataGridViewRow));
             }
@@ -1528,7 +1506,7 @@ namespace System.Windows.Forms
 
             if (dataGridViewRow.Cells.Count > DataGridView.Columns.Count)
             {
-                throw new ArgumentException(SR.DataGridViewRowCollection_TooManyCells, "dataGridViewRow");
+                throw new ArgumentException(SR.DataGridViewRowCollection_TooManyCells, nameof(dataGridViewRow));
             }
 
             if (dataGridViewRow.Selected)
@@ -1544,7 +1522,7 @@ namespace System.Windows.Forms
             Debug.Assert(DataGridView != null);
             Debug.Assert(rowIndex >= 0 && rowIndex <= Count);
             Debug.Assert(dataGridViewRow != null);
-            Debug.Assert(dataGridViewRow.DataGridView == null);
+            Debug.Assert(dataGridViewRow.DataGridView is null);
             Debug.Assert(!DataGridView.NoDimensionChangeAllowed);
             Debug.Assert(DataGridView.NewRowIndex == -1 || rowIndex != Count);
             Debug.Assert(!dataGridViewRow.Selected);
@@ -1559,7 +1537,7 @@ namespace System.Windows.Forms
                 }
                 if (dataGridViewRow.Cells.Count > DataGridView.Columns.Count)
                 {
-                    throw new ArgumentException(SR.DataGridViewRowCollection_TooManyCells, "dataGridViewRow");
+                    throw new ArgumentException(SR.DataGridViewRowCollection_TooManyCells, nameof(dataGridViewRow));
                 }
             }
             DataGridView.CompleteCellsCollection(dataGridViewRow);
@@ -1589,7 +1567,7 @@ namespace System.Windows.Forms
             rowStates.Insert(rowIndex, dataGridViewRow.State);
             Debug.Assert(rowStates.Count == SharedList.Count);
 #if DEBUG
-            DataGridView.dataStoreAccessAllowed = false;
+            DataGridView._dataStoreAccessAllowed = false;
             cachedRowHeightsAccessAllowed = false;
             cachedRowCountsAccessAllowed = false;
 #endif
@@ -1668,7 +1646,7 @@ namespace System.Windows.Forms
                         rowStates.Insert(indexDestination + i, rowTemplateState);
                     }
 #if DEBUG
-                    DataGridView.dataStoreAccessAllowed = false;
+                    DataGridView._dataStoreAccessAllowed = false;
                     cachedRowHeightsAccessAllowed = false;
                     cachedRowCountsAccessAllowed = false;
 #endif
@@ -1686,7 +1664,7 @@ namespace System.Windows.Forms
                     SharedList.Insert(indexDestination, rowTemplate);
                     rowStates.Insert(indexDestination, rowTemplateState);
 #if DEBUG
-                    DataGridView.dataStoreAccessAllowed = false;
+                    DataGridView._dataStoreAccessAllowed = false;
                     cachedRowHeightsAccessAllowed = false;
                     cachedRowCountsAccessAllowed = false;
 #endif
@@ -1712,7 +1690,7 @@ namespace System.Windows.Forms
                             rowStates.Insert(indexDestination + i, rowTemplateState);
                         }
 #if DEBUG
-                        DataGridView.dataStoreAccessAllowed = false;
+                        DataGridView._dataStoreAccessAllowed = false;
                         cachedRowHeightsAccessAllowed = false;
                         cachedRowCountsAccessAllowed = false;
 #endif
@@ -1777,7 +1755,7 @@ namespace System.Windows.Forms
             rowStates.Insert(indexDestination, rowState);
             Debug.Assert(rowStates.Count == SharedList.Count);
 #if DEBUG
-            DataGridView.dataStoreAccessAllowed = false;
+            DataGridView._dataStoreAccessAllowed = false;
             cachedRowHeightsAccessAllowed = false;
             cachedRowCountsAccessAllowed = false;
 #endif
@@ -1790,7 +1768,7 @@ namespace System.Windows.Forms
         {
             Debug.Assert(DataGridView != null);
 
-            if (dataGridViewRows == null)
+            if (dataGridViewRows is null)
             {
                 throw new ArgumentNullException(nameof(dataGridViewRows));
             }
@@ -1860,7 +1838,7 @@ namespace System.Windows.Forms
                 rowStates.Insert(rowIndexInserted, dataGridViewRow.State);
                 Debug.Assert(rowStates.Count == SharedList.Count);
 #if DEBUG
-                DataGridView.dataStoreAccessAllowed = false;
+                DataGridView._dataStoreAccessAllowed = false;
                 cachedRowHeightsAccessAllowed = false;
                 cachedRowCountsAccessAllowed = false;
 #endif
@@ -2066,7 +2044,7 @@ namespace System.Windows.Forms
                         this.rowStates.RemoveAt(rowIndex);
                         SharedList.RemoveAt(rowIndex);
 #if DEBUG
-                        DataGridView.dataStoreAccessAllowed = false;
+                        DataGridView._dataStoreAccessAllowed = false;
 #endif
                         DataGridView.OnRemovedRow_PreNotification(rowIndex);
                         if (deletedRowVisible)
@@ -2134,7 +2112,7 @@ namespace System.Windows.Forms
             }
 
 #if DEBUG
-            DataGridView.dataStoreAccessAllowed = true;
+            DataGridView._dataStoreAccessAllowed = true;
 #endif
             switch (cca)
             {
@@ -2172,19 +2150,19 @@ namespace System.Windows.Forms
 
         public virtual void Remove(DataGridViewRow dataGridViewRow)
         {
-            if (dataGridViewRow == null)
+            if (dataGridViewRow is null)
             {
                 throw new ArgumentNullException(nameof(dataGridViewRow));
             }
 
             if (dataGridViewRow.DataGridView != DataGridView)
             {
-                throw new ArgumentException(SR.DataGridView_RowDoesNotBelongToDataGridView, "dataGridViewRow");
+                throw new ArgumentException(SR.DataGridView_RowDoesNotBelongToDataGridView, nameof(dataGridViewRow));
             }
 
             if (dataGridViewRow.Index == -1)
             {
-                throw new ArgumentException(SR.DataGridView_RowMustBeUnshared, "dataGridViewRow");
+                throw new ArgumentException(SR.DataGridView_RowMustBeUnshared, nameof(dataGridViewRow));
             }
             else
             {
@@ -2493,76 +2471,6 @@ namespace System.Windows.Forms
 #endif
         }
 
-        /*#if DEBUG
-                private bool inVerifyRowFrozenStates = false;
-                public void VerifyRowFrozenStates()
-                {
-                    if (inVerifyRowFrozenStates) return;
-
-                    inVerifyRowFrozenStates = true;
-                    try
-                    {
-                        bool previousVisibleRowFrozen = true;
-                        for (int rowIndex = 0; rowIndex < this.items.Count; rowIndex++)
-                        {
-                            DataGridViewElementStates rowStates = GetRowState(rowIndex);
-                            if (!previousVisibleRowFrozen &&
-                                (rowStates & DataGridViewElementStates.Visible) != 0 &&
-                                (rowStates & DataGridViewElementStates.Frozen) != 0)
-                            {
-                                Debug.Fail("VerifyRowFrozenStates - wrong frozen state");
-                            }
-                            if ((rowStates & DataGridViewElementStates.Visible) != 0)
-                            {
-                                previousVisibleRowFrozen = (rowStates & DataGridViewElementStates.Frozen) != 0;
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        inVerifyRowFrozenStates = false;
-                    }
-                }
-        #endif*/
-
-        /* Private classes */
-
-        /*private class DefaultRowComparer : IComparer
-        {
-            private DataGridView dataGridView;
-            private DataGridViewRowCollection dataGridViewRows;
-            private DataGridViewColumn dataGridViewSortedColumn;
-            private int sortedColumnIndex;
-
-            public DefaultRowComparer(DataGridViewRowCollection dataGridViewRows)
-            {
-                this.DataGridView = dataGridViewRows.DataGridView;
-                this.dataGridViewRows = dataGridViewRows;
-                this.dataGridViewSortedColumn = this.dataGridView.SortedColumn;
-                this.sortedColumnIndex = this.dataGridViewSortedColumn.Index;
-            }
-
-            int IComparer.Compare(object x, object y)
-            {
-                DataGridViewRow dataGridViewRow1 = this.dataGridViewRows.SharedRow((int)x);
-                DataGridViewRow dataGridViewRow2 = this.dataGridViewRows.SharedRow((int)y);
-                Debug.Assert(dataGridViewRow1 != null);
-                Debug.Assert(dataGridViewRow2 != null);
-                object value1 = dataGridViewRow1.Cells[this.sortedColumnIndex].GetValueInternal((int)x);
-                object value2 = dataGridViewRow2.Cells[this.sortedColumnIndex].GetValueInternal((int)y);
-                DataGridViewSortEventArgs tsea = new DataGridViewSortEventArgs(this.dataGridViewSortedColumn, value1, value2);
-                this.dataGridView.OnSorting(tsea);
-                if (tsea.Handled)
-                {
-                    return tsea.SortResult;
-                }
-                else
-                {
-                    return Comparer.Default.Compare(value1, value2);
-                }
-            }
-        }*/
-
         private class RowArrayList : ArrayList
         {
             private readonly DataGridViewRowCollection owner;
@@ -2690,7 +2598,7 @@ namespace System.Windows.Forms
                 dataGridView = dataGridViewRows.DataGridView;
                 this.dataGridViewRows = dataGridViewRows;
                 dataGridViewSortedColumn = dataGridView.SortedColumn;
-                if (dataGridViewSortedColumn == null)
+                if (dataGridViewSortedColumn is null)
                 {
                     Debug.Assert(customComparer != null);
                     sortedColumnIndex = -1;
@@ -2713,7 +2621,7 @@ namespace System.Windows.Forms
                         return max;
                     }
                 }
-                if (customComparer == null)
+                if (customComparer is null)
                 {
                     DataGridViewRow dataGridViewRow = dataGridViewRows.SharedRow(rowIndex);
                     Debug.Assert(dataGridViewRow != null);
@@ -2737,15 +2645,15 @@ namespace System.Windows.Forms
                     return -1;
                 }
                 int result = 0;
-                if (customComparer == null)
+                if (customComparer is null)
                 {
                     if (!dataGridView.OnSortCompare(dataGridViewSortedColumn, value1, value2, rowIndex1, rowIndex2, out result))
                     {
                         if (!(value1 is IComparable) && !(value2 is IComparable))
                         {
-                            if (value1 == null)
+                            if (value1 is null)
                             {
-                                if (value2 == null)
+                                if (value2 is null)
                                 {
                                     result = 0;
                                 }
@@ -2754,7 +2662,7 @@ namespace System.Windows.Forms
                                     result = 1;
                                 }
                             }
-                            else if (value2 == null)
+                            else if (value2 is null)
                             {
                                 result = -1;
                             }
@@ -2826,7 +2734,6 @@ namespace System.Windows.Forms
             /// </summary>
             bool IEnumerator.MoveNext()
             {
-
                 if (current < owner.Count - 1)
                 {
                     current++;

@@ -2,32 +2,30 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Runtime.InteropServices;
+using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Represents a Windows up-down control that displays numeric values.
     /// </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultProperty(nameof(Value)),
-    DefaultEvent(nameof(ValueChanged)),
-    DefaultBindingProperty(nameof(Value)),
-    SRDescription(nameof(SR.DescriptionNumericUpDown))
-    ]
+    [DefaultProperty(nameof(Value))]
+    [DefaultEvent(nameof(ValueChanged))]
+    [DefaultBindingProperty(nameof(Value))]
+    [SRDescription(nameof(SR.DescriptionNumericUpDown))]
     public class NumericUpDown : UpDownBase, ISupportInitialize
     {
-        private static readonly decimal DefaultValue = decimal.Zero;
-        private static readonly decimal DefaultMinimum = decimal.Zero;
-        private static readonly decimal DefaultMaximum = (decimal)100.0;
+        private const decimal DefaultValue = decimal.Zero;
+        private const decimal DefaultMinimum = decimal.Zero;
+        private const decimal DefaultMaximum = (decimal)100.0;
         private const int DefaultDecimalPlaces = 0;
-        private static readonly decimal DefaultIncrement = decimal.One;
+        private const decimal DefaultIncrement = decimal.One;
         private const bool DefaultThousandsSeparator = false;
         private const bool DefaultHexadecimal = false;
         private const int InvalidValue = -1;
@@ -61,10 +59,10 @@ namespace System.Windows.Forms
         private bool currentValueChanged;
 
         // Event handler for the onValueChanged event
-        private EventHandler onValueChanged = null;
+        private EventHandler onValueChanged;
 
         // Disable value range checking while initializing the control
-        private bool initializing = false;
+        private bool initializing;
 
         // Provides for finer acceleration behavior.
         private NumericUpDownAccelerationCollection accelerations;
@@ -91,15 +89,13 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Specifies the acceleration information.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public NumericUpDownAccelerationCollection Accelerations
         {
             get
             {
-                if (accelerations == null)
+                if (accelerations is null)
                 {
                     accelerations = new NumericUpDownAccelerationCollection();
                 }
@@ -110,11 +106,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the number of decimal places to display in the up-down control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatData)),
-        DefaultValue(NumericUpDown.DefaultDecimalPlaces),
-        SRDescription(nameof(SR.NumericUpDownDecimalPlacesDescr))
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [DefaultValue(NumericUpDown.DefaultDecimalPlaces)]
+        [SRDescription(nameof(SR.NumericUpDownDecimalPlacesDescr))]
         public int DecimalPlaces
         {
             get
@@ -138,11 +132,9 @@ namespace System.Windows.Forms
         ///  sets a value indicating whether the up-down control should
         ///  display the value it contains in hexadecimal format.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(NumericUpDown.DefaultHexadecimal),
-        SRDescription(nameof(SR.NumericUpDownHexadecimalDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(NumericUpDown.DefaultHexadecimal)]
+        [SRDescription(nameof(SR.NumericUpDownHexadecimalDescr))]
         public bool Hexadecimal
         {
             get
@@ -162,10 +154,8 @@ namespace System.Windows.Forms
         ///  to increment or
         ///  decrement the up-down control when the up or down buttons are clicked.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatData)),
-        SRDescription(nameof(SR.NumericUpDownIncrementDescr))
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [SRDescription(nameof(SR.NumericUpDownIncrementDescr))]
         public decimal Increment
         {
             get
@@ -194,11 +184,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the maximum value for the up-down control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatData)),
-        RefreshProperties(RefreshProperties.All),
-        SRDescription(nameof(SR.NumericUpDownMaximumDescr))
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [RefreshProperties(RefreshProperties.All)]
+        [SRDescription(nameof(SR.NumericUpDownMaximumDescr))]
         public decimal Maximum
         {
             get
@@ -223,11 +211,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the minimum allowed value for the up-down control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatData)),
-        RefreshProperties(RefreshProperties.All),
-        SRDescription(nameof(SR.NumericUpDownMinimumDescr))
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [RefreshProperties(RefreshProperties.All)]
+        [SRDescription(nameof(SR.NumericUpDownMinimumDescr))]
         public decimal Minimum
         {
             get
@@ -249,21 +235,17 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public new Padding Padding
         {
-            get { return base.Padding; }
-            set { base.Padding = value; }
+            get => base.Padding;
+            set => base.Padding = value;
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler PaddingChanged
         {
             add => base.PaddingChanged += value;
@@ -284,25 +266,19 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The text displayed in the control.
         /// </summary>
-        [
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
-        Bindable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Bindable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         // We're just overriding this to make it non-browsable.
         public override string Text
         {
-            get
-            {
-                return base.Text;
-            }
-            set
-            {
-                base.Text = value;
-            }
+            get => base.Text;
+            set => base.Text = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler TextChanged
         {
             add => base.TextChanged += value;
@@ -313,12 +289,10 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether a thousands
         ///  separator is displayed in the up-down control when appropriate.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatData)),
-        DefaultValue(NumericUpDown.DefaultThousandsSeparator),
-        Localizable(true),
-        SRDescription(nameof(SR.NumericUpDownThousandsSeparatorDescr))
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [DefaultValue(NumericUpDown.DefaultThousandsSeparator)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.NumericUpDownThousandsSeparatorDescr))]
         public bool ThousandsSeparator
         {
             get
@@ -333,18 +307,13 @@ namespace System.Windows.Forms
             }
         }
 
-        /*
-         * The current value of the control
-         */
         /// <summary>
         ///  Gets or sets the value
         ///  assigned to the up-down control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        Bindable(true),
-        SRDescription(nameof(SR.NumericUpDownValueDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Bindable(true)]
+        [SRDescription(nameof(SR.NumericUpDownValueDescr))]
         public decimal Value
         {
             get
@@ -360,7 +329,6 @@ namespace System.Windows.Forms
             {
                 if (value != currentValue)
                 {
-
                     if (!initializing && ((value < minimum) || (value > maximum)))
                     {
                         throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidBoundArgument, nameof(Value), value, $"'{nameof(Minimum)}'", $"'{nameof(Maximum)}'"));
@@ -384,7 +352,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Occurs when the <see cref='Value'/> property has been changed in some way.
         /// </summary>
-        [SRCategory(nameof(SR.CatAction)), SRDescription(nameof(SR.NumericUpDownOnValueChangedDescr))]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.NumericUpDownOnValueChangedDescr))]
         public event EventHandler ValueChanged
         {
             add => onValueChanged += value;
@@ -537,7 +506,7 @@ namespace System.Windows.Forms
             {
                 // Eat this invalid key and beep
                 e.Handled = true;
-                SafeNativeMethods.MessageBeep(0);
+                User32.MessageBeep(User32.MB.OK);
             }
         }
 
@@ -703,6 +672,8 @@ namespace System.Windows.Forms
             buttonPressedStartTime = InvalidValue;
         }
 
+        internal override bool SupportsUiaProviders => true;
+
         /// <summary>
         ///  Provides some interesting info about this control in String form.
         /// </summary>
@@ -790,7 +761,6 @@ namespace System.Windows.Forms
             if (currentValueChanged || (!string.IsNullOrEmpty(Text) &&
                 !(Text.Length == 1 && Text == "-")))
             {
-
                 currentValueChanged = false;
                 ChangingText = true;
 
@@ -883,7 +853,7 @@ namespace System.Windows.Forms
             }
 
             // Call AdjuctWindowRect to add space for the borders
-            int width = SizeFromClientSize(textWidth, height).Width + upDownButtons.Width;
+            int width = SizeFromClientSize(textWidth, height).Width + _upDownButtons.Width;
             return new Size(width, height) + Padding.Size;
         }
 
@@ -916,63 +886,27 @@ namespace System.Windows.Forms
             return largestDigit;
         }
 
-        [ComVisible(true)]
         internal class NumericUpDownAccessibleObject : ControlAccessibleObject
         {
+            private readonly UpDownBase _owner;
+
             public NumericUpDownAccessibleObject(NumericUpDown owner) : base(owner)
             {
-            }
-
-            /// <summary>
-            ///  Gets or sets the accessible name.
-            /// </summary>
-            public override string Name
-            {
-                get
-                {
-                    string baseName = base.Name;
-                    return ((NumericUpDown)Owner).GetAccessibleName(baseName);
-                }
-                set
-                {
-                    base.Name = value;
-                }
-            }
-
-            public override AccessibleRole Role
-            {
-                get
-                {
-                    AccessibleRole role = Owner.AccessibleRole;
-                    if (role != AccessibleRole.Default)
-                    {
-                        return role;
-                    }
-                    else
-                    {
-                        return AccessibleRole.SpinButton;
-                    }
-                }
+                _owner = owner;
             }
 
             public override AccessibleObject GetChild(int index)
             {
-                if (index >= 0 && index < GetChildCount())
+                // TextBox child
+                if (index == 0)
                 {
+                    return _owner.TextBox.AccessibilityObject.Parent;
+                }
 
-                    // TextBox child
-                    //
-                    if (index == 0)
-                    {
-                        return ((UpDownBase)Owner).TextBox.AccessibilityObject.Parent;
-                    }
-
-                    // Up/down buttons
-                    //
-                    if (index == 1)
-                    {
-                        return ((UpDownBase)Owner).UpDownButtonsInternal.AccessibilityObject.Parent;
-                    }
+                // Up/down buttons
+                if (index == 1)
+                {
+                    return _owner.UpDownButtonsInternal.AccessibilityObject.Parent;
                 }
 
                 return null;
@@ -982,7 +916,67 @@ namespace System.Windows.Forms
             {
                 return 2;
             }
+
+            internal override object GetPropertyValue(UiaCore.UIA propertyID)
+            {
+                switch (propertyID)
+                {
+                    case UiaCore.UIA.RuntimeIdPropertyId:
+                        return RuntimeId;
+                    case UiaCore.UIA.NamePropertyId:
+                        return Name;
+                    case UiaCore.UIA.ControlTypePropertyId:
+                        return UiaCore.UIA.SpinnerControlTypeId;
+                    case UiaCore.UIA.BoundingRectanglePropertyId:
+                        return Bounds;
+                    case UiaCore.UIA.LegacyIAccessibleStatePropertyId:
+                        return State;
+                    case UiaCore.UIA.LegacyIAccessibleRolePropertyId:
+                        return Role;
+                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
+                        return false;
+                    default:
+                        return base.GetPropertyValue(propertyID);
+                }
+            }
+
+            public override AccessibleRole Role
+            {
+                get
+                {
+                    AccessibleRole role = Owner.AccessibleRole;
+
+                    if (role != AccessibleRole.Default)
+                    {
+                        return role;
+                    }
+
+                    return AccessibleRole.SpinButton;
+                }
+            }
+
+            internal override int[] RuntimeId
+            {
+                get
+                {
+                    if (_owner is null)
+                    {
+                        return base.RuntimeId;
+                    }
+
+                    // we need to provide a unique ID
+                    // others are implementing this in the same manner
+                    // first item is static - 0x2a (RuntimeIDFirstItem)
+                    // second item can be anything, but here it is a hash
+
+                    var runtimeId = new int[3];
+                    runtimeId[0] = RuntimeIDFirstItem;
+                    runtimeId[1] = (int)(long)_owner.Handle;
+                    runtimeId[2] = _owner.GetHashCode();
+
+                    return runtimeId;
+                }
+            }
         }
     }
-
 }

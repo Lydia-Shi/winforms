@@ -1,6 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+#nullable disable
 
 using System.ComponentModel.Design;
 using System.Drawing;
@@ -67,7 +69,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         {
             get
             {
-                if (label == null)
+                if (label is null)
                 {
                     label = new LinkLabel
                     {
@@ -179,7 +181,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 this.verbs = null;
             }
 
-            if (component == null || verbs == null || verbs.Length == 0)
+            if (component is null || verbs is null || verbs.Length == 0)
             {
                 Visible = false;
                 Label.Links.Clear();
@@ -246,13 +248,11 @@ namespace System.Windows.Forms.PropertyGridInternal
                 }
             }
         }
-
     }
 
     /// <summary>
     ///  Represents the hot commands control accessible object.
     /// </summary>
-    [Runtime.InteropServices.ComVisible(true)]
     internal class HotCommandsAccessibleObject : Control.ControlAccessibleObject
     {
         private readonly PropertyGrid _parentPropertyGrid;
@@ -289,7 +289,7 @@ namespace System.Windows.Forms.PropertyGridInternal
         /// <summary>
         ///  Request value of specified property from an element.
         /// </summary>
-        /// <param name="propertyId">Identifier indicating the property to return</param>
+        /// <param name="propertyID">Identifier indicating the property to return</param>
         /// <returns>Returns a ValInfo indicating whether the element supports this property, or has no value for it.</returns>
         internal override object GetPropertyValue(UiaCore.UIA propertyID)
             => propertyID switch
@@ -309,7 +309,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                     return name;
                 }
 
-                return _parentPropertyGrid?.Name;
+                return _parentPropertyGrid?.AccessibilityObject.Name;
             }
         }
     }

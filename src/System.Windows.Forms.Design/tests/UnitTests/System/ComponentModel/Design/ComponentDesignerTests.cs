@@ -14,7 +14,7 @@ using Xunit;
 
 namespace System.ComponentModel.Design.Tests
 {
-    public class ComponentDesignerTests
+    public class ComponentDesignerTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void ComponentDesigner_Ctor_Default()
@@ -153,7 +153,7 @@ namespace System.ComponentModel.Design.Tests
 
         public static IEnumerable<object[]> Children_GetInvalidService_TestData()
         {
-            foreach (ICollection associatedComponents in new object[] { null, new object[0], new object[] { new Component() }})
+            foreach (ICollection associatedComponents in new object[] { null, Array.Empty<object>(), new object[] { new Component() }})
             {
                 yield return new object[] { associatedComponents, null };
                 yield return new object[] { associatedComponents, new object() };
@@ -487,16 +487,16 @@ namespace System.ComponentModel.Design.Tests
             mockDesignerHost.Verify(h => h.RootComponent, Times.Once());
             mockDesignerHost.Verify(h => h.GetDesigner(rootComponent), Times.Never());
 
-            Assert.Same(rootComponent == null ? null : designer, treeDesigner.Parent);
-            mockSite.Verify(s => s.GetService(typeof(IDesignerHost)), Times.Exactly(rootComponent == null ? 2 : 3));
+            Assert.Same(rootComponent is null ? null : designer, treeDesigner.Parent);
+            mockSite.Verify(s => s.GetService(typeof(IDesignerHost)), Times.Exactly(rootComponent is null ? 2 : 3));
             mockDesignerHost.Verify(h => h.RootComponent, Times.Exactly(2));
-            mockDesignerHost.Verify(h => h.GetDesigner(rootComponent), Times.Exactly(rootComponent == null ? 0 : 1));
+            mockDesignerHost.Verify(h => h.GetDesigner(rootComponent), Times.Exactly(rootComponent is null ? 0 : 1));
 
             // Get again.
-            Assert.Same(rootComponent == null ? null : designer, treeDesigner.Parent);
-            mockSite.Verify(s => s.GetService(typeof(IDesignerHost)), Times.Exactly(rootComponent == null ? 3 : 5));
+            Assert.Same(rootComponent is null ? null : designer, treeDesigner.Parent);
+            mockSite.Verify(s => s.GetService(typeof(IDesignerHost)), Times.Exactly(rootComponent is null ? 3 : 5));
             mockDesignerHost.Verify(h => h.RootComponent, Times.Exactly(3));
-            mockDesignerHost.Verify(h => h.GetDesigner(rootComponent), Times.Exactly(rootComponent == null ? 0 : 2));
+            mockDesignerHost.Verify(h => h.GetDesigner(rootComponent), Times.Exactly(rootComponent is null ? 0 : 2));
         }
 
         [Fact]
@@ -829,9 +829,9 @@ namespace System.ComponentModel.Design.Tests
                 yield return new object[] { property, null, 1, string.Empty };
                 yield return new object[] { property, null, 1, "UniqueMethod" };
 
-                yield return new object[] { property, new object[0], 1, null };
-                yield return new object[] { property, new object[0], 1, string.Empty };
-                yield return new object[] { property, new object[0], 1, "UniqueMethod" };
+                yield return new object[] { property, Array.Empty<object>(), 1, null };
+                yield return new object[] { property, Array.Empty<object>(), 1, string.Empty };
+                yield return new object[] { property, Array.Empty<object>(), 1, "UniqueMethod" };
 
                 yield return new object[] { property, new object[] { null, new object(), "NoSuchStringValue" }, 1, null };
                 yield return new object[] { property, new object[] { null, new object(), "NoSuchStringValue" }, 1, string.Empty };
@@ -978,7 +978,7 @@ namespace System.ComponentModel.Design.Tests
                 .Verifiable();
             mockEventBindingService
                 .Setup(s => s.GetCompatibleMethods(It.IsAny<EventDescriptor>()))
-                .Returns(new object[0]);
+                .Returns(Array.Empty<object>());
             mockEventBindingService
                 .Setup(s => s.CreateUniqueMethodName(component, It.IsAny<EventDescriptor>()))
                 .Returns(uniqueName);
@@ -1723,7 +1723,7 @@ namespace System.ComponentModel.Design.Tests
         public static IEnumerable<object[]> DoDefaultAction_InvalidSelectedComponents_TestData()
         {
             yield return new object[] { null };
-            yield return new object[] { new object[0] };
+            yield return new object[] { Array.Empty<object>() };
             yield return new object[] { new object[] { null, new object() } };
         }
 
@@ -1921,7 +1921,7 @@ namespace System.ComponentModel.Design.Tests
                 .Verifiable();
             mockEventBindingService
                 .Setup(s => s.GetCompatibleMethods(It.IsAny<EventDescriptor>()))
-                .Returns(new object[0])
+                .Returns(Array.Empty<object>())
                 .Verifiable();
             var mockSite = new Mock<ISite>(MockBehavior.Strict);
             mockSite
@@ -2820,7 +2820,6 @@ namespace System.ComponentModel.Design.Tests
         [Fact]
         public void ComponentDesigner_IDesignerFilterPreFilterProperties_WithComponentWithKey_Success()
         {
-            //Debugger.Launch();
             var designer = new SubComponentDesigner();
             IDesignerFilter filter = designer;
             PropertyDescriptor descriptor = TypeDescriptor.GetProperties(typeof(CustomComponent))[0];
@@ -3121,7 +3120,7 @@ namespace System.ComponentModel.Design.Tests
         [DefaultEvent(nameof(DefaultEventComponent.Event))]
         private class DefaultEventComponent : Component
         {
-            private string _stringProperty = null;
+            private string _stringProperty;
 
             public event EventHandler Event
             {
@@ -3145,7 +3144,7 @@ namespace System.ComponentModel.Design.Tests
                 }
             }
 
-            public int StringPropertySetCount { get; set; } = 0;
+            public int StringPropertySetCount { get; set; }
 
             public int IntProperty { get; set; }
 

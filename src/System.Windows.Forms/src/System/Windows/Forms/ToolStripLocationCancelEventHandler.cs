@@ -8,5 +8,5 @@ namespace System.Windows.Forms
     ///  Represents a method that will handle the event raised when canceling an
     ///  <see cref="ToolStrip.OnLocationChanging"/> event for <see cref="ToolStrip"/>.
     /// </summary>
-    internal delegate void ToolStripLocationCancelEventHandler(object sender, ToolStripLocationCancelEventArgs e);
+    internal delegate void ToolStripLocationCancelEventHandler(object? sender, ToolStripLocationCancelEventArgs e);
 }

@@ -58,12 +58,12 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override void Serialize(SerializationStore store, object value)
         {
-            if (store == null)
+            if (store is null)
             {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            if (value == null)
+            if (value is null)
             {
                 throw new ArgumentNullException(nameof(value));
             }
@@ -81,12 +81,12 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override void SerializeAbsolute(SerializationStore store, object value)
         {
-            if (store == null)
+            if (store is null)
             {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            if (value == null)
+            if (value is null)
             {
                 throw new ArgumentNullException(nameof(value));
             }
@@ -104,17 +104,17 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override void SerializeMember(SerializationStore store, object owningObject, MemberDescriptor member)
         {
-            if (store == null)
+            if (store is null)
             {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            if (owningObject == null)
+            if (owningObject is null)
             {
                 throw new ArgumentNullException(nameof(owningObject));
             }
 
-            if (member == null)
+            if (member is null)
             {
                 throw new ArgumentNullException(nameof(member));
             }
@@ -133,17 +133,17 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override void SerializeMemberAbsolute(SerializationStore store, object owningObject, MemberDescriptor member)
         {
-            if (store == null)
+            if (store is null)
             {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            if (owningObject == null)
+            if (owningObject is null)
             {
                 throw new ArgumentNullException(nameof(owningObject));
             }
 
-            if (member == null)
+            if (member is null)
             {
                 throw new ArgumentNullException(nameof(member));
             }
@@ -161,7 +161,7 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override ICollection Deserialize(SerializationStore store)
         {
-            if (store == null)
+            if (store is null)
             {
                 throw new ArgumentNullException(nameof(store));
             }
@@ -179,12 +179,12 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override ICollection Deserialize(SerializationStore store, IContainer container)
         {
-            if (store == null)
+            if (store is null)
             {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            if (container == null)
+            if (container is null)
             {
                 throw new ArgumentNullException(nameof(container));
             }
@@ -202,12 +202,12 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         public override void DeserializeTo(SerializationStore store, IContainer container, bool validateRecycledTypes, bool applyDefaults)
         {
-            if (store == null)
+            if (store is null)
             {
                 throw new ArgumentNullException(nameof(store));
             }
 
-            if (container == null)
+            if (container is null)
             {
                 throw new ArgumentNullException(nameof(container));
             }
@@ -221,7 +221,7 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  The SerializationStore class is an implementation-specific class that stores serialization data for the component serialization service.  
+        ///  The SerializationStore class is an implementation-specific class that stores serialization data for the component serialization service.
         ///  The service adds state to this serialization store.  Once the store is closed it can be saved to a stream.  A serialization store can
         ///  be deserialized at a later date by the same type of serialization service. SerializationStore implements the IDisposable interface such
         ///  that Dispose  simply calls the Close method.  Dispose is implemented as a private interface to avoid confusion.
@@ -244,7 +244,7 @@ namespace System.ComponentModel.Design.Serialization
             private const int StateEvents = 4;
             private const int StateModifier = 5;
 
-            private MemoryStream _resourceStream = null;
+            private MemoryStream _resourceStream;
 
             // Transient fields only used during creation of the store
             private Hashtable _objects;
@@ -286,7 +286,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 get
                 {
-                    if (_errors == null)
+                    if (_errors is null)
                     {
                         _errors = Array.Empty<object>();
                     }
@@ -304,7 +304,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 get
                 {
-                    if (_resources == null)
+                    if (_resources is null)
                     {
                         _resources = new LocalResourceManager();
                     }
@@ -323,7 +323,7 @@ namespace System.ComponentModel.Design.Serialization
                 }
 
                 ObjectData data = (ObjectData)_objects[value];
-                if (data == null)
+                if (data is null)
                 {
                     data = new ObjectData
                     {
@@ -350,7 +350,7 @@ namespace System.ComponentModel.Design.Serialization
                 }
 
                 ObjectData data = (ObjectData)_objects[value];
-                if (data == null)
+                if (data is null)
                 {
                     data = new ObjectData
                     {
@@ -372,7 +372,7 @@ namespace System.ComponentModel.Design.Serialization
             /// </summary>
             public override void Close()
             {
-                if (_objectState == null)
+                if (_objectState is null)
                 {
                     Hashtable state = new Hashtable(_objects.Count);
                     DesignerSerializationManager manager = new DesignerSerializationManager(new LocalServices(this, _provider));
@@ -400,13 +400,15 @@ namespace System.ComponentModel.Design.Serialization
                     // also serialize out resources if we have any  we force this in order for undo to work correctly
                     if (_resources != null)
                     {
-                        Debug.Assert(_resourceStream == null, "Attempting to close a serialization store with already serialized resources");
-                        if (_resourceStream == null)
+                        Debug.Assert(_resourceStream is null, "Attempting to close a serialization store with already serialized resources");
+                        if (_resourceStream is null)
                         {
                             BinaryFormatter formatter = new BinaryFormatter();
                             _resourceStream = new MemoryStream();
 
+#pragma warning disable CS0618 // Type or member is obsolete
                             formatter.Serialize(_resourceStream, _resources.Data);
+#pragma warning restore CS0618 // Type or member is obsolete
                         }
                     }
 
@@ -478,7 +480,9 @@ namespace System.ComponentModel.Design.Serialization
                 {
                     BinaryFormatter formatter = new BinaryFormatter();
                     _resourceStream.Seek(0, SeekOrigin.Begin);
+#pragma warning disable CS0618 // Type or member is obsolete
                     Hashtable resources = formatter.Deserialize(_resourceStream) as Hashtable;
+#pragma warning restore CS0618 // Type or member is obsolete
                     _resources = new LocalResourceManager(resources);
                 }
 
@@ -499,7 +503,7 @@ namespace System.ComponentModel.Design.Serialization
                             foreach (string compName in names)
                             {
                                 object instance = container.Components[compName];
-                                if (instance != null && dsm.GetInstance(compName) == null)
+                                if (instance != null && dsm.GetInstance(compName) is null)
                                 {
                                     dsm.SetName(instance, compName);
                                 }
@@ -566,7 +570,9 @@ namespace System.ComponentModel.Design.Serialization
             internal static CodeDomSerializationStore Load(Stream stream)
             {
                 BinaryFormatter f = new BinaryFormatter();
+#pragma warning disable CS0618 // Type or member is obsolete
                 return (CodeDomSerializationStore)f.Deserialize(stream);
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             /// <summary>
@@ -589,8 +595,7 @@ namespace System.ComponentModel.Design.Serialization
 #if DEBUG
             internal static void TraceCode(string name, object code)
             {
-
-                if (code == null || !s_trace.TraceVerbose)
+                if (code is null || !s_trace.TraceVerbose)
                 {
                     return;
                 }
@@ -599,7 +604,7 @@ namespace System.ComponentModel.Design.Serialization
                 object[] state = (object[])code;
                 code = state[StateCode];
 
-                if (code == null)
+                if (code is null)
                 {
                     return;
                 }
@@ -607,13 +612,13 @@ namespace System.ComponentModel.Design.Serialization
 #pragma warning disable 618
                 System.CodeDom.Compiler.ICodeGenerator codeGenerator = new Microsoft.CSharp.CSharpCodeProvider().CreateGenerator();
 #pragma warning restore 618
-                StringWriter sw = new StringWriter(CultureInfo.InvariantCulture);
+                using var sw = new StringWriter(CultureInfo.InvariantCulture);
                 Trace("Stored CodeDom for {0}: ", name);
                 Debug.Indent();
 
-                if (code is CodeTypeDeclaration)
+                if (code is CodeTypeDeclaration codeTypeDeclaration)
                 {
-                    codeGenerator.GenerateCodeFromType((CodeTypeDeclaration)code, sw, null);
+                    codeGenerator.GenerateCodeFromType(codeTypeDeclaration, sw, null);
                 }
                 else if (code is CodeStatementCollection statements)
                 {
@@ -622,13 +627,13 @@ namespace System.ComponentModel.Design.Serialization
                         codeGenerator.GenerateCodeFromStatement(statement, sw, null);
                     }
                 }
-                else if (code is CodeStatement)
+                else if (code is CodeStatement codeStatement)
                 {
-                    codeGenerator.GenerateCodeFromStatement((CodeStatement)code, sw, null);
+                    codeGenerator.GenerateCodeFromStatement(codeStatement, sw, null);
                 }
-                else if (code is CodeExpression)
+                else if (code is CodeExpression codeExpression)
                 {
-                    codeGenerator.GenerateCodeFromExpression((CodeExpression)code, sw, null);
+                    codeGenerator.GenerateCodeFromExpression(codeExpression, sw, null);
                 }
                 else
                 {
@@ -651,7 +656,7 @@ namespace System.ComponentModel.Design.Serialization
             /// </summary>
             void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
             {
-                if (info == null)
+                if (info is null)
                 {
                     throw new ArgumentNullException(nameof(info));
                 }
@@ -698,7 +703,7 @@ namespace System.ComponentModel.Design.Serialization
                         {
                             exps = _expressions[name];
                         }
-                        if (exps == null)
+                        if (exps is null)
                         {
                             exps = new ArrayList();
                             _expressions[name] = exps;
@@ -939,7 +944,7 @@ namespace System.ComponentModel.Design.Serialization
                         if (typeName != null)
                         {
                             Type type = manager.GetType(typeName);
-                            if (type == null)
+                            if (type is null)
                             {
                                 TraceError("Type does not exist: {0}", typeName);
                                 manager.ReportError(new CodeDomSerializerException(string.Format(SR.SerializerTypeNotFound, typeName), manager));
@@ -949,7 +954,7 @@ namespace System.ComponentModel.Design.Serialization
                                 if (statements != null && statements.Count > 0)
                                 {
                                     CodeDomSerializer serializer = GetSerializer(manager, type);
-                                    if (serializer == null)
+                                    if (serializer is null)
                                     {
                                         // We report this as an error.  This indicates that there are code statements in initialize component that we do not know how to load.
                                         TraceError("Type referenced in init method has no serializer: {0}", type.Name);
@@ -1032,7 +1037,7 @@ namespace System.ComponentModel.Design.Serialization
                                     object exValue = DeserializeExpression(manager, name, exp);
                                     if (exValue != null && !resolved)
                                     {
-                                        if (canInvokeManager && manager.GetInstance(name) == null)
+                                        if (canInvokeManager && manager.GetInstance(name) is null)
                                         {
                                             manager.SetName(exValue, name);
                                             resolved = true;
@@ -1122,9 +1127,12 @@ namespace System.ComponentModel.Design.Serialization
                     throw new NotSupportedException();
                 }
 
-                // <summary>
-                // For everything in the serialization manager's container, we need a variable ref, just in case something that has changed has a reference to another object. We also must do this for everything that we are serializing that is not marked as EntireObject.  Otherwise reference could leak and cause the entire object to be serialized.
-                // <summary>
+                /// <summary>
+                ///  For everything in the serialization manager's container, we need a variable ref,
+                ///  just in case something that has changed has a reference to another object. We also
+                ///  must do this for everything that we are serializing that is not marked as EntireObject.
+                ///  Otherwise reference could leak and cause the entire object to be serialized.
+                /// </summary>
                 internal void SetupVariableReferences(IDesignerSerializationManager manager, IContainer container, IDictionary objectData, IList shimObjectNames)
                 {
                     foreach (IComponent c in container.Components)
@@ -1232,7 +1240,7 @@ namespace System.ComponentModel.Design.Serialization
                                             // For design time properties, we write their value into a resource blob.
                                             if (md._member is PropertyDescriptor prop && prop.PropertyType.IsSerializable)
                                             {
-                                                if (state[StateResources] == null)
+                                                if (state[StateResources] is null)
                                                 {
                                                     state[StateResources] = new Hashtable();
                                                 }
@@ -1278,7 +1286,7 @@ namespace System.ComponentModel.Design.Serialization
                                     {
                                         if (prop.Attributes.Contains(DesignerSerializationVisibilityAttribute.Content) || !prop.IsReadOnly)
                                         {
-                                            if (defaultPropList == null)
+                                            if (defaultPropList is null)
                                             {
                                                 defaultPropList = new ArrayList(data.Members.Count);
                                             }
@@ -1293,14 +1301,14 @@ namespace System.ComponentModel.Design.Serialization
                                     PropertyDescriptorCollection events = ebs.GetEventProperties(TypeDescriptor.GetEvents(data._value));
                                     foreach (PropertyDescriptor eventProp in events)
                                     {
-                                        if (eventProp == null || eventProp.IsReadOnly)
+                                        if (eventProp is null || eventProp.IsReadOnly)
                                         {
                                             continue;
                                         }
 
-                                        if (eventProp.GetValue(data._value) == null)
+                                        if (eventProp.GetValue(data._value) is null)
                                         {
-                                            if (defaultEventList == null)
+                                            if (defaultEventList is null)
                                             {
                                                 defaultEventList = new List<string>();
                                             }
@@ -1317,8 +1325,8 @@ namespace System.ComponentModel.Design.Serialization
                                     {
                                         if (ebs != null && ebs.GetEvent(prop) != null)
                                         {
-                                            Debug.Assert(prop.GetValue(data._value) == null, "ShouldSerializeValue and GetValue are differing");
-                                            if (defaultEventList == null)
+                                            Debug.Assert(prop.GetValue(data._value) is null, "ShouldSerializeValue and GetValue are differing");
+                                            if (defaultEventList is null)
                                             {
                                                 defaultEventList = new List<string>();
                                             }
@@ -1326,7 +1334,7 @@ namespace System.ComponentModel.Design.Serialization
                                         }
                                         else
                                         {
-                                            if (defaultPropList == null)
+                                            if (defaultPropList is null)
                                             {
                                                 defaultPropList = new ArrayList(data.Members.Count);
                                             }
@@ -1442,7 +1450,7 @@ namespace System.ComponentModel.Design.Serialization
                 {
                     get
                     {
-                        if (_members == null)
+                        if (_members is null)
                         {
                             _members = new ArrayList();
                         }
@@ -1465,7 +1473,7 @@ namespace System.ComponentModel.Design.Serialization
                 {
                     get
                     {
-                        if (_hashtable == null)
+                        if (_hashtable is null)
                         {
                             _hashtable = new Hashtable();
                         }
@@ -1496,7 +1504,6 @@ namespace System.ComponentModel.Design.Serialization
             /// </summary>
             private class LocalServices : IServiceProvider, IResourceService
             {
-
                 private readonly CodeDomSerializationStore _store;
                 private readonly IServiceProvider _provider;
 
@@ -1513,7 +1520,7 @@ namespace System.ComponentModel.Design.Serialization
                 // IServiceProvider
                 object IServiceProvider.GetService(Type serviceType)
                 {
-                    if (serviceType == null)
+                    if (serviceType is null)
                     {
                         throw new ArgumentNullException(nameof(serviceType));
                     }
@@ -1632,7 +1639,6 @@ namespace System.ComponentModel.Design.Serialization
                 {
                     return ((IDesignerSerializationManager)_manager).GetService(serviceType);
                 }
-
             }
 
             /// <summary>
@@ -1641,7 +1647,7 @@ namespace System.ComponentModel.Design.Serialization
             private class LocalDesignerSerializationManager : DesignerSerializationManager
             {
                 private readonly CodeDomSerializationStore _store;
-                private Nullable<bool> _typeSvcAvailable = new Nullable<bool>();
+                private bool? _typeSvcAvailable;
 
                 /// <summary>
                 ///  Creates a new serilalization manager.
@@ -1681,7 +1687,7 @@ namespace System.ComponentModel.Design.Serialization
                 protected override Type GetType(string name)
                 {
                     Type t = base.GetType(name);
-                    if (t == null && !TypeResolutionAvailable.Value)
+                    if (t is null && !TypeResolutionAvailable.Value)
                     {
                         AssemblyName[] names = _store.AssemblyNames;
                         // First try the assembly names directly.
@@ -1699,7 +1705,7 @@ namespace System.ComponentModel.Design.Serialization
                         }
 
                         // Failing that go after their dependencies.
-                        if (t == null)
+                        if (t is null)
                         {
                             foreach (AssemblyName n in names)
                             {

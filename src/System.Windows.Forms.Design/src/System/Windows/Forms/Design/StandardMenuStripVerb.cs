@@ -6,14 +6,13 @@ using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 
 namespace System.Windows.Forms.Design
 {
     /// <summary>
-    ///  Internal class to provide 'Insert Standard Items" verb for ToolStrips & MenuStrips.
+    ///  Internal class to provide 'Insert Standard Items" verb for ToolStrips and MenuStrips.
     /// </summary>
     internal class StandardMenuStripVerb
     {
@@ -89,7 +88,7 @@ namespace System.Windows.Forms.Design
                         new Keys[]{/*Help*/Keys.None, /*Contents*/Keys.None, /*Index*/Keys.None, /*Search*/Keys.None,/*Separator*/Keys.None , /*About*/Keys.None}};
 
             Debug.Assert(host != null, "can't create standard menu without designer _host.");
-            if (host == null)
+            if (host is null)
             {
                 return;
             }
@@ -260,7 +259,7 @@ namespace System.Windows.Forms.Design
             string[] menuItemImageNames = new string[] { "new", "open", "save", "print", "-", "cut", "copy", "paste", "-", "help" };
             Debug.Assert(host != null, "can't create standard menu without designer _host.");
 
-            if (host == null)
+            if (host is null)
             {
                 return;
             }
@@ -396,7 +395,6 @@ namespace System.Windows.Forms.Design
                 SelectionManager selMgr = (SelectionManager)_provider.GetService(typeof(SelectionManager));
                 selMgr.Refresh();
             }
-
         }
 
         /// <summary>
@@ -488,7 +486,7 @@ namespace System.Windows.Forms.Design
 
             // see if this name matches another one in the container..
             object existingComponent = _host.Container.Components[baseName];
-            if (existingComponent == null)
+            if (existingComponent is null)
             {
                 if (!nameCreationService.IsValidName(baseName))
                 {

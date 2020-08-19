@@ -2,15 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 
 namespace System.Windows.Forms
 {
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [ProvideProperty("FlowBreak", typeof(Control))]
     [DefaultProperty(nameof(FlowDirection))]
     [Designer("System.Windows.Forms.Design.FlowLayoutPanelDesigner, " + AssemblyRef.SystemDesign)]
@@ -61,7 +60,7 @@ namespace System.Windows.Forms
         [DisplayName("FlowBreak")]
         public bool GetFlowBreak(Control control)
         {
-            if (control == null)
+            if (control is null)
             {
                 throw new ArgumentNullException(nameof(control));
             }
@@ -72,7 +71,7 @@ namespace System.Windows.Forms
         [DisplayName("FlowBreak")]
         public void SetFlowBreak(Control control, bool value)
         {
-            if (control == null)
+            if (control is null)
             {
                 throw new ArgumentNullException(nameof(control));
             }

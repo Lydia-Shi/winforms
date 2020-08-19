@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -41,7 +43,6 @@ namespace System.Windows.Forms
             Debug.Assert(NativeHtmlElement != null, "The element object should implement IHTMLElement");
 
             this.shimManager = shimManager;
-
         }
 
         public HtmlElementCollection All
@@ -105,7 +106,7 @@ namespace System.Windows.Forms
                 if (ShimManager != null)
                 {
                     HtmlElementShim shim = ShimManager.GetElementShim(this);
-                    if (shim == null)
+                    if (shim is null)
                     {
                         shimManager.AddElementShim(this);
                         shim = ShimManager.GetElementShim(this);
@@ -411,7 +412,7 @@ namespace System.Windows.Forms
         public string GetAttribute(string attributeName)
         {
             object oAttributeValue = NativeHtmlElement.GetAttribute(attributeName, 0);
-            return oAttributeValue == null ? "" : oAttributeValue.ToString();
+            return oAttributeValue is null ? "" : oAttributeValue.ToString();
         }
 
         public HtmlElementCollection GetElementsByTagName(string tagName)
@@ -433,59 +434,57 @@ namespace System.Windows.Forms
 
         public unsafe object InvokeMember(string methodName, params object[] parameter)
         {
-            object retVal = null;
-            var dispParams = new Ole32.DISPPARAMS();
             try
             {
-                if (NativeHtmlElement is UnsafeNativeMethods.IDispatch scriptObject)
+                if (NativeHtmlElement is Oleaut32.IDispatch scriptObject)
                 {
                     Guid g = Guid.Empty;
-                    string[] names = new string[] { methodName };
+                    var names = new string[] { methodName };
                     Ole32.DispatchID dispid = Ole32.DispatchID.UNKNOWN;
                     HRESULT hr = scriptObject.GetIDsOfNames(&g, names, 1, Kernel32.GetThreadLocale(), &dispid);
-                    if (hr.Succeeded() && dispid != Ole32.DispatchID.UNKNOWN)
+                    if (!hr.Succeeded() || dispid == Ole32.DispatchID.UNKNOWN)
                     {
-                        // Reverse the arg order below so that parms are read properly thru IDispatch. (
-                        if (parameter != null)
-                        {
-                            // Reverse the parm order so that they read naturally after IDispatch. (
-                            Array.Reverse(parameter);
-                        }
-                        dispParams.rgvarg = (parameter == null) ? IntPtr.Zero : HtmlDocument.ArrayToVARIANTVector(parameter);
-                        dispParams.cArgs = (parameter == null) ? 0 : (uint)parameter.Length;
-                        dispParams.rgdispidNamedArgs = IntPtr.Zero;
+                        return null;
+                    }
+
+                    if (parameter != null)
+                    {
+                        // Reverse the parameter order so that they read naturally after IDispatch.
+                        Array.Reverse(parameter);
+                    }
+
+                    using var vectorArgs = new Oleaut32.VARIANTVector(parameter);
+                    fixed (Oleaut32.VARIANT* pVariant = vectorArgs.Variants)
+                    {
+                        var dispParams = new Oleaut32.DISPPARAMS();
+                        dispParams.rgvarg = pVariant;
+                        dispParams.cArgs = (uint)vectorArgs.Variants.Length;
+                        dispParams.rgdispidNamedArgs = null;
                         dispParams.cNamedArgs = 0;
 
-                        object[] retVals = new object[1];
-                        var pExcepInfo = new Ole32.EXCEPINFO();
+                        var retVals = new object[1];
+                        var excepInfo = new Oleaut32.EXCEPINFO();
                         hr = scriptObject.Invoke(
                             dispid,
                             &g,
                             Kernel32.GetThreadLocale(),
-                            NativeMethods.DISPATCH_METHOD,
+                            Oleaut32.DISPATCH.METHOD,
                             &dispParams,
                             retVals,
-                            &pExcepInfo,
+                            &excepInfo,
                             null);
                         if (hr == HRESULT.S_OK)
                         {
-                            retVal = retVals[0];
+                            return retVals[0];
                         }
                     }
                 }
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
-            }
-            finally
-            {
-                if (dispParams.rgvarg != IntPtr.Zero)
-                {
-                    HtmlDocument.FreeVARIANTVector(dispParams.rgvarg, parameter.Length);
-                }
             }
 
-            return retVal;
+            return null;
         }
 
         public void RemoveFocus()
@@ -527,7 +526,6 @@ namespace System.Windows.Forms
         {
             add => ElementShim.AddHandler(EventClick, value);
             remove => ElementShim.RemoveHandler(EventClick, value);
-
         }
 
         public event HtmlElementEventHandler DoubleClick
@@ -552,7 +550,6 @@ namespace System.Windows.Forms
         {
             add => ElementShim.AddHandler(EventDragLeave, value);
             remove => ElementShim.RemoveHandler(EventDragLeave, value);
-
         }
 
         public event HtmlElementEventHandler DragOver
@@ -571,7 +568,6 @@ namespace System.Windows.Forms
         {
             add => ElementShim.AddHandler(EventGotFocus, value);
             remove => ElementShim.RemoveHandler(EventGotFocus, value);
-
         }
 
         public event HtmlElementEventHandler LosingFocus
@@ -595,7 +591,6 @@ namespace System.Windows.Forms
         {
             add => ElementShim.AddHandler(EventKeyPress, value);
             remove => ElementShim.RemoveHandler(EventKeyPress, value);
-
         }
         public event HtmlElementEventHandler KeyUp
         {
@@ -1008,14 +1003,14 @@ namespace System.Windows.Forms
             public void onstart(IHTMLEventObj evtObj) { }
         }
 
-        ///<summary>
+        /// <summary>
         ///  HtmlElementShim - this is the glue between the DOM eventing mechanisms
         ///          and our CLR callbacks.
         ///
         ///  HTMLElementEvents2: we create an IConnectionPoint (via ConnectionPointCookie) between us and MSHTML and it calls back
         ///              on our an instance of HTMLElementEvents2.  The HTMLElementEvents2 class then fires the event.
         ///
-        ///</summary>
+        /// </summary>
         internal class HtmlElementShim : HtmlShim
         {
             private static readonly Type[] dispInterfaceTypes = {typeof(DHTMLElementEvents2),
@@ -1042,7 +1037,7 @@ namespace System.Windows.Forms
 
             private AxHost.ConnectionPointCookie cookie;   // To hook up events from the native HtmlElement
             private HtmlElement htmlElement;
-            private readonly IHTMLWindow2 associatedWindow = null;
+            private readonly IHTMLWindow2 associatedWindow;
 
             public HtmlElementShim(HtmlElement element)
             {
@@ -1081,21 +1076,19 @@ namespace System.Windows.Forms
             ///  Support IHTMLElement2.AttachEventHandler
             public override void AttachEventHandler(string eventName, EventHandler eventHandler)
             {
-
                 // IE likes to call back on an IDispatch of DISPID=0 when it has an event,
                 // the HtmlToClrEventProxy helps us fake out the CLR so that we can call back on
                 // our EventHandler properly.
 
                 HtmlToClrEventProxy proxy = AddEventProxy(eventName, eventHandler);
-                bool success = ((IHTMLElement2)NativeHtmlElement).AttachEvent(eventName, proxy);
-                Debug.Assert(success, "failed to add event");
+                ((IHTMLElement2)NativeHtmlElement).AttachEvent(eventName, proxy);
             }
 
             public override void ConnectToEvents()
             {
-                if (cookie == null || !cookie.Connected)
+                if (cookie is null || !cookie.Connected)
                 {
-                    for (int i = 0; i < dispInterfaceTypes.Length && cookie == null; i++)
+                    for (int i = 0; i < dispInterfaceTypes.Length && cookie is null; i++)
                     {
                         cookie = new AxHost.ConnectionPointCookie(NativeHtmlElement,
                                                                                   new HTMLElementEvents2(htmlElement),
@@ -1126,7 +1119,6 @@ namespace System.Windows.Forms
                     cookie.Disconnect();
                     cookie = null;
                 }
-
             }
             protected override void Dispose(bool disposing)
             {
@@ -1142,7 +1134,6 @@ namespace System.Windows.Forms
             {
                 return htmlElement;
             }
-
         }
 
         #region operators
@@ -1199,4 +1190,3 @@ namespace System.Windows.Forms
 
     }
 }
-

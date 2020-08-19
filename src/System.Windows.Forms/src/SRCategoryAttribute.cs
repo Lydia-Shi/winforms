@@ -13,7 +13,7 @@ namespace System.Windows.Forms
         {
         }
 
-        protected override string GetLocalizedString(string value)
+        protected override string? GetLocalizedString(string value)
         {
             return SR.GetResourceString(value);
         }

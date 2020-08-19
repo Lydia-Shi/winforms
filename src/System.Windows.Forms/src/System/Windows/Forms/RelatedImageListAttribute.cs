@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     /// <summary>
@@ -11,7 +13,7 @@ namespace System.Windows.Forms
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public sealed class RelatedImageListAttribute : Attribute
     {
-        private readonly string relatedImageList = null;
+        private readonly string relatedImageList;
 
         public RelatedImageListAttribute(string relatedImageList)
         {

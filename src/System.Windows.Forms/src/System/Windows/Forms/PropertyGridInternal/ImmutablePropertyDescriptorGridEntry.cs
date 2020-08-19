@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Reflection;
@@ -29,10 +31,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         public override object PropertyValue
         {
-            get
-            {
-                return base.PropertyValue;
-            }
+            get => base.PropertyValue;
             set
             {
                 // Create a new instance of the value and set it into the parent grid entry.
@@ -47,7 +46,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                 for (int i = 0; i < props.Count; i++)
                 {
-                    if (propertyInfo.Name != null && propertyInfo.Name.Equals(props[i].Name))
+                    if (_propertyInfo.Name != null && _propertyInfo.Name.Equals(props[i].Name))
                     {
                         values[props[i].Name] = value;
                     }

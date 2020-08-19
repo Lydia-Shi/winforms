@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -18,10 +20,10 @@ namespace System.Windows.Forms
     // The only event this dialog has is HelpRequest, which isn't very useful
     public class ColorDialog : CommonDialog
     {
-        private int options;
-        private readonly int[] customColors;
+        private int _options;
+        private readonly int[] _customColors;
 
-        private Color color;
+        private Color _color;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='ColorDialog'/>
@@ -29,7 +31,7 @@ namespace System.Windows.Forms
         /// </summary>
         public ColorDialog()
         {
-            customColors = new int[16];
+            _customColors = new int[16];
             Reset();
         }
 
@@ -37,11 +39,9 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether the user can use the dialog box
         ///  to define custom colors.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatBehavior)),
-            DefaultValue(true),
-            SRDescription(nameof(SR.CDallowFullOpenDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.CDallowFullOpenDescr))]
         public virtual bool AllowFullOpen
         {
             get
@@ -59,11 +59,9 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether the dialog box displays all available colors in
         ///  the set of basic colors.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatBehavior)),
-            DefaultValue(false),
-            SRDescription(nameof(SR.CDanyColorDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.CDanyColorDescr))]
         public virtual bool AnyColor
         {
             get
@@ -80,25 +78,23 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the color selected by the user.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatData)),
-            SRDescription(nameof(SR.CDcolorDescr))
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [SRDescription(nameof(SR.CDcolorDescr))]
         public Color Color
         {
             get
             {
-                return color;
+                return _color;
             }
             set
             {
                 if (!value.IsEmpty)
                 {
-                    color = value;
+                    _color = value;
                 }
                 else
                 {
-                    color = Color.Black;
+                    _color = Color.Black;
                 }
             }
         }
@@ -107,25 +103,23 @@ namespace System.Windows.Forms
         ///  Gets or sets the set of
         ///  custom colors shown in the dialog box.
         /// </summary>
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-            SRDescription(nameof(SR.CDcustomColorsDescr))
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.CDcustomColorsDescr))]
         public int[] CustomColors
         {
-            get { return (int[])customColors.Clone(); }
+            get { return (int[])_customColors.Clone(); }
             set
             {
-                int length = value == null ? 0 : Math.Min(value.Length, 16);
+                int length = value is null ? 0 : Math.Min(value.Length, 16);
                 if (length > 0)
                 {
-                    Array.Copy(value, 0, customColors, 0, length);
+                    Array.Copy(value, 0, _customColors, 0, length);
                 }
 
                 for (int i = length; i < 16; i++)
                 {
-                    customColors[i] = 0x00FFFFFF;
+                    _customColors[i] = 0x00FFFFFF;
                 }
             }
         }
@@ -134,11 +128,9 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether the controls used to create custom
         ///  colors are visible when the dialog box is opened
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            DefaultValue(false),
-            SRDescription(nameof(SR.CDfullOpenDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.CDfullOpenDescr))]
         public virtual bool FullOpen
         {
             get
@@ -164,7 +156,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return options;
+                return _options;
             }
         }
 
@@ -172,11 +164,9 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether a Help button appears
         ///  in the color dialog box.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatBehavior)),
-            DefaultValue(false),
-            SRDescription(nameof(SR.CDshowHelpDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.CDshowHelpDescr))]
         public virtual bool ShowHelp
         {
             get
@@ -195,11 +185,9 @@ namespace System.Windows.Forms
         ///  whether the dialog
         ///  box will restrict users to selecting solid colors only.
         /// </summary>
-        [
-            SRCategory(nameof(SR.CatBehavior)),
-            DefaultValue(false),
-            SRDescription(nameof(SR.CDsolidColorOnlyDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.CDsolidColorOnlyDescr))]
         public virtual bool SolidColorOnly
         {
             get
@@ -217,7 +205,7 @@ namespace System.Windows.Forms
         /// </summary>
         private bool GetOption(int option)
         {
-            return (options & option) != 0;
+            return (_options & option) != 0;
         }
 
         /// <summary>
@@ -228,8 +216,8 @@ namespace System.Windows.Forms
         /// </summary>
         public override void Reset()
         {
-            options = 0;
-            color = Color.Black;
+            _options = 0;
+            _color = Color.Black;
             CustomColors = null;
         }
 
@@ -248,10 +236,10 @@ namespace System.Windows.Forms
             IntPtr custColorPtr = Marshal.AllocCoTaskMem(64);
             try
             {
-                Marshal.Copy(customColors, 0, custColorPtr, 16);
+                Marshal.Copy(_customColors, 0, custColorPtr, 16);
                 cc.hwndOwner = hwndOwner;
                 cc.hInstance = Instance;
-                cc.rgbResult = ColorTranslator.ToWin32(color);
+                cc.rgbResult = ColorTranslator.ToWin32(_color);
                 cc.lpCustColors = custColorPtr;
 
                 Comdlg32.CC flags = (Comdlg32.CC)Options | Comdlg32.CC.RGBINIT | Comdlg32.CC.ENABLEHOOK;
@@ -269,12 +257,12 @@ namespace System.Windows.Forms
                     return false;
                 }
 
-                if (cc.rgbResult != ColorTranslator.ToWin32(color))
+                if (cc.rgbResult != ColorTranslator.ToWin32(_color))
                 {
-                    color = ColorTranslator.FromOle(cc.rgbResult);
+                    _color = ColorTranslator.FromOle(cc.rgbResult);
                 }
 
-                Marshal.Copy(custColorPtr, customColors, 0, 16);
+                Marshal.Copy(custColorPtr, _customColors, 0, 16);
                 return true;
             }
             finally
@@ -290,11 +278,11 @@ namespace System.Windows.Forms
         {
             if (value)
             {
-                options |= option;
+                _options |= option;
             }
             else
             {
-                options &= ~option;
+                _options &= ~option;
             }
         }
 

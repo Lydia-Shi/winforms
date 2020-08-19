@@ -2,7 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -32,7 +33,7 @@ namespace System.Windows.Forms
         protected override string GetLocalizedString(string value)
         {
             string localizedValue = base.GetLocalizedString(value);
-            if (localizedValue == null)
+            if (localizedValue is null)
             {
                 localizedValue = (string)GetSRObject("WinFormsCategory" + value);
             }

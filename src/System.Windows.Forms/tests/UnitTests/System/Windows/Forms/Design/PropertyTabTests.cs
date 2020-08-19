@@ -11,7 +11,10 @@ using Xunit;
 
 namespace System.Windows.Forms.Design.Tests
 {
-    public class PropertyTabTests
+    using Size = System.Drawing.Size;
+
+    // NB: doesn't require thread affinity
+    public class PropertyTabTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void PropertyTab_Ctor_Default()
@@ -120,10 +123,24 @@ namespace System.Windows.Forms.Design.Tests
         }
 
         [Fact]
-        public void PropertyTab_GetDefaultProperty_Invoke_ReturnsExpected()
+        public void PropertyTab_GetDefaultProperty_InvokeWithoutDefaultProperty_ReturnsExpected()
+        {
+            var tab = new SubPropertyTab();
+            Assert.Null(tab.GetDefaultProperty(new ClassWithoutDefaultProperty()));
+        }
+
+        [Fact]
+        public void PropertyTab_GetDefaultProperty_InvokeWithDefaultProperty_ReturnsExpected()
         {
             var tab = new SubPropertyTab();
             Assert.Equal("Value", tab.GetDefaultProperty(new ClassWithDefaultProperty()).Name);
+        }
+
+        [Fact]
+        public void PropertyTab_GetDefaultProperty_InvokeNullComponent_ReturnsExpected()
+        {
+            var tab = new SubPropertyTab();
+            Assert.Null(tab.GetDefaultProperty(null));
         }
 
         [Theory]
@@ -187,6 +204,11 @@ namespace System.Windows.Forms.Design.Tests
 
         private class CustomPropertyTab : SubPropertyTab
         {
+        }
+
+        private class ClassWithoutDefaultProperty
+        {
+            public int Value { get; set; }
         }
 
         [DefaultProperty(nameof(ClassWithDefaultProperty.Value))]

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace System.Windows.Forms
 {
@@ -15,7 +16,7 @@ namespace System.Windows.Forms
     /// </summary>
     public class ApplicationContext : IDisposable
     {
-        private Form _mainForm;
+        private Form? _mainForm;
 
         /// <summary>
         ///  Creates a new ApplicationContext with no mainForm.
@@ -29,7 +30,7 @@ namespace System.Windows.Forms
         ///  If OnMainFormClosed is not overriden, the thread's message
         ///  loop will be terminated when mainForm is closed.
         /// </summary>
-        public ApplicationContext(Form mainForm)
+        public ApplicationContext(Form? mainForm)
         {
             MainForm = mainForm;
         }
@@ -42,7 +43,7 @@ namespace System.Windows.Forms
         ///  If OnMainFormClosed is not overriden, the thread's message
         ///  loop will be terminated when mainForm is closed.
         /// </summary>
-        public Form MainForm
+        public Form? MainForm
         {
             get => _mainForm;
             set
@@ -68,13 +69,13 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.ControlTagDescr))]
         [DefaultValue(null)]
         [TypeConverter(typeof(StringConverter))]
-        public object Tag { get; set; }
+        public object? Tag { get; set; }
 
         /// <summary>
         ///  Is raised when the thread's message loop should be terminated.
         ///  This is raised by calling ExitThread.
         /// </summary>
-        public event EventHandler ThreadExit;
+        public event EventHandler? ThreadExit;
 
         /// <summary>
         ///  Disposes the context. This should dispose the mainForm. This is
@@ -117,14 +118,15 @@ namespace System.Windows.Forms
         ///  Called when the mainForm is closed. The default implementation
         ///  of this will call ExitThreadCore.
         /// </summary>
-        protected virtual void OnMainFormClosed(object sender, EventArgs e) => ExitThreadCore();
+        protected virtual void OnMainFormClosed(object? sender, EventArgs e) => ExitThreadCore();
 
         /// <summary>
         ///  Called when the mainForm is closed. The default implementation
         ///  of this will call ExitThreadCore.
         /// </summary>
-        private void OnMainFormDestroy(object sender, EventArgs e)
+        private void OnMainFormDestroy(object? sender, EventArgs e)
         {
+            Debug.Assert(sender is Form);
             Form form = (Form)sender;
             if (!form.RecreatingHandle)
             {
@@ -134,4 +136,3 @@ namespace System.Windows.Forms
         }
     }
 }
-

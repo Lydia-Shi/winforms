@@ -3,9 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
-using Accessibility;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -17,12 +16,10 @@ namespace System.Windows.Forms
         ///  This inherits from the base ListBoxExAccessibleObject and ListBoxAccessibleObject
         ///  to have all base functionality.
         /// </summary>
-        [ComVisible(true)]
         internal class ListBoxAccessibleObject : ControlAccessibleObject
         {
             private readonly Dictionary<ItemArray.Entry, ListBoxItemAccessibleObject> _itemAccessibleObjects;
             private readonly ListBox _owningListBox;
-            private readonly IAccessible _systemIAccessible;
 
             /// <summary>
             ///  Initializes new instance of ListBoxAccessibleObject.
@@ -32,7 +29,6 @@ namespace System.Windows.Forms
             {
                 _owningListBox = owningListBox;
                 _itemAccessibleObjects = new Dictionary<ItemArray.Entry, ListBoxItemAccessibleObject>();
-                _systemIAccessible = GetSystemIAccessibleInternal();
             }
 
             internal override Rectangle BoundingRectangle => _owningListBox.GetToolNativeScreenRectangle();
@@ -41,11 +37,11 @@ namespace System.Windows.Forms
 
             internal override bool IsSelectionRequired => true;
 
-            internal override int[] RuntimeId
+            internal override int[]? RuntimeId
             {
                 get
                 {
-                    if (_owningListBox == null)
+                    if (_owningListBox is null)
                     {
                         return base.RuntimeId;
                     }
@@ -69,7 +65,6 @@ namespace System.Windows.Forms
                 get
                 {
                     AccessibleStates state = AccessibleStates.Focusable;
-
                     if (_owningListBox.Focused)
                     {
                         state |= AccessibleStates.Focused;
@@ -87,8 +82,7 @@ namespace System.Windows.Forms
             /// <returns>The accessible object of corresponding element in the provided coordinates.</returns>
             internal override UiaCore.IRawElementProviderFragment ElementProviderFromPoint(double x, double y)
             {
-                AccessibleObject element = HitTest((int)x, (int)y);
-
+                AccessibleObject? element = HitTest((int)x, (int)y);
                 if (element != null)
                 {
                     return element;
@@ -102,7 +96,7 @@ namespace System.Windows.Forms
             /// </summary>
             /// <param name="direction">Indicates the direction in which to navigate.</param>
             /// <returns>Returns the element in the specified direction.</returns>
-            internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
+            internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
                 int childCount = _owningListBox.Items.Count;
 
@@ -111,28 +105,22 @@ namespace System.Windows.Forms
                     return null;
                 }
 
-                switch (direction)
+                return direction switch
                 {
-                    case UiaCore.NavigateDirection.FirstChild:
-                        return GetChild(0);
-                    case UiaCore.NavigateDirection.LastChild:
-                        return GetChild(childCount - 1);
-                    default:
-                        return base.FragmentNavigate(direction);
-                }
+                    UiaCore.NavigateDirection.FirstChild => GetChild(0),
+                    UiaCore.NavigateDirection.LastChild => GetChild(childCount - 1),
+                    _ => base.FragmentNavigate(direction),
+                };
             }
 
-            internal override UiaCore.IRawElementProviderFragment GetFocus()
-            {
-                return GetFocused();
-            }
+            internal override UiaCore.IRawElementProviderFragment? GetFocus() => GetFocused();
 
             /// <summary>
             ///  Gets the accessible property value.
             /// </summary>
             /// <param name="propertyID">The accessible property ID.</param>
             /// <returns>The accessible property value.</returns>
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID)
             {
                 switch (propertyID)
                 {
@@ -164,7 +152,7 @@ namespace System.Windows.Forms
 
             internal override UiaCore.IRawElementProviderSimple[] GetSelection()
             {
-                AccessibleObject itemAccessibleObject = GetSelected();
+                AccessibleObject? itemAccessibleObject = GetSelected();
                 if (itemAccessibleObject != null)
                 {
                     return new UiaCore.IRawElementProviderSimple[]
@@ -173,7 +161,7 @@ namespace System.Windows.Forms
                     };
                 }
 
-                return new UiaCore.IRawElementProviderSimple[0];
+                return Array.Empty<UiaCore.IRawElementProviderSimple>();
             }
 
             internal override bool IsIAccessibleExSupported()
@@ -189,8 +177,7 @@ namespace System.Windows.Forms
             internal override bool IsPatternSupported(UiaCore.UIA patternId)
             {
                 if (patternId == UiaCore.UIA.ScrollPatternId ||
-                    patternId == UiaCore.UIA.SelectionPatternId ||
-                    patternId == UiaCore.UIA.LegacyIAccessiblePatternId)
+                    patternId == UiaCore.UIA.SelectionPatternId)
                 {
                     return true;
                 }
@@ -205,22 +192,22 @@ namespace System.Windows.Forms
 
             internal override void SelectItem()
             {
-                GetChild(_owningListBox.FocusedIndex).SelectItem();
+                GetChild(_owningListBox.FocusedIndex)?.SelectItem();
             }
 
             internal override void SetFocus()
             {
-                AccessibleObject focusedItem = GetFocused();
-                focusedItem.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
-                focusedItem.SetFocus();
+                AccessibleObject? focusedItem = GetFocused();
+                focusedItem?.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
+                focusedItem?.SetFocus();
             }
 
-            internal override void SetValue(string newValue)
+            internal override void SetValue(string? newValue)
             {
                 Value = newValue;
             }
 
-            public override AccessibleObject GetChild(int index)
+            public override AccessibleObject? GetChild(int index)
             {
                 if (index < 0 || index >= _owningListBox.Items.Count)
                 {
@@ -241,7 +228,7 @@ namespace System.Windows.Forms
                 return _owningListBox.Items.Count;
             }
 
-            public override AccessibleObject GetFocused()
+            public override AccessibleObject? GetFocused()
             {
                 int index = _owningListBox.FocusedIndex;
                 if (index >= 0)
@@ -252,7 +239,7 @@ namespace System.Windows.Forms
                 return null;
             }
 
-            public override AccessibleObject GetSelected()
+            public override AccessibleObject? GetSelected()
             {
                 int index = _owningListBox.SelectedIndex;
                 if (index >= 0)
@@ -263,15 +250,15 @@ namespace System.Windows.Forms
                 return null;
             }
 
-            public override AccessibleObject HitTest(int x, int y)
+            public override AccessibleObject? HitTest(int x, int y)
             {
                 // Within a child element?
-                //
                 int count = GetChildCount();
                 for (int index = 0; index < count; ++index)
                 {
-                    AccessibleObject child = GetChild(index);
-                    if (child.Bounds.Contains(x, y))
+                    AccessibleObject? child = GetChild(index);
+                    Debug.Assert(child != null, $"GetChild({index}) returned null");
+                    if (child != null && child.Bounds.Contains(x, y))
                     {
                         _owningListBox.HasKeyboardFocus = false;
                         return child;
@@ -279,7 +266,6 @@ namespace System.Windows.Forms
                 }
 
                 // Within the ListBox bounds?
-                //
                 if (Bounds.Contains(x, y))
                 {
                     _owningListBox.HasKeyboardFocus = true;

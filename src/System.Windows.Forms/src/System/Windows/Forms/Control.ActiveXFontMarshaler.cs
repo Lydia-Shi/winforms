@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using System.Runtime.InteropServices;
 using static Interop;
@@ -53,7 +55,7 @@ namespace System.Windows.Forms
 
                 Marshal.Release(pFont);
 
-                if (NativeMethods.Failed(hr))
+                if (((HRESULT)hr).Failed())
                 {
                     Marshal.ThrowExceptionForHR(hr);
                 }
@@ -68,7 +70,7 @@ namespace System.Windows.Forms
                 {
                     return Font.FromHfont(nativeFont.hFont);
                 }
-                catch (Exception e) when (!ClientUtils.IsSecurityOrCriticalException(e))
+                catch (Exception e) when (!ClientUtils.IsCriticalException(e))
                 {
                     return DefaultFont;
                 }

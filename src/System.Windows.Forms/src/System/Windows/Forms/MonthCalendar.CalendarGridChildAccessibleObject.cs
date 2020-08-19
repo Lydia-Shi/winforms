@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     public partial class MonthCalendar
@@ -11,12 +13,12 @@ namespace System.Windows.Forms
         /// </summary>
         internal abstract class CalendarGridChildAccessibleObject : CalendarChildAccessibleObject
         {
-            protected AccessibleObject _parentAccessibleObject;
+            protected readonly AccessibleObject _parentAccessibleObject;
 
             public CalendarGridChildAccessibleObject(MonthCalendarAccessibleObject calendarAccessibleObject, int calendarIndex, CalendarChildType itemType,
                 AccessibleObject parentAccessibleObject, int itemIndex) : base(calendarAccessibleObject, calendarIndex, itemType)
             {
-                _parentAccessibleObject = parentAccessibleObject;
+                _parentAccessibleObject = parentAccessibleObject ?? throw new ArgumentNullException(nameof(parentAccessibleObject));
             }
 
             public override AccessibleObject Parent => _parentAccessibleObject;

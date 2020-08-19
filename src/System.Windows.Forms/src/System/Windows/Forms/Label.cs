@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -18,65 +20,49 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Represents a standard Windows label.
     /// </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultProperty(nameof(Text)),
-    DefaultBindingProperty(nameof(Text)),
-    Designer("System.Windows.Forms.Design.LabelDesigner, " + AssemblyRef.SystemDesign),
-    ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign),
-    SRDescription(nameof(SR.DescriptionLabel))
-    ]
+    [DefaultProperty(nameof(Text))]
+    [DefaultBindingProperty(nameof(Text))]
+    [Designer("System.Windows.Forms.Design.LabelDesigner, " + AssemblyRef.SystemDesign)]
+    [ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign)]
+    [SRDescription(nameof(SR.DescriptionLabel))]
     // If not for FormatControl, we could inherit from ButtonBase and get foreground images for free.
-    public class Label : Control, IAutomationLiveRegion
+    public partial class Label : Control, IAutomationLiveRegion
     {
-        private static readonly object EVENT_TEXTALIGNCHANGED = new object();
+        private static readonly object s_eventTextAlignChanged = new object();
 
-        private static readonly BitVector32.Section StateUseMnemonic = BitVector32.CreateSection(1);
-        private static readonly BitVector32.Section StateAutoSize = BitVector32.CreateSection(1, StateUseMnemonic);
-        private static readonly BitVector32.Section StateAnimating = BitVector32.CreateSection(1, StateAutoSize);
-        private static readonly BitVector32.Section StateFlatStyle = BitVector32.CreateSection((int)FlatStyle.System, StateAnimating);
-        private static readonly BitVector32.Section StateBorderStyle = BitVector32.CreateSection((int)BorderStyle.Fixed3D, StateFlatStyle);
-        private static readonly BitVector32.Section StateAutoEllipsis = BitVector32.CreateSection(1, StateBorderStyle);
+        private static readonly BitVector32.Section s_stateUseMnemonic = BitVector32.CreateSection(1);
+        private static readonly BitVector32.Section s_stateAutoSize = BitVector32.CreateSection(1, s_stateUseMnemonic);
+        private static readonly BitVector32.Section s_stateAnimating = BitVector32.CreateSection(1, s_stateAutoSize);
+        private static readonly BitVector32.Section s_stateFlatStyle = BitVector32.CreateSection((int)FlatStyle.System, s_stateAnimating);
+        private static readonly BitVector32.Section s_stateBorderStyle = BitVector32.CreateSection((int)BorderStyle.Fixed3D, s_stateFlatStyle);
+        private static readonly BitVector32.Section s_stateAutoEllipsis = BitVector32.CreateSection(1, s_stateBorderStyle);
 
-        private static readonly int PropImageList = PropertyStore.CreateKey();
-        private static readonly int PropImage = PropertyStore.CreateKey();
+        private static readonly int s_propImageList = PropertyStore.CreateKey();
+        private static readonly int s_propImage = PropertyStore.CreateKey();
 
-        private static readonly int PropTextAlign = PropertyStore.CreateKey();
-        private static readonly int PropImageAlign = PropertyStore.CreateKey();
-        private static readonly int PropImageIndex = PropertyStore.CreateKey();
+        private static readonly int s_propTextAlign = PropertyStore.CreateKey();
+        private static readonly int s_propImageAlign = PropertyStore.CreateKey();
+        private static readonly int s_propImageIndex = PropertyStore.CreateKey();
 
-        ///////////////////////////////////////////////////////////////////////
-        // Label per instance members
-        //
-        // Note: Do not add anything to this list unless absolutely neccessary.
-        //
-        // Begin Members {
+        private BitVector32 _labelState;
+        private int _requestedHeight;
+        private int _requestedWidth;
+        private LayoutUtils.MeasureTextCache _textMeasurementCache;
 
-        // List of properties that are generally set, so we keep them directly on
-        // Label.
-        //
+        // Tooltip is shown only if the Text in the Label is cut.
+        internal bool _showToolTip;
+        private ToolTip _textToolTip;
 
-        BitVector32 labelState = new BitVector32();
-        int requestedHeight;
-        int requestedWidth;
-        LayoutUtils.MeasureTextCache textMeasurementCache;
+        // This bool suggests that the User has added a toolTip to this label. In such a case we should not show the
+        // AutoEllipsis tooltip.
+        private bool _controlToolTip;
 
-        //Tooltip is shown only if the Text in the Label is cut.
-        internal bool showToolTip = false;
-        ToolTip textToolTip;
-        // This bool suggests that the User has added a toolTip to this label
-        // In such a case we should not show the AutoEllipsis tooltip.
-        bool controlToolTip = false;
-        AutomationLiveSetting liveSetting;
+        private AutomationLiveSetting _liveSetting;
 
-        // } End Members
-        ///////////////////////////////////////////////////////////////////////
         /// <summary>
         ///  Initializes a new instance of the <see cref='Label'/> class.
         /// </summary>
-        public Label()
-        : base()
+        public Label() : base()
         {
             // this class overrides GetPreferredSizeCore, let Control automatically cache the result
             SetExtendedState(ExtendedStates.UserPreferredSizeCache, true);
@@ -92,35 +78,29 @@ namespace System.Windows.Forms
 
             CommonProperties.SetSelfAutoSizeInDefaultLayout(this, true);
 
-            labelState[StateFlatStyle] = (int)FlatStyle.Standard;
-            labelState[StateUseMnemonic] = 1;
-            labelState[StateBorderStyle] = (int)BorderStyle.None;
+            _labelState[s_stateFlatStyle] = (int)FlatStyle.Standard;
+            _labelState[s_stateUseMnemonic] = 1;
+            _labelState[s_stateBorderStyle] = (int)BorderStyle.None;
 
             TabStop = false;
-            requestedHeight = Height;
-            requestedWidth = Width;
+            _requestedHeight = Height;
+            _requestedWidth = Width;
         }
 
         /// <summary>
-        ///  Indicates whether the control is automatically resized
-        ///  to fit its contents.
+        ///  Indicates whether the control is automatically resized to fit its contents.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatLayout)),
-        DefaultValue(false),
-        RefreshProperties(RefreshProperties.All),
-        Localizable(true),
-        SRDescription(nameof(SR.LabelAutoSizeDescr)),
-        Browsable(true),
-        EditorBrowsable(EditorBrowsableState.Always),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)
-        ]
+        [SRCategory(nameof(SR.CatLayout))]
+        [DefaultValue(false)]
+        [RefreshProperties(RefreshProperties.All)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.LabelAutoSizeDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public override bool AutoSize
         {
-            get
-            {
-                return base.AutoSize;
-            }
+            get => base.AutoSize;
             set
             {
                 if (AutoSize != value)
@@ -131,8 +111,10 @@ namespace System.Windows.Forms
             }
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.ControlOnAutoSizeChangedDescr))]
-        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always)]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.ControlOnAutoSizeChangedDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         new public event EventHandler AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
@@ -143,34 +125,28 @@ namespace System.Windows.Forms
         ///  This property controls the activation handling of bleedover for the text that
         ///  extends beyond the width of the label.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        Browsable(true),
-        EditorBrowsable(EditorBrowsableState.Always),
-        SRDescription(nameof(SR.LabelAutoEllipsisDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
+        [SRDescription(nameof(SR.LabelAutoEllipsisDescr))]
         public bool AutoEllipsis
         {
-            get
-            {
-                return labelState[StateAutoEllipsis] != 0;
-            }
-
+            get => _labelState[s_stateAutoEllipsis] != 0;
             set
             {
                 if (AutoEllipsis != value)
                 {
-                    labelState[StateAutoEllipsis] = value ? 1 : 0;
+                    _labelState[s_stateAutoEllipsis] = value ? 1 : 0;
                     MeasureTextCache.InvalidateCache();
 
                     OnAutoEllipsisChanged(/*EventArgs.Empty*/);
 
                     if (value)
                     {
-                        if (textToolTip == null)
+                        if (_textToolTip is null)
                         {
-                            textToolTip = new ToolTip();
+                            _textToolTip = new ToolTip();
                         }
                     }
 
@@ -178,6 +154,7 @@ namespace System.Windows.Forms
                     {
                         LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.AutoEllipsis);
                     }
+
                     Invalidate();
                 }
             }
@@ -186,25 +163,19 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the image rendered on the background of the control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.LabelBackgroundImageDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.LabelBackgroundImageDescr))]
         public override Image BackgroundImage
         {
-            get
-            {
-                return base.BackgroundImage;
-            }
-            set
-            {
-                base.BackgroundImage = value;
-            }
+            get => base.BackgroundImage;
+            set => base.BackgroundImage = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler BackgroundImageChanged
         {
             add => base.BackgroundImageChanged += value;
@@ -214,22 +185,16 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the image layout for the background of the control.
         /// </summary>
-        [
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override ImageLayout BackgroundImageLayout
         {
-            get
-            {
-                return base.BackgroundImageLayout;
-            }
-            set
-            {
-                base.BackgroundImageLayout = value;
-            }
+            get => base.BackgroundImageLayout;
+            set => base.BackgroundImageLayout = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
@@ -245,7 +210,7 @@ namespace System.Windows.Forms
         [SRDescription(nameof(SR.LabelBorderDescr))]
         public virtual BorderStyle BorderStyle
         {
-            get => (BorderStyle)labelState[StateBorderStyle];
+            get => (BorderStyle)_labelState[s_stateBorderStyle];
             set
             {
                 if (!ClientUtils.IsEnumValid(value, (int)value, (int)BorderStyle.None, (int)BorderStyle.Fixed3D))
@@ -255,7 +220,7 @@ namespace System.Windows.Forms
 
                 if (BorderStyle != value)
                 {
-                    labelState[StateBorderStyle] = (int)value;
+                    _labelState[s_stateBorderStyle] = (int)value;
                     if (ParentInternal != null)
                     {
                         LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.BorderStyle);
@@ -273,13 +238,7 @@ namespace System.Windows.Forms
         ///  Determines whether the current state of the control allows for rendering text using TextRenderer (GDI).
         ///  See LinkLabel implementation for details.
         /// </summary>
-        internal virtual bool CanUseTextRenderer
-        {
-            get
-            {
-                return true;
-            }
-        }
+        internal virtual bool CanUseTextRenderer => true;
 
         /// <summary>
         ///  Overrides Control.  A Label is a Win32 STATIC control, which we setup here.
@@ -289,18 +248,17 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = "STATIC";
+                cp.ClassName = ComCtl32.WindowClasses.WC_STATIC;
 
                 if (OwnerDraw)
                 {
                     // An unfortunate side effect of this style is Windows sends us WM_DRAWITEM
                     // messages instead of WM_PAINT, but since Windows insists on repainting
                     // *without* a WM_PAINT after SetWindowText, I don't see much choice.
-                    cp.Style |= NativeMethods.SS_OWNERDRAW;
+                    cp.Style |= (int)User32.SS.OWNERDRAW;
 
                     // Since we're owner draw, I don't see any point in setting the
                     // SS_CENTER/SS_RIGHT styles.
-                    //
                     cp.ExStyle &= ~(int)User32.WS_EX.RIGHT;   // WS_EX_RIGHT overrides the SS_XXXX alignment styles
                 }
 
@@ -311,25 +269,23 @@ namespace System.Windows.Forms
                         case ContentAlignment.TopLeft:
                         case ContentAlignment.MiddleLeft:
                         case ContentAlignment.BottomLeft:
-                            cp.Style |= NativeMethods.SS_LEFT;
+                            cp.Style |= (int)User32.SS.LEFT;
                             break;
-
                         case ContentAlignment.TopRight:
                         case ContentAlignment.MiddleRight:
                         case ContentAlignment.BottomRight:
-                            cp.Style |= NativeMethods.SS_RIGHT;
+                            cp.Style |= (int)User32.SS.RIGHT;
                             break;
-
                         case ContentAlignment.TopCenter:
                         case ContentAlignment.MiddleCenter:
                         case ContentAlignment.BottomCenter:
-                            cp.Style |= NativeMethods.SS_CENTER;
+                            cp.Style |= (int)User32.SS.CENTER;
                             break;
                     }
                 }
                 else
                 {
-                    cp.Style |= NativeMethods.SS_LEFT;
+                    cp.Style |= (int)User32.SS.LEFT;
                 }
 
                 switch (BorderStyle)
@@ -338,58 +294,35 @@ namespace System.Windows.Forms
                         cp.Style |= (int)User32.WS.BORDER;
                         break;
                     case BorderStyle.Fixed3D:
-                        cp.Style |= NativeMethods.SS_SUNKEN;
+                        cp.Style |= (int)User32.SS.SUNKEN;
                         break;
                 }
 
                 if (!UseMnemonic)
                 {
-                    cp.Style |= NativeMethods.SS_NOPREFIX;
+                    cp.Style |= (int)User32.SS.NOPREFIX;
                 }
 
                 return cp;
             }
         }
 
-        protected override ImeMode DefaultImeMode
-        {
-            get
-            {
-                return ImeMode.Disable;
-            }
-        }
+        protected override ImeMode DefaultImeMode => ImeMode.Disable;
 
-        protected override Padding DefaultMargin
-        {
-            get
-            {
-                return new Padding(3, 0, 3, 0);
-            }
-        }
+        protected override Padding DefaultMargin => new Padding(3, 0, 3, 0);
 
         /// <summary>
         ///  Deriving classes can override this to configure a default size for their control.
         ///  This is more efficient than setting the size in the control's constructor.
         /// </summary>
-        protected override Size DefaultSize
-        {
-            get
-            {
-                return new Size(100, AutoSize ? PreferredHeight : 23);
-            }
-        }
+        protected override Size DefaultSize => new Size(100, AutoSize ? PreferredHeight : 23);
 
-        [
-            SRCategory(nameof(SR.CatAppearance)),
-            DefaultValue(FlatStyle.Standard),
-            SRDescription(nameof(SR.ButtonFlatStyleDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(FlatStyle.Standard)]
+        [SRDescription(nameof(SR.ButtonFlatStyleDescr))]
         public FlatStyle FlatStyle
         {
-            get
-            {
-                return (FlatStyle)labelState[StateFlatStyle];
-            }
+            get => (FlatStyle)_labelState[s_stateFlatStyle];
             set
             {
                 //valid values are 0x0 to 0x3
@@ -398,11 +331,11 @@ namespace System.Windows.Forms
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(FlatStyle));
                 }
 
-                if (labelState[StateFlatStyle] != (int)value)
+                if (_labelState[s_stateFlatStyle] != (int)value)
                 {
-                    bool needRecreate = (labelState[StateFlatStyle] == (int)FlatStyle.System) || (value == FlatStyle.System);
+                    bool needRecreate = (_labelState[s_stateFlatStyle] == (int)FlatStyle.System) || (value == FlatStyle.System);
 
-                    labelState[StateFlatStyle] = (int)value;
+                    _labelState[s_stateFlatStyle] = (int)value;
 
                     SetStyle(ControlStyles.UserPaint
                              | ControlStyles.SupportsTransparentBackColor
@@ -429,18 +362,16 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the image that is displayed on a <see cref='Label'/>.
         /// </summary>
-        [
-        Localizable(true),
-        SRDescription(nameof(SR.ButtonImageDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.ButtonImageDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Image Image
         {
             get
             {
-                Image image = (Image)Properties.GetObject(PropImage);
+                Image image = (Image)Properties.GetObject(s_propImage);
 
-                if (image == null && ImageList != null && ImageIndexer.ActualIndex >= 0)
+                if (image is null && ImageList != null && ImageIndexer.ActualIndex >= 0)
                 {
                     return ImageList.Images[ImageIndexer.ActualIndex];
                 }
@@ -455,7 +386,7 @@ namespace System.Windows.Forms
                 {
                     StopAnimate();
 
-                    Properties.SetObject(PropImage, value);
+                    Properties.SetObject(s_propImage, value);
                     if (value != null)
                     {
                         ImageIndex = -1;
@@ -474,20 +405,17 @@ namespace System.Windows.Forms
         ///  Gets or sets the index value of the images displayed on the
         ///  <see cref='Label'/>.
         /// </summary>
-        [
-        TypeConverter(typeof(ImageIndexConverter)),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        DefaultValue(-1),
-        Localizable(true),
-        RefreshProperties(RefreshProperties.Repaint),
-        SRDescription(nameof(SR.ButtonImageIndexDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [TypeConverter(typeof(ImageIndexConverter))]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [DefaultValue(ImageList.Indexer.DefaultIndex)]
+        [Localizable(true)]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [SRDescription(nameof(SR.ButtonImageIndexDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public int ImageIndex
         {
             get
             {
-
                 if (ImageIndexer != null)
                 {
                     int index = ImageIndexer.Index;
@@ -497,66 +425,60 @@ namespace System.Windows.Forms
                         return ImageList.Images.Count - 1;
                     }
                     return index;
-
                 }
-                return -1;
+
+                return ImageList.Indexer.DefaultIndex;
             }
             set
             {
-                if (value < -1)
+                if (value < ImageList.Indexer.DefaultIndex)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, -1));
+                    throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(ImageIndex), value, ImageList.Indexer.DefaultIndex));
                 }
-                if (ImageIndex != value)
-                {
-                    if (value != -1)
-                    {
-                        // Image.set calls ImageIndex = -1
-                        Properties.SetObject(PropImage, null);
-                    }
 
-                    ImageIndexer.Index = value;
-                    Invalidate();
+                if (ImageIndex == value && value != ImageList.Indexer.DefaultIndex)
+                {
+                    return;
                 }
+
+                if (value != ImageList.Indexer.DefaultIndex)
+                {
+                    // Image.set calls ImageIndex = -1
+                    Properties.SetObject(s_propImage, null);
+                }
+
+                ImageIndexer.Index = value;
+                Invalidate();
             }
         }
 
         /// <summary>
         ///  Gets or sets the key accessor for the image list.  This specifies the image
-	    ///	  from the image list to display on
+        ///   from the image list to display on
         ///  <see cref='Label'/>.
         /// </summary>
-        [
-        TypeConverter(typeof(ImageKeyConverter)),
-        Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        DefaultValue(""),
-        Localizable(true),
-        RefreshProperties(RefreshProperties.Repaint),
-        SRDescription(nameof(SR.ButtonImageIndexDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [TypeConverter(typeof(ImageKeyConverter))]
+        [Editor("System.Windows.Forms.Design.ImageIndexEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [DefaultValue(ImageList.Indexer.DefaultKey)]
+        [Localizable(true)]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [SRDescription(nameof(SR.ButtonImageIndexDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public string ImageKey
         {
-            get
-            {
-
-                if (ImageIndexer != null)
-                {
-                    return ImageIndexer.Key;
-                }
-                return null;
-            }
+            get => ImageIndexer?.Key;
             set
             {
-                if (ImageKey != value)
+                if (ImageKey == value && !string.Equals(value, ImageList.Indexer.DefaultKey))
                 {
-
-                    // Image.set calls ImageIndex = -1
-                    Properties.SetObject(PropImage, null);
-
-                    ImageIndexer.Key = value;
-                    Invalidate();
+                    return;
                 }
+
+                // Image.set calls ImageIndex = -1
+                Properties.SetObject(s_propImage, null);
+
+                ImageIndexer.Key = value;
+                Invalidate();
             }
         }
 
@@ -565,7 +487,7 @@ namespace System.Windows.Forms
             get
             {
                 // Demand create the ImageIndexer property
-                if ((!(Properties.GetObject(PropImageIndex, out bool found) is LabelImageIndexer imageIndexer)) || (!found))
+                if ((!(Properties.GetObject(s_propImageIndex, out bool found) is LabelImageIndexer imageIndexer)) || (!found))
                 {
                     imageIndexer = new LabelImageIndexer(this);
                     ImageIndexer = imageIndexer;
@@ -575,36 +497,28 @@ namespace System.Windows.Forms
             }
             set
             {
-                Properties.SetObject(PropImageIndex, value);
+                Properties.SetObject(s_propImageIndex, value);
             }
-
         }
 
         /// <summary>
         ///  Gets or sets the images displayed in a <see cref='Label'/>.
         /// </summary>
-        [
-        DefaultValue(null),
-        SRDescription(nameof(SR.ButtonImageListDescr)),
-        RefreshProperties(RefreshProperties.Repaint),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(null)]
+        [SRDescription(nameof(SR.ButtonImageListDescr))]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [SRCategory(nameof(SR.CatAppearance))]
         public ImageList ImageList
         {
-            get
-            {
-                return (ImageList)Properties.GetObject(PropImageList);
-            }
+            get => (ImageList)Properties.GetObject(s_propImageList);
             set
             {
                 if (ImageList != value)
                 {
-
                     EventHandler recreateHandler = new EventHandler(ImageListRecreateHandle);
                     EventHandler disposedHandler = new EventHandler(DetachImageList);
 
                     // Remove the previous imagelist handle recreate handler
-                    //
                     ImageList imageList = ImageList;
                     if (imageList != null)
                     {
@@ -613,16 +527,14 @@ namespace System.Windows.Forms
                     }
 
                     // Make sure we don't have an Image as well as an ImageList
-                    //
                     if (value != null)
                     {
-                        Properties.SetObject(PropImage, null); // Image.set calls ImageList = null
+                        Properties.SetObject(s_propImage, null); // Image.set calls ImageList = null
                     }
 
-                    Properties.SetObject(PropImageList, value);
+                    Properties.SetObject(s_propImageList, value);
 
                     // Add the new imagelist handle recreate handler
-                    //
                     if (value != null)
                     {
                         value.RecreateHandle += recreateHandler;
@@ -637,17 +549,15 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the alignment of the image on the <see cref='Label'/>.
         /// </summary>
-        [
-        DefaultValue(ContentAlignment.MiddleCenter),
-        Localizable(true),
-        SRDescription(nameof(SR.ButtonImageAlignDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(ContentAlignment.MiddleCenter)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.ButtonImageAlignDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public ContentAlignment ImageAlign
         {
             get
             {
-                int imageAlign = Properties.GetInteger(PropImageAlign, out bool found);
+                int imageAlign = Properties.GetInteger(s_propImageAlign, out bool found);
                 if (found)
                 {
                     return (ContentAlignment)imageAlign;
@@ -662,7 +572,7 @@ namespace System.Windows.Forms
                 }
                 if (value != ImageAlign)
                 {
-                    Properties.SetInteger(PropImageAlign, (int)value);
+                    Properties.SetInteger(s_propImageAlign, (int)value);
                     LayoutTransaction.DoLayoutIf(AutoSize, ParentInternal, this, PropertyNames.ImageAlign);
                     Invalidate();
                 }
@@ -673,43 +583,34 @@ namespace System.Windows.Forms
         ///  Indicates the "politeness" level that a client should use
         ///  to notify the user of changes to the live region.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAccessibility)),
-        DefaultValue(AutomationLiveSetting.Off),
-        SRDescription(nameof(SR.LiveRegionAutomationLiveSettingDescr)),
-        Browsable(true),
-        EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [SRCategory(nameof(SR.CatAccessibility))]
+        [DefaultValue(AutomationLiveSetting.Off)]
+        [SRDescription(nameof(SR.LiveRegionAutomationLiveSettingDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutomationLiveSetting LiveSetting
         {
-            get
-            {
-                return liveSetting;
-            }
+            get => _liveSetting;
             set
             {
                 if (!ClientUtils.IsEnumValid(value, (int)value, (int)AutomationLiveSetting.Off, (int)AutomationLiveSetting.Assertive))
                 {
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(AutomationLiveSetting));
                 }
-                liveSetting = value;
+                _liveSetting = value;
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public ImeMode ImeMode
         {
-            get
-            {
-                return base.ImeMode;
-            }
-            set
-            {
-                base.ImeMode = value;
-            }
+            get => base.ImeMode;
+            set => base.ImeMode = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler ImeModeChanged
         {
             add => base.ImeModeChanged += value;
@@ -717,7 +618,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event KeyEventHandler KeyUp
         {
             add => base.KeyUp += value;
@@ -725,7 +627,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event KeyEventHandler KeyDown
         {
             add => base.KeyDown += value;
@@ -733,7 +636,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event KeyPressEventHandler KeyPress
         {
             add => base.KeyPress += value;
@@ -741,54 +645,31 @@ namespace System.Windows.Forms
         }
 
         internal LayoutUtils.MeasureTextCache MeasureTextCache
-        {
-            get
-            {
-                if (textMeasurementCache == null)
-                {
-                    textMeasurementCache = new LayoutUtils.MeasureTextCache();
-                }
-                return textMeasurementCache;
-            }
-        }
+            => _textMeasurementCache ??= new LayoutUtils.MeasureTextCache();
 
-        internal virtual bool OwnerDraw
-        {
-            get
-            {
-                return IsOwnerDraw();
-            }
-        }
+        internal virtual bool OwnerDraw => IsOwnerDraw();
 
         /// <summary>
         ///  Gets the height of the control (in pixels), assuming a
         ///  single line of text is displayed.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatLayout)),
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.LabelPreferredHeightDescr))
-        ]
-        public virtual int PreferredHeight
-        {
-            get { return PreferredSize.Height; }
-        }
+        [SRCategory(nameof(SR.CatLayout))]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.LabelPreferredHeightDescr))]
+        public virtual int PreferredHeight => PreferredSize.Height;
 
         /// <summary>
         ///  Gets the width of the control (in pixels), assuming a single line
         ///  of text is displayed.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatLayout)),
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Advanced),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.LabelPreferredWidthDescr))
-        ]
-        public virtual int PreferredWidth
-        {
-            get { return PreferredSize.Width; }
-        }
+        [SRCategory(nameof(SR.CatLayout))]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.LabelPreferredWidthDescr))]
+        public virtual int PreferredWidth => PreferredSize.Width;
 
         /// <summary>
         ///  Indicates whether
@@ -797,41 +678,27 @@ namespace System.Windows.Forms
         [Obsolete("This property has been deprecated. Use BackColor instead.  http://go.microsoft.com/fwlink/?linkid=14202")]
         virtual new protected bool RenderTransparent
         {
-            get
-            {
-                return ((Control)this).RenderTransparent;
-            }
-            set
-            {
-            }
+            get => ((Control)this).RenderTransparent;
+            set { }
         }
 
-        private bool SelfSizing
-        {
-            get
-            {
-                return CommonProperties.ShouldSelfSize(this);
-            }
-        }
+        private bool SelfSizing => CommonProperties.ShouldSelfSize(this);
 
         /// <summary>
         ///  Gets or sets a value indicating whether the user can tab to the
         ///  <see cref='Label'/>.
         /// </summary>
-        [DefaultValue(false), Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [DefaultValue(false)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public bool TabStop
         {
-            get
-            {
-                return base.TabStop;
-            }
-            set
-            {
-                base.TabStop = value;
-            }
+            get => base.TabStop;
+            set => base.TabStop = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler TabStopChanged
         {
             add => base.TabStopChanged += value;
@@ -842,17 +709,15 @@ namespace System.Windows.Forms
         ///  Gets or sets the
         ///  horizontal alignment of the text in the control.
         /// </summary>
-        [
-        SRDescription(nameof(SR.LabelTextAlignDescr)),
-        Localizable(true),
-        DefaultValue(ContentAlignment.TopLeft),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRDescription(nameof(SR.LabelTextAlignDescr))]
+        [Localizable(true)]
+        [DefaultValue(ContentAlignment.TopLeft)]
+        [SRCategory(nameof(SR.CatAppearance))]
         public virtual ContentAlignment TextAlign
         {
             get
             {
-                int textAlign = Properties.GetInteger(PropTextAlign, out bool found);
+                int textAlign = Properties.GetInteger(s_propTextAlign, out bool found);
                 if (found)
                 {
                     return (ContentAlignment)textAlign;
@@ -862,7 +727,6 @@ namespace System.Windows.Forms
             }
             set
             {
-
                 if (!WindowsFormsUtils.EnumValidator.IsValidContentAlignment(value))
                 {
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ContentAlignment));
@@ -870,15 +734,15 @@ namespace System.Windows.Forms
 
                 if (TextAlign != value)
                 {
-                    Properties.SetInteger(PropTextAlign, (int)value);
+                    Properties.SetInteger(s_propTextAlign, (int)value);
                     Invalidate();
-                    //Change the TextAlignment for SystemDrawn Labels ....
+
+                    // Change the TextAlignment for SystemDrawn Labels
                     if (!OwnerDraw)
                     {
                         RecreateHandle();
                     }
                     OnTextAlignChanged(EventArgs.Empty);
-
                 }
             }
         }
@@ -887,45 +751,36 @@ namespace System.Windows.Forms
         ///  Gets or sets the text in the Label. Since we can have multiline support
         ///  this property just overides the base to pluck in the Multiline editor.
         /// </summary>
-        [
-        Editor("System.ComponentModel.Design.MultilineStringEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        SettingsBindable(true)
-        ]
+        [Editor("System.ComponentModel.Design.MultilineStringEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
+        SettingsBindable(true)]
         public override string Text
         {
-            get
-            {
-                return base.Text;
-            }
-            set
-            {
-                base.Text = value;
-            }
+            get => base.Text;
+            set => base.Text = value;
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.LabelOnTextAlignChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.LabelOnTextAlignChangedDescr))]
         public event EventHandler TextAlignChanged
         {
-            add => Events.AddHandler(EVENT_TEXTALIGNCHANGED, value);
+            add => Events.AddHandler(s_eventTextAlignChanged, value);
 
-            remove => Events.RemoveHandler(EVENT_TEXTALIGNCHANGED, value);
+            remove => Events.RemoveHandler(s_eventTextAlignChanged, value);
         }
 
         /// <summary>
         ///  Determines whether to use compatible text rendering engine (GDI+) or not (GDI).
         /// </summary>
-        [
-        DefaultValue(false),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.UseCompatibleTextRenderingDescr))
-        ]
+        [DefaultValue(false)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.UseCompatibleTextRenderingDescr))]
         public bool UseCompatibleTextRendering
         {
             get
             {
                 if (CanUseTextRenderer)
                 {
-                    return base.UseCompatibleTextRenderingInt;
+                    return UseCompatibleTextRenderingInt;
                 }
 
                 // Use compat text rendering (GDI+).
@@ -933,49 +788,35 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (base.UseCompatibleTextRenderingInt != value)
+                if (UseCompatibleTextRenderingInt != value)
                 {
-                    base.UseCompatibleTextRenderingInt = value;
+                    UseCompatibleTextRenderingInt = value;
                     AdjustSize();
                 }
             }
         }
 
         /// <summary>
-        ///  Determines whether the control supports rendering text using GDI+ and GDI.
-        ///  This is provided for container controls to iterate through its children to set UseCompatibleTextRendering to the same
-        ///  value if the child control supports it.
+        ///  Determines whether the control supports rendering text using GDI+ and GDI. This is provided for container
+        ///  controls to iterate through its children to set <see cref="UseCompatibleTextRendering"/> to the same value
+        ///  if the child control supports it.
         /// </summary>
-        internal override bool SupportsUseCompatibleTextRendering
-        {
-            get
-            {
-                return true;
-            }
-        }
+        internal override bool SupportsUseCompatibleTextRendering => true;
 
         /// <summary>
-        ///  Gets or sets a value indicating whether an ampersand (&amp;) included in the text of
-        ///  the control.
+        ///  Gets or sets a value indicating whether an ampersand (&amp;) included in the text of  the control.
         /// </summary>
-        [
-        SRDescription(nameof(SR.LabelUseMnemonicDescr)),
-        DefaultValue(true),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [SRDescription(nameof(SR.LabelUseMnemonicDescr))]
+        [DefaultValue(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
         public bool UseMnemonic
         {
-            get
-            {
-                return labelState[StateUseMnemonic] != 0;
-            }
-
+            get => _labelState[s_stateUseMnemonic] != 0;
             set
             {
-
                 if (UseMnemonic != value)
                 {
-                    labelState[StateUseMnemonic] = value ? 1 : 0;
+                    _labelState[s_stateUseMnemonic] = value ? 1 : 0;
                     MeasureTextCache.InvalidateCache();
 
                     // The size of the label need to be adjusted when the Mnemonic
@@ -992,12 +833,11 @@ namespace System.Windows.Forms
                         int style = WindowStyle;
                         if (!UseMnemonic)
                         {
-
-                            style |= NativeMethods.SS_NOPREFIX;
+                            style |= (int)User32.SS.NOPREFIX;
                         }
                         else
                         {
-                            style &= ~NativeMethods.SS_NOPREFIX;
+                            style &= ~(int)User32.SS.NOPREFIX;
                         }
                         WindowStyle = style;
                     }
@@ -1028,9 +868,9 @@ namespace System.Windows.Forms
             }
 
             // Resize control to fit around current text
-            //
-            int saveHeight = requestedHeight;
-            int saveWidth = requestedWidth;
+
+            int saveHeight = _requestedHeight;
+            int saveWidth = _requestedWidth;
             try
             {
                 Size preferredSize = (AutoSize) ? PreferredSize : new Size(saveWidth, saveHeight);
@@ -1038,33 +878,27 @@ namespace System.Windows.Forms
             }
             finally
             {
-                requestedHeight = saveHeight;
-                requestedWidth = saveWidth;
+                _requestedHeight = saveHeight;
+                _requestedWidth = saveWidth;
             }
         }
 
-        internal void Animate()
-        {
-            Animate(!DesignMode && Visible && Enabled && ParentInternal != null);
-        }
+        internal void Animate() => Animate(!DesignMode && Visible && Enabled && ParentInternal != null);
 
-        internal void StopAnimate()
-        {
-            Animate(false);
-        }
+        internal void StopAnimate() => Animate(false);
 
         private void Animate(bool animate)
         {
-            bool currentlyAnimating = labelState[StateAnimating] != 0;
+            bool currentlyAnimating = _labelState[s_stateAnimating] != 0;
             if (animate != currentlyAnimating)
             {
-                Image image = (Image)Properties.GetObject(PropImage);
+                Image image = (Image)Properties.GetObject(s_propImage);
                 if (animate)
                 {
                     if (image != null)
                     {
                         ImageAnimator.Animate(image, new EventHandler(OnFrameChanged));
-                        labelState[StateAnimating] = animate ? 1 : 0;
+                        _labelState[s_stateAnimating] = animate ? 1 : 0;
                     }
                 }
                 else
@@ -1072,7 +906,7 @@ namespace System.Windows.Forms
                     if (image != null)
                     {
                         ImageAnimator.StopAnimate(image, new EventHandler(OnFrameChanged));
-                        labelState[StateAnimating] = animate ? 1 : 0;
+                        _labelState[s_stateAnimating] = animate ? 1 : 0;
                     }
                 }
             }
@@ -1110,29 +944,24 @@ namespace System.Windows.Forms
             return new Rectangle(xLoc, yLoc, pointImageSize.Width, pointImageSize.Height);
         }
 
-        protected override AccessibleObject CreateAccessibilityInstance()
-        {
-            return new LabelAccessibleObject(this);
-        }
+        protected override AccessibleObject CreateAccessibilityInstance() => new LabelAccessibleObject(this);
 
         /// <summary>
         ///  Get StringFormat object for rendering text using GDI+ (Graphics).
         /// </summary>
         internal virtual StringFormat CreateStringFormat()
-        {
-            return ControlPaint.CreateStringFormat(this, TextAlign, AutoEllipsis, UseMnemonic);
-        }
+            => ControlPaint.CreateStringFormat(this, TextAlign, AutoEllipsis, UseMnemonic);
 
         private TextFormatFlags CreateTextFormatFlags()
-        {
-            return CreateTextFormatFlags(Size - GetBordersAndPadding());
-        }
+            => CreateTextFormatFlags(Size - GetBordersAndPadding());
+
         /// <summary>
         ///  Get TextFormatFlags flags for rendering text using GDI (TextRenderer).
         /// </summary>
         internal virtual TextFormatFlags CreateTextFormatFlags(Size constrainingSize)
         {
             // PREFERRED SIZE CACHING:
+            //
             // Please read if you're adding a new TextFormatFlag.
             // whenever something can change the TextFormatFlags used
             // MeasureTextCache.InvalidateCache() should be called so we can approprately clear.
@@ -1151,10 +980,7 @@ namespace System.Windows.Forms
             return flags;
         }
 
-        private void DetachImageList(object sender, EventArgs e)
-        {
-            ImageList = null;
-        }
+        private void DetachImageList(object sender, EventArgs e) => ImageList = null;
 
         protected override void Dispose(bool disposing)
         {
@@ -1166,28 +992,44 @@ namespace System.Windows.Forms
                 {
                     ImageList.Disposed -= new EventHandler(DetachImageList);
                     ImageList.RecreateHandle -= new EventHandler(ImageListRecreateHandle);
-                    Properties.SetObject(PropImageList, null);
+                    Properties.SetObject(s_propImageList, null);
                 }
                 if (Image != null)
                 {
-                    Properties.SetObject(PropImage, null);
+                    Properties.SetObject(s_propImage, null);
                 }
 
                 //Dipose the tooltip if one present..
-                if (textToolTip != null)
+                if (_textToolTip != null)
                 {
-                    textToolTip.Dispose();
-                    textToolTip = null;
+                    _textToolTip.Dispose();
+                    _textToolTip = null;
                 }
-                controlToolTip = false;
+                _controlToolTip = false;
             }
             base.Dispose(disposing);
+        }
+
+        private void DrawImage(PaintEventArgs e, Image image, Rectangle r, ContentAlignment align)
+        {
+            if (GetType() == typeof(Label))
+            {
+                // We're not overridden, use the internal graphics accessor as we know it won't be modified.
+                DrawImage(e.GraphicsInternal, image, r, align);
+            }
+            else
+            {
+                DrawImage(e.Graphics, image, r, align);
+            }
         }
 
         /// <summary>
         ///  Draws an <see cref='Drawing.Image'/> within the specified bounds.
         /// </summary>
         protected void DrawImage(Graphics g, Image image, Rectangle r, ContentAlignment align)
+            => DrawImageInternal(g, image, r, align);
+
+        private void DrawImageInternal(Graphics g, Image image, Rectangle r, ContentAlignment align)
         {
             Rectangle loc = CalcImageRenderBounds(image, r, align);
 
@@ -1209,11 +1051,10 @@ namespace System.Windows.Forms
             if (UseCompatibleTextRendering)
             {
                 //Always return the Fontheight + some buffer else the Text gets clipped for Autosize = true..
-                //(
                 if (BorderStyle != BorderStyle.None)
                 {
                     bordersAndPadding.Height += 6; // taken from Everett.PreferredHeight
-                    bordersAndPadding.Width += 2; // taken from Everett.PreferredWidth
+                    bordersAndPadding.Width += 2;  // taken from Everett.PreferredWidth
                 }
                 else
                 {
@@ -1231,12 +1072,11 @@ namespace System.Windows.Forms
                 }
             }
             return bordersAndPadding;
-
         }
 
         public override Size GetPreferredSize(Size proposedSize)
         {
-            //make sure the behavior is consistent with GetPreferredSizeCore
+            // Make sure the behavior is consistent with GetPreferredSizeCore
             if (proposedSize.Width == 1)
             {
                 proposedSize.Width = 0;
@@ -1248,36 +1088,30 @@ namespace System.Windows.Forms
             return base.GetPreferredSize(proposedSize);
         }
 
-        internal virtual bool UseGDIMeasuring()
-        {
-            return (FlatStyle == FlatStyle.System || !UseCompatibleTextRendering);
-        }
+        internal virtual bool UseGDIMeasuring() => (FlatStyle == FlatStyle.System || !UseCompatibleTextRendering);
 
-// See ComboBox.cs GetComboHeight
+        // See ComboBox.cs GetComboHeight
         internal override Size GetPreferredSizeCore(Size proposedConstraints)
         {
             Size bordersAndPadding = GetBordersAndPadding();
+
             // Subtract border area from constraints
             proposedConstraints -= bordersAndPadding;
 
-            // keep positive
+            // Keep positive
             proposedConstraints = LayoutUtils.UnionSizes(proposedConstraints, Size.Empty);
 
             Size requiredSize;
 
-            //
-            // TEXT Measurement
-            //
-
             if (string.IsNullOrEmpty(Text))
             {
-                // empty labels return the font height + borders
-                using (WindowsFont font = WindowsFont.FromFont(Font))
-                {
-                    // this is the character that Windows uses to determine the extent
-                    requiredSize = WindowsGraphicsCacheManager.MeasurementGraphics.GetTextExtent("0", font);
-                    requiredSize.Width = 0;
-                }
+                // Empty labels return the font height + borders
+                using var hfont = GdiCache.GetHFONT(Font);
+                using var screen = GdiCache.GetScreenHdc();
+
+                // This is the character that Windows uses to determine the extent
+                requiredSize = screen.HDC.GetTextExtent("0", hfont);
+                requiredSize.Width = 0;
             }
             else if (UseGDIMeasuring())
             {
@@ -1287,18 +1121,13 @@ namespace System.Windows.Forms
             else
             {
                 // GDI+ rendering.
-                using (Graphics measurementGraphics = WindowsFormsUtils.CreateMeasurementGraphics())
-                {
-                    using (StringFormat stringFormat = CreateStringFormat())
-                    {
-                        SizeF bounds = (proposedConstraints.Width == 1) ?
-                            new SizeF(0, proposedConstraints.Height) :
-                            new SizeF(proposedConstraints.Width, proposedConstraints.Height);
+                using var screen = GdiCache.GetScreenDCGraphics();
+                using StringFormat stringFormat = CreateStringFormat();
+                SizeF bounds = (proposedConstraints.Width == 1) ?
+                    new SizeF(0, proposedConstraints.Height) :
+                    new SizeF(proposedConstraints.Width, proposedConstraints.Height);
 
-                        requiredSize = Size.Ceiling(measurementGraphics.MeasureString(Text, Font, bounds, stringFormat));
-                    }
-                }
-
+                requiredSize = Size.Ceiling(screen.Graphics.MeasureString(Text, Font, bounds, stringFormat));
             }
 
             requiredSize += bordersAndPadding;
@@ -1316,34 +1145,30 @@ namespace System.Windows.Forms
                 return 0;
             }
 
-            //If we are using GDI+ the code below will not work, except
-            //if the style is FlatStyle.System since GDI will be used in that case.
+            // If we are using GDI+ the code below will not work, except/if the style is FlatStyle.System since GDI
+            // will be used in that case.
             if (UseCompatibleTextRendering && FlatStyle != FlatStyle.System)
             {
                 return 0;
             }
 
-            using (WindowsGraphics wg = WindowsGraphics.FromHwnd(Handle))
+            TextFormatFlags flags = CreateTextFormatFlags();
+            TextPaddingOptions padding = default;
+
+            if ((flags & TextFormatFlags.NoPadding) == TextFormatFlags.NoPadding)
             {
-                TextFormatFlags flags = CreateTextFormatFlags();
-
-                if ((flags & TextFormatFlags.NoPadding) == TextFormatFlags.NoPadding)
-                {
-                    wg.TextPadding = TextPaddingOptions.NoPadding;
-                }
-                else if ((flags & TextFormatFlags.LeftAndRightPadding) == TextFormatFlags.LeftAndRightPadding)
-                {
-                    wg.TextPadding = TextPaddingOptions.LeftAndRightPadding;
-                }
-
-                using (WindowsFont wf = WindowsGraphicsCacheManager.GetWindowsFont(Font))
-                {
-                    User32.DRAWTEXTPARAMS dtParams = wg.GetTextMargins(wf);
-
-                    // This is actually leading margin.
-                    return dtParams.iLeftMargin;
-                }
+                padding = TextPaddingOptions.NoPadding;
             }
+            else if ((flags & TextFormatFlags.LeftAndRightPadding) == TextFormatFlags.LeftAndRightPadding)
+            {
+                padding = TextPaddingOptions.LeftAndRightPadding;
+            }
+
+            using var hfont = GdiCache.GetHFONT(Font);
+            User32.DRAWTEXTPARAMS dtParams = hfont.GetTextMargins(padding);
+
+            // This is actually leading margin.
+            return dtParams.iLeftMargin;
         }
 
         private void ImageListRecreateHandle(object sender, EventArgs e)
@@ -1357,13 +1182,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Specifies whether the control is willing to process mnemonics when hosted in an container ActiveX (Ax Sourcing).
         /// </summary>
-        internal override bool IsMnemonicsListenerAxSourced
-        {
-            get
-            {
-                return true;
-            }
-        }
+        internal override bool IsMnemonicsListenerAxSourced => true;
 
         /// <summary>
         ///  This method is required because the Label constructor needs to know if the control is
@@ -1378,19 +1197,17 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseEnter(EventArgs e)
         {
-            if (!controlToolTip && !DesignMode && AutoEllipsis && showToolTip && textToolTip != null)
+            if (!_controlToolTip && !DesignMode && AutoEllipsis && _showToolTip && _textToolTip != null)
             {
-
                 try
                 {
-                    controlToolTip = true;
-                    textToolTip.Show(WindowsFormsUtils.TextWithoutMnemonics(Text), this);
+                    _controlToolTip = true;
+                    _textToolTip.Show(WindowsFormsUtils.TextWithoutMnemonics(Text), this);
                 }
                 finally
                 {
-                    controlToolTip = false;
+                    _controlToolTip = false;
                 }
-
             }
             base.OnMouseEnter(e);
         }
@@ -1400,11 +1217,11 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void OnMouseLeave(EventArgs e)
         {
-            if (!controlToolTip && textToolTip != null && textToolTip.GetHandleCreated())
+            if (!_controlToolTip && _textToolTip != null && _textToolTip.GetHandleCreated())
             {
-                textToolTip.RemoveAll();
+                _textToolTip.RemoveAll();
 
-                textToolTip.Hide(this);
+                _textToolTip.Hide(this);
             }
 
             base.OnMouseLeave(e);
@@ -1416,6 +1233,7 @@ namespace System.Windows.Forms
             {
                 return;
             }
+
             if (IsHandleCreated && InvokeRequired)
             {
                 BeginInvoke(new EventHandler(OnFrameChanged), o, e);
@@ -1436,9 +1254,9 @@ namespace System.Windows.Forms
         protected override void OnHandleDestroyed(EventArgs e)
         {
             base.OnHandleDestroyed(e);
-            if (textToolTip != null && textToolTip.GetHandleCreated())
+            if (_textToolTip != null && _textToolTip.GetHandleCreated())
             {
-                textToolTip.DestroyHandle();
+                _textToolTip.DestroyHandle();
             }
         }
 
@@ -1460,7 +1278,7 @@ namespace System.Windows.Forms
 
         protected virtual void OnTextAlignChanged(EventArgs e)
         {
-            if (Events[EVENT_TEXTALIGNCHANGED] is EventHandler eh)
+            if (Events[s_eventTextAlignChanged] is EventHandler eh)
             {
                 eh(this, e);
             }
@@ -1481,7 +1299,7 @@ namespace System.Windows.Forms
             Image i = Image;
             if (i != null)
             {
-                DrawImage(e.Graphics, i, face, RtlTranslateAlignment(ImageAlign));
+                DrawImage(e, i, face, RtlTranslateAlignment(ImageAlign));
             }
 
             Color color;
@@ -1491,18 +1309,8 @@ namespace System.Windows.Forms
             }
             else
             {
-                IntPtr hdc = e.Graphics.GetHdc();
-                try
-                {
-                    using (WindowsGraphics wg = WindowsGraphics.FromHdc(hdc))
-                    {
-                        color = wg.GetNearestColor((Enabled) ? ForeColor : DisabledColor);
-                    }
-                }
-                finally
-                {
-                    e.Graphics.ReleaseHdc();
-                }
+                using var hdc = new DeviceContextHdcScope(e);
+                color = hdc.FindNearestColor(Enabled ? ForeColor : DisabledColor);
             }
 
             // Do actual drawing
@@ -1511,28 +1319,24 @@ namespace System.Windows.Forms
             {
                 Rectangle clientRect = ClientRectangle;
                 Size preferredSize = GetPreferredSize(new Size(clientRect.Width, clientRect.Height));
-                showToolTip = (clientRect.Width < preferredSize.Width || clientRect.Height < preferredSize.Height);
+                _showToolTip = (clientRect.Width < preferredSize.Width || clientRect.Height < preferredSize.Height);
             }
             else
             {
-                showToolTip = false;
+                _showToolTip = false;
             }
 
             if (UseCompatibleTextRendering)
             {
-                using (StringFormat stringFormat = CreateStringFormat())
+                using StringFormat stringFormat = CreateStringFormat();
+                if (Enabled)
                 {
-                    if (Enabled)
-                    {
-                        using (Brush brush = new SolidBrush(color))
-                        {
-                            e.Graphics.DrawString(Text, Font, brush, face, stringFormat);
-                        }
-                    }
-                    else
-                    {
-                        ControlPaint.DrawStringDisabled(e.Graphics, Text, Font, color, face, stringFormat);
-                    }
+                    using var brush = color.GetCachedSolidBrushScope();
+                    e.GraphicsInternal.DrawString(Text, Font, brush, face, stringFormat);
+                }
+                else
+                {
+                    ControlPaint.DrawStringDisabled(e.GraphicsInternal, Text, Font, color, face, stringFormat);
                 }
             }
             else
@@ -1541,7 +1345,7 @@ namespace System.Windows.Forms
 
                 if (Enabled)
                 {
-                    TextRenderer.DrawText(e.Graphics, Text, Font, face, color, flags);
+                    TextRenderer.DrawTextInternal(e, Text, Font, face, color, flags: flags);
                 }
                 else
                 {
@@ -1549,7 +1353,7 @@ namespace System.Windows.Forms
                     // ControlPaint.Dark(backcolor).  Otherwise we use ControlDark.
 
                     Color disabledTextForeColor = TextRenderer.DisabledTextColor(BackColor);
-                    TextRenderer.DrawText(e.Graphics, Text, Font, face, disabledTextForeColor, flags);
+                    TextRenderer.DrawTextInternal(e, Text, Font, face, disabledTextForeColor, flags: flags);
                 }
             }
 
@@ -1559,7 +1363,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Overriden by LinkLabel.
         /// </summary>
-        internal virtual void OnAutoEllipsisChanged(/*EventArgs e*/)
+        internal virtual void OnAutoEllipsisChanged()
         {
         }
 
@@ -1593,19 +1397,18 @@ namespace System.Windows.Forms
             Animate();
         }
 
-        private protected override void PrintToMetaFileRecursive(IntPtr hDC, IntPtr lParam, Rectangle bounds)
+        private protected override void PrintToMetaFileRecursive(Gdi32.HDC hDC, IntPtr lParam, Rectangle bounds)
         {
             base.PrintToMetaFileRecursive(hDC, lParam, bounds);
 
-            using var mapping = new WindowsFormsUtils.DCMapping(hDC, bounds);
-            using Graphics g = Graphics.FromHdcInternal(hDC);
+            using var mapping = new DCMapping(hDC, bounds);
+            using Graphics g = hDC.CreateGraphics();
             ControlPaint.PrintBorder(g, new Rectangle(Point.Empty, Size), BorderStyle, Border3DStyle.SunkenOuter);
         }
 
         /// <summary>
-        ///  Overrides Control. This is called when the user has pressed an Alt-CHAR
-        ///  key combination and determines if that combination is an interesting
-        ///  mnemonic for this control.
+        ///  Overrides Control. This is called when the user has pressed an Alt-CHAR key combination and determines if
+        ///  that combination is an interesting mnemonic for this control.
         /// </summary>
         protected internal override bool ProcessMnemonic(char charCode)
         {
@@ -1614,12 +1417,9 @@ namespace System.Windows.Forms
                 Control parent = ParentInternal;
                 if (parent != null)
                 {
-                    if (parent.SelectNextControl(this, true, false, true, false))
+                    if (parent.SelectNextControl(this, true, false, true, false) && !parent.ContainsFocus)
                     {
-                        if (!parent.ContainsFocus)
-                        {
-                            parent.Focus();
-                        }
+                        parent.Focus();
                     }
                 }
                 return true;
@@ -1634,12 +1434,12 @@ namespace System.Windows.Forms
         {
             if ((specified & BoundsSpecified.Height) != BoundsSpecified.None)
             {
-                requestedHeight = height;
+                _requestedHeight = height;
             }
 
             if ((specified & BoundsSpecified.Width) != BoundsSpecified.None)
             {
-                requestedWidth = width;
+                _requestedWidth = width;
             }
 
             if (AutoSize && SelfSizing)
@@ -1655,24 +1455,18 @@ namespace System.Windows.Forms
                 "It is SetBoundsCore's responsibility to ensure Size = PreferredSize when AutoSize is true.");
         }
 
-        private void ResetImage()
-        {
-            Image = null;
-        }
+        private void ResetImage() => Image = null;
 
-        private bool ShouldSerializeImage()
-        {
-            return Properties.GetObject(PropImage) != null;
-        }
+        private bool ShouldSerializeImage() => Properties.GetObject(s_propImage) != null;
 
         /// <summary>
         ///  Called by ToolTip to poke in that Tooltip into this ComCtl so that the Native ChildToolTip is not exposed.
         /// </summary>
         internal void SetToolTip(ToolTip toolTip)
         {
-            if (toolTip != null && !controlToolTip)
+            if (toolTip != null && !_controlToolTip)
             {
-                controlToolTip = true;
+                _controlToolTip = true;
             }
         }
 
@@ -1688,20 +1482,19 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Overrides Control. This processes certain messages that the Win32 STATIC
-        ///  class would normally override.
+        ///  Overrides Control. This processes certain messages that the Win32 STATIC class would normally override.
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_NCHITTEST:
-                    // label returns HT_TRANSPARENT for everything, so all messages get
-                    // routed to the parent.  Change this so we can tell what's going on.
-                    //
+                case User32.WM.NCHITTEST:
+                    // Label returns HT_TRANSPARENT for everything, so all messages get routed to the parent.  Change
+                    // this so we can tell what's going on.
+
                     Rectangle rectInScreen = RectangleToScreen(new Rectangle(0, 0, Width, Height));
                     Point pt = new Point(unchecked((int)(long)m.LParam));
-                    m.Result = (IntPtr)((rectInScreen.Contains(pt) ? NativeMethods.HTCLIENT : NativeMethods.HTNOWHERE));
+                    m.Result = (IntPtr)(rectInScreen.Contains(pt) ? User32.HT.CLIENT : User32.HT.NOWHERE);
                     break;
 
                 default:
@@ -1710,100 +1503,60 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
-        internal class LabelAccessibleObject : ControlAccessibleObject
+        /// <summary>
+        ///  Override ImageList.Indexer to support Label's ImageList semantics.
+        /// </summary>
+        internal class LabelImageIndexer : ImageList.Indexer
         {
-            public LabelAccessibleObject(Label owner) : base(owner)
+            private readonly Label _owner;
+            private bool _useIntegerIndex = true;
+
+            public LabelImageIndexer(Label owner) => _owner = owner;
+
+            public override ImageList ImageList
             {
+                get { return _owner?.ImageList; }
+                set { Debug.Assert(false, "Setting the image list in this class is not supported"); }
             }
 
-            public override AccessibleRole Role
+            public override string Key
+            {
+                get => base.Key;
+                set
+                {
+                    base.Key = value;
+                    _useIntegerIndex = false;
+                }
+            }
+
+            public override int Index
+            {
+                get => base.Index;
+                set
+                {
+                    base.Index = value;
+                    _useIntegerIndex = true;
+                }
+            }
+
+            public override int ActualIndex
             {
                 get
                 {
-                    AccessibleRole role = Owner.AccessibleRole;
-                    if (role != AccessibleRole.Default)
+                    if (_useIntegerIndex)
                     {
-                        return role;
+                        // The behavior of label is to return the last item in the Images collection
+                        // if the index is currently set higher than the count.
+                        return (Index < ImageList.Images.Count) ? Index : ImageList.Images.Count - 1;
                     }
-                    return AccessibleRole.StaticText;
+                    else if (ImageList != null)
+                    {
+                        return ImageList.Images.IndexOfKey(Key);
+                    }
+
+                    return -1;
                 }
-            }
-
-            internal override bool IsIAccessibleExSupported() => true;
-
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                if (propertyID == UiaCore.UIA.ControlTypePropertyId)
-                {
-                    return UiaCore.UIA.TextControlTypeId;
-                }
-
-                return base.GetPropertyValue(propertyID);
             }
         }
     }
-
-    /// <summary>
-    ///  Override ImageList.Indexer to support Label's ImageList semantics.
-    /// </summary>
-    internal class LabelImageIndexer : ImageList.Indexer
-    {
-        private readonly Label owner;
-        private bool useIntegerIndex = true;
-
-        public LabelImageIndexer(Label owner)
-        {
-            this.owner = owner;
-        }
-
-        public override ImageList ImageList
-        {
-            get { return owner?.ImageList; }
-
-            set { Debug.Assert(false, "Setting the image list in this class is not supported"); }
-        }
-
-        public override string Key
-        {
-            get { return base.Key; }
-            set
-            {
-                base.Key = value;
-                useIntegerIndex = false;
-            }
-        }
-
-        public override int Index
-        {
-            get { return base.Index; }
-            set
-            {
-                base.Index = value;
-                useIntegerIndex = true;
-            }
-
-        }
-
-        public override int ActualIndex
-        {
-            get
-            {
-                if (useIntegerIndex)
-                {
-                    // The behavior of label is to return the last item in the Images collection
-                    // if the index is currently set higher than the count.
-                    return (Index < ImageList.Images.Count) ? Index : ImageList.Images.Count - 1;
-                }
-                else if (ImageList != null)
-                {
-                    return ImageList.Images.IndexOfKey(Key);
-                }
-
-                return -1;
-            }
-        }
-
-    }
-
 }

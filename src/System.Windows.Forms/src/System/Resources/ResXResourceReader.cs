@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Specialized;
 using System.ComponentModel.Design;
@@ -15,109 +17,117 @@ using System.Xml;
 
 namespace System.Resources
 {
-
     /// <summary>
     ///  ResX resource reader.
     /// </summary>
-    public class ResXResourceReader : IResourceReader
+    public partial class ResXResourceReader : IResourceReader
     {
-        readonly string fileName = null;
-        TextReader reader = null;
-        Stream stream = null;
-        string fileContents = null;
-        readonly AssemblyName[] assemblyNames;
-        string basePath;
-        bool isReaderDirty = false;
-        readonly ITypeResolutionService typeResolver;
-        readonly IAliasResolver aliasResolver = null;
+        private readonly string _fileName;
+        private TextReader _reader;
+        private Stream _stream;
+        private string _fileContents;
+        private readonly AssemblyName[] _assemblyNames;
+        private string _basePath;
+        private bool _isReaderDirty;
+        private readonly ITypeResolutionService _typeResolver;
+        private readonly IAliasResolver _aliasResolver;
 
-        ListDictionary resData = null;
-        ListDictionary resMetadata = null;
-        string resHeaderVersion = null;
-        string resHeaderMimeType = null;
-        string resHeaderReaderType = null;
-        string resHeaderWriterType = null;
-        bool useResXDataNodes = false;
+        private ListDictionary _resData;
+        private ListDictionary _resMetadata;
+        private string _resHeaderVersion;
+        private string _resHeaderMimeType;
+        private string _resHeaderReaderType;
+        private string _resHeaderWriterType;
+        private bool _useResXDataNodes;
 
         private ResXResourceReader(ITypeResolutionService typeResolver)
         {
-            this.typeResolver = typeResolver;
-            aliasResolver = new ReaderAliasResolver();
+            _typeResolver = typeResolver;
+            _aliasResolver = new ReaderAliasResolver();
         }
 
         private ResXResourceReader(AssemblyName[] assemblyNames)
         {
-            this.assemblyNames = assemblyNames;
-            aliasResolver = new ReaderAliasResolver();
+            _assemblyNames = assemblyNames;
+            _aliasResolver = new ReaderAliasResolver();
         }
 
-        public ResXResourceReader(string fileName) : this(fileName, (ITypeResolutionService)null, (IAliasResolver)null)
+        public ResXResourceReader(string fileName) : this(fileName, (ITypeResolutionService)null, null)
         {
         }
-        public ResXResourceReader(string fileName, ITypeResolutionService typeResolver) : this(fileName, typeResolver, (IAliasResolver)null)
+
+        public ResXResourceReader(string fileName, ITypeResolutionService typeResolver) : this(fileName, typeResolver, null)
         {
         }
+
         internal ResXResourceReader(string fileName, ITypeResolutionService typeResolver, IAliasResolver aliasResolver)
         {
-            this.fileName = fileName;
-            this.typeResolver = typeResolver;
-            this.aliasResolver = aliasResolver ?? new ReaderAliasResolver();
+            _fileName = fileName;
+            _typeResolver = typeResolver;
+            _aliasResolver = aliasResolver ?? new ReaderAliasResolver();
         }
 
-        public ResXResourceReader(TextReader reader) : this(reader, (ITypeResolutionService)null, (IAliasResolver)null)
+        public ResXResourceReader(TextReader reader) : this(reader, (ITypeResolutionService)null, null)
         {
         }
+
         public ResXResourceReader(TextReader reader, ITypeResolutionService typeResolver) : this(reader, typeResolver, (IAliasResolver)null)
         {
         }
+
         internal ResXResourceReader(TextReader reader, ITypeResolutionService typeResolver, IAliasResolver aliasResolver)
         {
-            this.reader = reader;
-            this.typeResolver = typeResolver;
-            this.aliasResolver = aliasResolver ?? new ReaderAliasResolver();
+            _reader = reader;
+            _typeResolver = typeResolver;
+            _aliasResolver = aliasResolver ?? new ReaderAliasResolver();
         }
 
         public ResXResourceReader(Stream stream) : this(stream, (ITypeResolutionService)null, (IAliasResolver)null)
         {
         }
+
         public ResXResourceReader(Stream stream, ITypeResolutionService typeResolver) : this(stream, typeResolver, (IAliasResolver)null)
         {
         }
+
         internal ResXResourceReader(Stream stream, ITypeResolutionService typeResolver, IAliasResolver aliasResolver)
         {
-            this.stream = stream;
-            this.typeResolver = typeResolver;
-            this.aliasResolver = aliasResolver ?? new ReaderAliasResolver();
+            _stream = stream;
+            _typeResolver = typeResolver;
+            _aliasResolver = aliasResolver ?? new ReaderAliasResolver();
         }
 
         public ResXResourceReader(Stream stream, AssemblyName[] assemblyNames) : this(stream, assemblyNames, (IAliasResolver)null)
         {
         }
+
         internal ResXResourceReader(Stream stream, AssemblyName[] assemblyNames, IAliasResolver aliasResolver)
         {
-            this.stream = stream;
-            this.assemblyNames = assemblyNames;
-            this.aliasResolver = aliasResolver ?? new ReaderAliasResolver();
+            _stream = stream;
+            _assemblyNames = assemblyNames;
+            _aliasResolver = aliasResolver ?? new ReaderAliasResolver();
         }
 
         public ResXResourceReader(TextReader reader, AssemblyName[] assemblyNames) : this(reader, assemblyNames, (IAliasResolver)null)
         {
         }
+
         internal ResXResourceReader(TextReader reader, AssemblyName[] assemblyNames, IAliasResolver aliasResolver)
         {
-            this.reader = reader;
-            this.assemblyNames = assemblyNames;
-            this.aliasResolver = aliasResolver ?? new ReaderAliasResolver();
+            _reader = reader;
+            _assemblyNames = assemblyNames;
+            _aliasResolver = aliasResolver ?? new ReaderAliasResolver();
         }
 
         public ResXResourceReader(string fileName, AssemblyName[] assemblyNames) : this(fileName, assemblyNames, (IAliasResolver)null)
         {
         }
+
         internal ResXResourceReader(string fileName, AssemblyName[] assemblyNames, IAliasResolver aliasResolver)
         {
-            this.fileName = fileName;
-            this.assemblyNames = assemblyNames;
-            this.aliasResolver = aliasResolver ?? new ReaderAliasResolver();
+            _fileName = fileName;
+            _assemblyNames = assemblyNames;
+            _aliasResolver = aliasResolver ?? new ReaderAliasResolver();
         }
 
         ~ResXResourceReader()
@@ -132,15 +142,16 @@ namespace System.Resources
         {
             get
             {
-                return basePath;
+                return _basePath;
             }
             set
             {
-                if (isReaderDirty)
+                if (_isReaderDirty)
                 {
                     throw new InvalidOperationException(SR.InvalidResXBasePathOperation);
                 }
-                basePath = value;
+
+                _basePath = value;
             }
         }
 
@@ -154,28 +165,27 @@ namespace System.Resources
         {
             get
             {
-                return useResXDataNodes;
+                return _useResXDataNodes;
             }
             set
             {
-                if (isReaderDirty)
+                if (_isReaderDirty)
                 {
                     throw new InvalidOperationException(SR.InvalidResXBasePathOperation);
                 }
-                useResXDataNodes = value;
+
+                _useResXDataNodes = value;
             }
         }
 
         /// <summary>
         ///  Closes and files or streams being used by the reader.
         /// </summary>
-        // NOTE: Part of IResourceReader - not protected by class level LinkDemand.
         public void Close()
         {
             ((IDisposable)this).Dispose();
         }
 
-        // NOTE: Part of IDisposable - not protected by class level LinkDemand.
         void IDisposable.Dispose()
         {
             GC.SuppressFinalize(this);
@@ -186,16 +196,16 @@ namespace System.Resources
         {
             if (disposing)
             {
-                if (fileName != null && stream != null)
+                if (_fileName != null && _stream != null)
                 {
-                    stream.Close();
-                    stream = null;
+                    _stream.Close();
+                    _stream = null;
                 }
 
-                if (reader != null)
+                if (_reader != null)
                 {
-                    reader.Close();
-                    reader = null;
+                    _reader.Close();
+                    _reader = null;
                 }
             }
         }
@@ -224,32 +234,32 @@ namespace System.Resources
         /// </summary>
         private void EnsureResData()
         {
-            if (resData == null)
+            if (_resData is null)
             {
-                resData = new ListDictionary();
-                resMetadata = new ListDictionary();
+                _resData = new ListDictionary();
+                _resMetadata = new ListDictionary();
 
                 XmlTextReader contentReader = null;
 
                 try
                 {
                     // Read data in any which way
-                    if (fileContents != null)
+                    if (_fileContents != null)
                     {
-                        contentReader = new XmlTextReader(new StringReader(fileContents));
+                        contentReader = new XmlTextReader(new StringReader(_fileContents));
                     }
-                    else if (reader != null)
+                    else if (_reader != null)
                     {
-                        contentReader = new XmlTextReader(reader);
+                        contentReader = new XmlTextReader(_reader);
                     }
-                    else if (fileName != null || stream != null)
+                    else if (_fileName != null || _stream != null)
                     {
-                        if (stream == null)
+                        if (_stream is null)
                         {
-                            stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                            _stream = new FileStream(_fileName, FileMode.Open, FileAccess.Read, FileShare.Read);
                         }
 
-                        contentReader = new XmlTextReader(stream);
+                        contentReader = new XmlTextReader(_stream);
                     }
 
                     SetupNameTable(contentReader);
@@ -258,10 +268,10 @@ namespace System.Resources
                 }
                 finally
                 {
-                    if (fileName != null && stream != null)
+                    if (_fileName != null && _stream != null)
                     {
-                        stream.Close();
-                        stream = null;
+                        _stream.Close();
+                        _stream = null;
                     }
                 }
             }
@@ -282,7 +292,7 @@ namespace System.Resources
         {
             return new ResXResourceReader(typeResolver)
             {
-                fileContents = fileContents
+                _fileContents = fileContents
             };
         }
 
@@ -293,31 +303,29 @@ namespace System.Resources
         {
             return new ResXResourceReader(assemblyNames)
             {
-                fileContents = fileContents
+                _fileContents = fileContents
             };
         }
 
-        // NOTE: Part of IEnumerable - not protected by class level LinkDemand.
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
 
-        // NOTE: Part of IResourceReader - not protected by class level LinkDemand.
         public IDictionaryEnumerator GetEnumerator()
         {
-            isReaderDirty = true;
+            _isReaderDirty = true;
             EnsureResData();
-            return resData.GetEnumerator();
+            return _resData.GetEnumerator();
         }
 
         /// <summary>
-        ///  Returns a dictionary enumerator that can be used to enumerate the <metadata> elements in the .resx file.
+        ///  Returns a dictionary enumerator that can be used to enumerate the &lt;metadata&gt; elements in the .resx file.
         /// </summary>
         public IDictionaryEnumerator GetMetadataEnumerator()
         {
             EnsureResData();
-            return resMetadata.GetEnumerator();
+            return _resMetadata.GetEnumerator();
         }
 
         /// <summary>
@@ -394,7 +402,7 @@ namespace System.Resources
                 }
                 catch (Exception e)
                 {
-                    if (ClientUtils.IsSecurityOrCriticalException(e))
+                    if (ClientUtils.IsCriticalException(e))
                     {
                         throw;
                     }
@@ -410,21 +418,20 @@ namespace System.Resources
             {
                 if (!success)
                 {
-                    resData = null;
-                    resMetadata = null;
+                    _resData = null;
+                    _resMetadata = null;
                 }
             }
 
             bool validFile = false;
 
-            if (resHeaderMimeType == ResXResourceWriter.ResMimeType)
+            if (_resHeaderMimeType == ResXResourceWriter.ResMimeType)
             {
-
                 Type readerType = typeof(ResXResourceReader);
                 Type writerType = typeof(ResXResourceWriter);
 
-                string readerTypeName = resHeaderReaderType;
-                string writerTypeName = resHeaderWriterType;
+                string readerTypeName = _resHeaderReaderType;
+                string writerTypeName = _resHeaderWriterType;
                 if (readerTypeName != null && readerTypeName.IndexOf(',') != -1)
                 {
                     readerTypeName = readerTypeName.Split(',')[0].Trim();
@@ -445,8 +452,8 @@ namespace System.Resources
 
             if (!validFile)
             {
-                resData = null;
-                resMetadata = null;
+                _resData = null;
+                _resMetadata = null;
                 throw new ArgumentException(SR.InvalidResXFileReaderWriterTypes);
             }
         }
@@ -462,50 +469,49 @@ namespace System.Resources
                 // in the resheader, however the "1.0" schema had a different
                 // casing. By checking the Equals first, we should
                 // see significant performance improvements.
-                //
 
                 if (name == ResXResourceWriter.VersionStr)
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
-                        resHeaderVersion = reader.ReadElementString();
+                        _resHeaderVersion = reader.ReadElementString();
                     }
                     else
                     {
-                        resHeaderVersion = reader.Value.Trim();
+                        _resHeaderVersion = reader.Value.Trim();
                     }
                 }
                 else if (name == ResXResourceWriter.ResMimeTypeStr)
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
-                        resHeaderMimeType = reader.ReadElementString();
+                        _resHeaderMimeType = reader.ReadElementString();
                     }
                     else
                     {
-                        resHeaderMimeType = reader.Value.Trim();
+                        _resHeaderMimeType = reader.Value.Trim();
                     }
                 }
                 else if (name == ResXResourceWriter.ReaderStr)
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
-                        resHeaderReaderType = reader.ReadElementString();
+                        _resHeaderReaderType = reader.ReadElementString();
                     }
                     else
                     {
-                        resHeaderReaderType = reader.Value.Trim();
+                        _resHeaderReaderType = reader.Value.Trim();
                     }
                 }
                 else if (name == ResXResourceWriter.WriterStr)
                 {
                     if (reader.NodeType == XmlNodeType.Element)
                     {
-                        resHeaderWriterType = reader.ReadElementString();
+                        _resHeaderWriterType = reader.ReadElementString();
                     }
                     else
                     {
-                        resHeaderWriterType = reader.Value.Trim();
+                        _resHeaderWriterType = reader.Value.Trim();
                     }
                 }
                 else
@@ -515,41 +521,41 @@ namespace System.Resources
                         case ResXResourceWriter.VersionStr:
                             if (reader.NodeType == XmlNodeType.Element)
                             {
-                                resHeaderVersion = reader.ReadElementString();
+                                _resHeaderVersion = reader.ReadElementString();
                             }
                             else
                             {
-                                resHeaderVersion = reader.Value.Trim();
+                                _resHeaderVersion = reader.Value.Trim();
                             }
                             break;
                         case ResXResourceWriter.ResMimeTypeStr:
                             if (reader.NodeType == XmlNodeType.Element)
                             {
-                                resHeaderMimeType = reader.ReadElementString();
+                                _resHeaderMimeType = reader.ReadElementString();
                             }
                             else
                             {
-                                resHeaderMimeType = reader.Value.Trim();
+                                _resHeaderMimeType = reader.Value.Trim();
                             }
                             break;
                         case ResXResourceWriter.ReaderStr:
                             if (reader.NodeType == XmlNodeType.Element)
                             {
-                                resHeaderReaderType = reader.ReadElementString();
+                                _resHeaderReaderType = reader.ReadElementString();
                             }
                             else
                             {
-                                resHeaderReaderType = reader.Value.Trim();
+                                _resHeaderReaderType = reader.Value.Trim();
                             }
                             break;
                         case ResXResourceWriter.WriterStr:
                             if (reader.NodeType == XmlNodeType.Element)
                             {
-                                resHeaderWriterType = reader.ReadElementString();
+                                _resHeaderWriterType = reader.ReadElementString();
                             }
                             else
                             {
-                                resHeaderWriterType = reader.Value.Trim();
+                                _resHeaderWriterType = reader.Value.Trim();
                             }
                             break;
                     }
@@ -568,7 +574,8 @@ namespace System.Resources
             {
                 alias = assemblyName.Name;
             }
-            aliasResolver.PushAlias(alias, assemblyName);
+
+            _aliasResolver.PushAlias(alias, assemblyName);
         }
 
         private void ParseDataNode(XmlTextReader reader, bool isMetaData)
@@ -587,10 +594,12 @@ namespace System.Resources
             {
                 alias = GetAliasFromTypeName(typeName);
             }
+
             if (!string.IsNullOrEmpty(alias))
             {
-                assemblyName = aliasResolver.ResolveAlias(alias);
+                assemblyName = _aliasResolver.ResolveAlias(alias);
             }
+
             if (assemblyName != null)
             {
                 nodeInfo.TypeName = GetTypeFromTypeName(typeName) + ", " + assemblyName.FullName;
@@ -651,7 +660,7 @@ namespace System.Resources
                 }
             }
 
-            if (nodeInfo.Name == null)
+            if (nodeInfo.Name is null)
             {
                 throw new ArgumentException(string.Format(SR.InvalidResXResourceNoName, nodeInfo.ValueData));
             }
@@ -660,18 +669,18 @@ namespace System.Resources
 
             if (UseResXDataNodes)
             {
-                resData[nodeInfo.Name] = dataNode;
+                _resData[nodeInfo.Name] = dataNode;
             }
             else
             {
-                IDictionary data = (isMetaData ? resMetadata : resData);
-                if (assemblyNames == null)
+                IDictionary data = (isMetaData ? _resMetadata : _resData);
+                if (_assemblyNames is null)
                 {
-                    data[nodeInfo.Name] = dataNode.GetValue(typeResolver);
+                    data[nodeInfo.Name] = dataNode.GetValue(_typeResolver);
                 }
                 else
                 {
-                    data[nodeInfo.Name] = dataNode.GetValue(assemblyNames);
+                    data[nodeInfo.Name] = dataNode.GetValue(_assemblyNames);
                 }
             }
         }
@@ -680,45 +689,12 @@ namespace System.Resources
         {
             int indexStart = typeName.IndexOf(',');
             return typeName.Substring(indexStart + 2);
-
         }
 
         private string GetTypeFromTypeName(string typeName)
         {
             int indexStart = typeName.IndexOf(',');
             return typeName.Substring(0, indexStart);
-
-        }
-
-        private sealed class ReaderAliasResolver : IAliasResolver
-        {
-            private readonly Hashtable cachedAliases;
-
-            internal ReaderAliasResolver()
-            {
-                cachedAliases = new Hashtable();
-            }
-
-            public AssemblyName ResolveAlias(string alias)
-            {
-
-                AssemblyName result = null;
-                if (cachedAliases != null)
-                {
-                    result = (AssemblyName)cachedAliases[alias];
-                }
-                return result;
-            }
-
-            public void PushAlias(string alias, AssemblyName name)
-            {
-                if (cachedAliases != null && !string.IsNullOrEmpty(alias))
-                {
-                    cachedAliases[alias] = name;
-                }
-            }
-
         }
     }
 }
-

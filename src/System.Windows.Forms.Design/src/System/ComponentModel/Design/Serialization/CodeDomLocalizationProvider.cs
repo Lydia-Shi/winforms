@@ -14,7 +14,7 @@ namespace System.ComponentModel.Design.Serialization
     ///  This is a serialization provider that provides a localization feature.  This provider
     ///  adds two properties to the root component:  Language and Localizable.  If Localizable
     ///  is set to true this provider will change the way that component properties are generated
-    ///  and will route their values to a resource file.  Two localization models are 
+    ///  and will route their values to a resource file.  Two localization models are
     ///  supported.
     /// </summary>
     public sealed class CodeDomLocalizationProvider : IDisposable, IDesignerSerializationProvider
@@ -27,15 +27,15 @@ namespace System.ComponentModel.Design.Serialization
         private Hashtable _nopMemberSerializers;
 
         /// <summary>
-        ///  Creates a new adapter and attaches it to the serialization manager.  This 
-        ///  will add itself as a serializer for resources into the serialization manager, and, 
-        ///  if not already added, will add itself as an extender provider to the roost component 
-        ///  and provide the Language and Localizable properties.  The latter piece is only 
-        ///  supplied if CodeDomLocalizationModel is not �none�.  
+        ///  Creates a new adapter and attaches it to the serialization manager.  This
+        ///  will add itself as a serializer for resources into the serialization manager, and,
+        ///  if not already added, will add itself as an extender provider to the roost component
+        ///  and provide the Language and Localizable properties.  The latter piece is only
+        ///  supplied if CodeDomLocalizationModel is not �none�.
         /// </summary>
         public CodeDomLocalizationProvider(IServiceProvider provider, CodeDomLocalizationModel model)
         {
-            if (provider == null)
+            if (provider is null)
             {
                 throw new ArgumentNullException(nameof(provider));
             }
@@ -45,20 +45,20 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Creates a new adapter and attaches it to the serialization manager.  This 
-        ///  will add itself as a serializer for resources into the serialization manager, and, 
-        ///  if not already added, will add itself as an extender provider to the roost component 
-        ///  and provide the Language and Localizable properties.  The latter piece is only 
-        ///  supplied if CodeDomLocalizationModel is not �none�.  
+        ///  Creates a new adapter and attaches it to the serialization manager.  This
+        ///  will add itself as a serializer for resources into the serialization manager, and,
+        ///  if not already added, will add itself as an extender provider to the roost component
+        ///  and provide the Language and Localizable properties.  The latter piece is only
+        ///  supplied if CodeDomLocalizationModel is not �none�.
         /// </summary>
         public CodeDomLocalizationProvider(IServiceProvider provider, CodeDomLocalizationModel model, CultureInfo[] supportedCultures)
         {
-            if (provider == null)
+            if (provider is null)
             {
                 throw new ArgumentNullException(nameof(provider));
             }
 
-            if (supportedCultures == null)
+            if (supportedCultures is null)
             {
                 throw new ArgumentNullException(nameof(supportedCultures));
             }
@@ -88,7 +88,7 @@ namespace System.ComponentModel.Design.Serialization
         {
             _providerService = provider.GetService(typeof(IExtenderProviderService)) as IExtenderProviderService;
 
-            if (_providerService == null)
+            if (_providerService is null)
             {
                 throw new NotSupportedException(string.Format(SR.LocalizationProviderMissingService, typeof(IExtenderProviderService).Name));
             }
@@ -103,7 +103,7 @@ namespace System.ComponentModel.Design.Serialization
         /// </summary>
         private object GetCodeDomSerializer(IDesignerSerializationManager manager, object currentSerializer, Type objectType, Type serializerType)
         {
-            if (currentSerializer == null)
+            if (currentSerializer is null)
             {
                 return null;
             }
@@ -114,7 +114,7 @@ namespace System.ComponentModel.Design.Serialization
                 return null;
             }
 
-            // Here's how this works.  We have two different types of serializers to offer :  a 
+            // Here's how this works.  We have two different types of serializers to offer :  a
             // serializer that writes out code like this:
             //
             //      this.Button1.Text = rm.GetString("Button1_Text");
@@ -140,7 +140,7 @@ namespace System.ComponentModel.Design.Serialization
 
             //Nifty, but this causes everything to be loc'd because our provider
             //comes in before the default one
-            //if (model == CodeDomLocalizationModel.None && currentSerializer == null) {
+            //if (model == CodeDomLocalizationModel.None && currentSerializer is null) {
             //    model = CodeDomLocalizationModel.PropertyAssignment;
             //}
 
@@ -170,7 +170,7 @@ namespace System.ComponentModel.Design.Serialization
             // we don't know how to perform the serialization.
             // We can only provide a custom serializer if we have an existing one
             // to base off of.
-            if (currentSerializer == null)
+            if (currentSerializer is null)
             {
                 return null;
             }
@@ -182,7 +182,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             // We only care if we're localizable
-            if (_extender == null || !_extender.GetLocalizable(null))
+            if (_extender is null || !_extender.GetLocalizable(null))
             {
                 return null;
             }
@@ -190,17 +190,17 @@ namespace System.ComponentModel.Design.Serialization
             // Fish the property out of the context to see if the property is localizable.
             PropertyDescriptor serializingProperty = manager.Context[typeof(PropertyDescriptor)] as PropertyDescriptor;
 
-            if (serializingProperty == null || !serializingProperty.IsLocalizable)
+            if (serializingProperty is null || !serializingProperty.IsLocalizable)
             {
                 model = CodeDomLocalizationModel.None;
             }
 
-            if (_memberSerializers == null)
+            if (_memberSerializers is null)
             {
                 _memberSerializers = new Hashtable();
             }
 
-            if (_nopMemberSerializers == null)
+            if (_nopMemberSerializers is null)
             {
                 _nopMemberSerializers = new Hashtable();
             }
@@ -216,7 +216,7 @@ namespace System.ComponentModel.Design.Serialization
                 newSerializer = _memberSerializers[currentSerializer];
             }
 
-            if (newSerializer == null)
+            if (newSerializer is null)
             {
                 newSerializer = new ResourcePropertyMemberCodeDomSerializer((MemberCodeDomSerializer)currentSerializer, _extender, model);
 
@@ -234,7 +234,7 @@ namespace System.ComponentModel.Design.Serialization
         }
 
         /// <summary>
-        ///  Returns an appropriate serializer for the object.  
+        ///  Returns an appropriate serializer for the object.
         /// </summary>
         object IDesignerSerializationProvider.GetSerializer(IDesignerSerializationManager manager, object currentSerializer, Type objectType, Type serializerType)
         {
@@ -300,7 +300,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 get
                 {
-                    if (_defaultLanguage == null)
+                    if (_defaultLanguage is null)
                     {
                         _defaultLanguage = Application.CurrentCulture;
                     }
@@ -309,7 +309,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             /// <summary>
-            ///  Broadcasts a global change, indicating that all 
+            ///  Broadcasts a global change, indicating that all
             ///  objects on the designer have changed.
             /// </summary>
             private void BroadcastGlobalChange(IComponent comp)
@@ -376,7 +376,7 @@ namespace System.ComponentModel.Design.Serialization
                 CheckRoot();
 
                 // If we never configured the load language, we're always invariant.
-                if (_loadLanguage == null)
+                if (_loadLanguage is null)
                 {
                     _loadLanguage = CultureInfo.InvariantCulture;
                 }
@@ -385,7 +385,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             /// <summary>
-            ///  Gets a value indicating whether the specified object supports design-time localization 
+            ///  Gets a value indicating whether the specified object supports design-time localization
             ///  support.
             /// </summary>
             [DesignOnly(true)]
@@ -406,7 +406,7 @@ namespace System.ComponentModel.Design.Serialization
             {
                 CheckRoot();
 
-                if (language == null)
+                if (language is null)
                 {
                     language = CultureInfo.InvariantCulture;
                 }
@@ -457,7 +457,7 @@ namespace System.ComponentModel.Design.Serialization
             }
 
             /// <summary>
-            ///  Sets a value indicating whether or not the specified object has design-time 
+            ///  Sets a value indicating whether or not the specified object has design-time
             ///  localization support.
             /// </summary>
             public void SetLocalizable(IComponent o, bool localizable)
@@ -523,12 +523,12 @@ namespace System.ComponentModel.Design.Serialization
             }
         }
 
-        #region LanguageCultureInfoConverter 
+        #region LanguageCultureInfoConverter
         /// <summary>
         ///  This is a culture info converter that knows how to provide
         ///  a restricted list of cultures based on the SupportedCultures
         ///  property of the extender.  If the extender can't be found
-        ///  or the SupportedCultures property returns null, this 
+        ///  or the SupportedCultures property returns null, this
         ///  defaults to the stock implementation.
         /// </summary>
         internal sealed class LanguageCultureInfoConverter : CultureInfoConverter
@@ -564,7 +564,7 @@ namespace System.ComponentModel.Design.Serialization
                     }
                 }
 
-                if (values == null)
+                if (values is null)
                 {
                     values = base.GetStandardValues(context);
                 }

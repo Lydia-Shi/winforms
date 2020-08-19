@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -20,13 +22,6 @@ namespace System.Windows.Forms
         private IDictionary keyNames;
         private List<string> displayOrder;
         private StandardValuesCollection values;
-
-        private const Keys FirstDigit = System.Windows.Forms.Keys.D0;
-        private const Keys LastDigit = System.Windows.Forms.Keys.D9;
-        private const Keys FirstAscii = System.Windows.Forms.Keys.A;
-        private const Keys LastAscii = System.Windows.Forms.Keys.Z;
-        private const Keys FirstNumpadDigit = System.Windows.Forms.Keys.NumPad0;
-        private const Keys LastNumpadDigit = System.Windows.Forms.Keys.NumPad9;
 
         private void AddKey(string key, Keys value)
         {
@@ -86,9 +81,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (keyNames == null)
+                if (keyNames is null)
                 {
-                    Debug.Assert(displayOrder == null);
+                    Debug.Assert(displayOrder is null);
                     Initialize();
                 }
                 return keyNames;
@@ -99,9 +94,9 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (displayOrder == null)
+                if (displayOrder is null)
                 {
-                    Debug.Assert(keyNames == null);
+                    Debug.Assert(keyNames is null);
                     Initialize();
                 }
                 return displayOrder;
@@ -149,7 +144,6 @@ namespace System.Windows.Forms
         {
             if (value is string)
             {
-
                 string text = ((string)value).Trim();
 
                 if (text.Length == 0)
@@ -158,7 +152,6 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-
                     // Parse an array of key tokens.
                     //
                     string[] tokens = text.Split(new char[] { '+' });
@@ -176,9 +169,8 @@ namespace System.Windows.Forms
                     {
                         object obj = KeyNames[tokens[i]];
 
-                        if (obj == null)
+                        if (obj is null)
                         {
-
                             // Key was not found in our table.  See if it is a valid value in
                             // the Keys enum.
                             //
@@ -191,7 +183,6 @@ namespace System.Windows.Forms
 
                             if ((currentKey & Keys.KeyCode) != 0)
                             {
-
                                 // We found a match.  If we have previously found a
                                 // key code, then check to see that this guy
                                 // isn't a key code (it is illegal to have, say,
@@ -210,11 +201,9 @@ namespace System.Windows.Forms
                         }
                         else
                         {
-
                             // We did not match this key.  Report this as an error too.
                             //
                             throw new FormatException(string.Format(SR.KeysConverterInvalidKeyName, tokens[i]));
-
                         }
                     }
 
@@ -243,7 +232,7 @@ namespace System.Windows.Forms
         /// </summary>
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (destinationType == null)
+            if (destinationType is null)
             {
                 throw new ArgumentNullException(nameof(destinationType));
             }
@@ -273,7 +262,6 @@ namespace System.Windows.Forms
                         Keys keyValue = (Keys)keyNames[keyString];
                         if (((int)(keyValue) & (int)modifiers) != 0)
                         {
-
                             if (asString)
                             {
                                 if (added)
@@ -309,7 +297,6 @@ namespace System.Windows.Forms
                         Keys keyValue = (Keys)keyNames[keyString];
                         if (keyValue.Equals(keyOnly))
                         {
-
                             if (asString)
                             {
                                 terms.Add((string)keyString);
@@ -367,7 +354,7 @@ namespace System.Windows.Forms
         /// </summary>
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            if (values == null)
+            if (values is null)
             {
                 ArrayList list = new ArrayList();
 
@@ -408,4 +395,3 @@ namespace System.Windows.Forms
         }
     }
 }
-

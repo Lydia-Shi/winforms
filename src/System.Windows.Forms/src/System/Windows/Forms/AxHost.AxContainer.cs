@@ -1,6 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+#nullable disable
 
 using System.Collections;
 using System.ComponentModel;
@@ -9,14 +11,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using static Interop;
+using static Interop.Ole32;
 
 namespace System.Windows.Forms
 {
     public abstract partial class AxHost
     {
-        internal class AxContainer : Ole32.IOleContainer, Ole32.IOleInPlaceFrame, IReflect
+        internal class AxContainer : IOleContainer, IOleInPlaceFrame, IReflect
         {
             internal ContainerControl parent;
             private IContainer assocContainer; // associated IContainer...
@@ -24,19 +26,12 @@ namespace System.Windows.Forms
             // forward [de]activation messages to the requisite container...
             private AxHost siteUIActive;
             private AxHost siteActive;
-            private bool formAlreadyCreated = false;
+            private bool formAlreadyCreated;
             private readonly Hashtable containerCache = new Hashtable();  // name -> Control
-            private int lockCount = 0;
-            private Hashtable components = null;  // Control -> any
-            private Hashtable proxyCache = null;
-            private AxHost ctlInEditMode = null;
-
-            private const int GC_CHILD = 0x1;
-            private const int GC_LASTSIBLING = 0x2;
-            private const int GC_FIRSTSIBLING = 0x4;
-            private const int GC_CONTAINER = 0x20;
-            private const int GC_PREVSIBLING = 0x40;
-            private const int GC_NEXTSIBLING = 0x80;
+            private int lockCount;
+            private Hashtable components;  // Control -> any
+            private Hashtable proxyCache;
+            private AxHost ctlInEditMode;
 
             internal AxContainer(ContainerControl parent)
             {
@@ -103,7 +98,6 @@ namespace System.Windows.Forms
             object IReflect.InvokeMember(string name, BindingFlags invokeAttr, Binder binder,
                                                     object target, object[] args, ParameterModifier[] modifiers, CultureInfo culture, string[] namedParameters)
             {
-
                 foreach (DictionaryEntry e in containerCache)
                 {
                     string ctlName = GetNameForControl((Control)e.Key);
@@ -124,18 +118,18 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal OleAut32.IExtender GetProxyForControl(Control ctl)
+            internal Oleaut32.IExtender GetProxyForControl(Control ctl)
             {
-                OleAut32.IExtender rval = null;
-                if (proxyCache == null)
+                Oleaut32.IExtender rval = null;
+                if (proxyCache is null)
                 {
                     proxyCache = new Hashtable();
                 }
                 else
                 {
-                    rval = (OleAut32.IExtender)proxyCache[ctl];
+                    rval = (Oleaut32.IExtender)proxyCache[ctl];
                 }
-                if (rval == null)
+                if (rval is null)
                 {
                     if (ctl != parent && !GetControlBelongs(ctl))
                     {
@@ -174,12 +168,12 @@ namespace System.Windows.Forms
                 {
                     if (containerCache.Contains(ctl))
                     {
-                        throw new ArgumentException(string.Format(SR.AXDuplicateControl, GetNameForControl(ctl)), "ctl");
+                        throw new ArgumentException(string.Format(SR.AXDuplicateControl, GetNameForControl(ctl)), nameof(ctl));
                     }
 
                     containerCache.Add(ctl, ctl);
 
-                    if (assocContainer == null)
+                    if (assocContainer is null)
                     {
                         ISite site = ctl.Site;
                         if (site != null)
@@ -231,7 +225,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal Ole32.IEnumUnknown EnumControls(Control ctl, Ole32.OLECONTF dwOleContF, Ole32.GC_WCH dwWhich)
+            internal IEnumUnknown EnumControls(Control ctl, OLECONTF dwOleContF, GC_WCH dwWhich)
             {
                 GetComponents();
 
@@ -239,19 +233,19 @@ namespace System.Windows.Forms
                 try
                 {
                     ArrayList l = null;
-                    bool selected = (dwWhich & Ole32.GC_WCH.FSELECTED) != 0;
-                    bool reverse = (dwWhich & Ole32.GC_WCH.FREVERSEDIR) != 0;
+                    bool selected = (dwWhich & GC_WCH.FSELECTED) != 0;
+                    bool reverse = (dwWhich & GC_WCH.FREVERSEDIR) != 0;
                     // Note that visual basic actually ignores the next/prev flags... we will not
-                    bool onlyNext = (dwWhich & Ole32.GC_WCH.FONLYNEXT) != 0;
-                    bool onlyPrev = (dwWhich & Ole32.GC_WCH.FONLYPREV) != 0;
-                    dwWhich &= ~(Ole32.GC_WCH.FSELECTED | Ole32.GC_WCH.FREVERSEDIR |
-                                          Ole32.GC_WCH.FONLYNEXT | Ole32.GC_WCH.FONLYPREV);
+                    bool onlyNext = (dwWhich & GC_WCH.FONLYNEXT) != 0;
+                    bool onlyPrev = (dwWhich & GC_WCH.FONLYPREV) != 0;
+                    dwWhich &= ~(GC_WCH.FSELECTED | GC_WCH.FREVERSEDIR |
+                                          GC_WCH.FONLYNEXT | GC_WCH.FONLYPREV);
                     if (onlyNext && onlyPrev)
                     {
                         Debug.Fail("onlyNext && onlyPrev are both set!");
                         throw E_INVALIDARG;
                     }
-                    if (dwWhich == Ole32.GC_WCH.CONTAINER || dwWhich == Ole32.GC_WCH.CONTAINED)
+                    if (dwWhich == GC_WCH.CONTAINER || dwWhich == GC_WCH.CONTAINED)
                     {
                         if (onlyNext || onlyPrev)
                         {
@@ -267,11 +261,11 @@ namespace System.Windows.Forms
                         default:
                             Debug.Fail("Bad GC_WCH");
                             throw E_INVALIDARG;
-                        case Ole32.GC_WCH.CONTAINED:
+                        case GC_WCH.CONTAINED:
                             ctls = ctl.GetChildControlsInTabOrder(false);
                             ctl = null;
                             break;
-                        case Ole32.GC_WCH.SIBLING:
+                        case GC_WCH.SIBLING:
                             Control p = ctl.ParentInternal;
                             if (p != null)
                             {
@@ -291,7 +285,7 @@ namespace System.Windows.Forms
                             }
                             ctl = null;
                             break;
-                        case Ole32.GC_WCH.CONTAINER:
+                        case GC_WCH.CONTAINER:
                             l = new ArrayList();
                             MaybeAdd(l, ctl, selected, dwOleContF, false);
                             while (ctl != null)
@@ -308,14 +302,14 @@ namespace System.Windows.Forms
                                 }
                             }
                             break;
-                        case Ole32.GC_WCH.ALL:
+                        case GC_WCH.ALL:
                             Hashtable htbl = GetComponents();
                             ctls = new Control[htbl.Keys.Count];
                             htbl.Keys.CopyTo(ctls, 0);
                             ctl = parent;
                             break;
                     }
-                    if (l == null)
+                    if (l is null)
                     {
                         l = new ArrayList();
                         if (last == -1 && ctls != null)
@@ -352,7 +346,7 @@ namespace System.Windows.Forms
                 }
             }
 
-            private void MaybeAdd(ArrayList l, Control ctl, bool selected, Ole32.OLECONTF dwOleContF, bool ignoreBelong)
+            private void MaybeAdd(ArrayList l, Control ctl, bool selected, OLECONTF dwOleContF, bool ignoreBelong)
             {
                 if (!ignoreBelong && ctl != parent && !GetControlBelongs(ctl))
                 {
@@ -362,16 +356,16 @@ namespace System.Windows.Forms
                 if (selected)
                 {
                     ISelectionService iss = GetSelectionService(ctl);
-                    if (iss == null || !iss.GetComponentSelected(this))
+                    if (iss is null || !iss.GetComponentSelected(this))
                     {
                         return;
                     }
                 }
-                if (ctl is AxHost hostctl && (dwOleContF & Ole32.OLECONTF.EMBEDDINGS) != 0)
+                if (ctl is AxHost hostctl && (dwOleContF & OLECONTF.EMBEDDINGS) != 0)
                 {
                     l.Add(hostctl.GetOcx());
                 }
-                else if ((dwOleContF & Ole32.OLECONTF.OTHERS) != 0)
+                else if ((dwOleContF & OLECONTF.OTHERS) != 0)
                 {
                     object item = GetProxyForControl(ctl);
                     if (item != null)
@@ -400,7 +394,7 @@ namespace System.Windows.Forms
                     }
                 }
 
-                Debug.Assert(parent.Site == null, "Parent is sited but we could not find IContainer!!!");
+                Debug.Assert(parent.Site is null, "Parent is sited but we could not find IContainer!!!");
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "Did not find a container in FillComponentsTable!!!");
 
                 bool checkHashTable = true;
@@ -408,7 +402,7 @@ namespace System.Windows.Forms
                 containerCache.Values.CopyTo(ctls, 0);
                 if (ctls != null)
                 {
-                    if (ctls.Length > 0 && components == null)
+                    if (ctls.Length > 0 && components is null)
                     {
                         components = new Hashtable();
                         checkHashTable = false;
@@ -427,12 +421,12 @@ namespace System.Windows.Forms
 
             private void GetAllChildren(Control ctl)
             {
-                if (ctl == null)
+                if (ctl is null)
                 {
                     return;
                 }
 
-                if (components == null)
+                if (components is null)
                 {
                     components = new Hashtable();
                 }
@@ -482,7 +476,7 @@ namespace System.Windows.Forms
             private IContainer GetParentsContainer()
             {
                 IContainer rval = GetParentIsDesigned();
-                Debug.Assert(rval == null || assocContainer == null || (rval == assocContainer),
+                Debug.Assert(rval is null || assocContainer is null || (rval == assocContainer),
                              "mismatch between getIPD & aContainer");
                 return rval ?? assocContainer;
             }
@@ -564,7 +558,7 @@ namespace System.Windows.Forms
 
             internal void OnUIDeactivate(AxHost site)
             {
-                Debug.Assert(siteUIActive == null || siteUIActive == site, "deactivating when not active...");
+                Debug.Assert(siteUIActive is null || siteUIActive == site, "deactivating when not active...");
 
                 siteUIActive = null;
                 site.RemoveSelectionHandler();
@@ -597,7 +591,7 @@ namespace System.Windows.Forms
                     }
                 }
                 site.AddSelectionHandler();
-                Debug.Assert(siteUIActive == null, "Object did not call OnUIDeactivate");
+                Debug.Assert(siteUIActive is null, "Object did not call OnUIDeactivate");
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "active Object is now " + site.ToString());
                 siteUIActive = site;
                 ContainerControl f = site.ContainingControl;
@@ -610,7 +604,7 @@ namespace System.Windows.Forms
             private void ListAxControls(ArrayList list, bool fuseOcx)
             {
                 Hashtable components = GetComponents();
-                if (components == null)
+                if (components is null)
                 {
                     return;
                 }
@@ -677,7 +671,7 @@ namespace System.Windows.Forms
             }
 
             // IOleContainer methods:
-            unsafe HRESULT Ole32.IOleContainer.ParseDisplayName(IntPtr pbc, string pszDisplayName, uint *pchEaten, IntPtr* ppmkOut)
+            unsafe HRESULT IOleContainer.ParseDisplayName(IntPtr pbc, string pszDisplayName, uint *pchEaten, IntPtr* ppmkOut)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in ParseDisplayName");
                 if (ppmkOut != null)
@@ -688,11 +682,11 @@ namespace System.Windows.Forms
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT Ole32.IOleContainer.EnumObjects(Ole32.OLECONTF grfFlags, out Ole32.IEnumUnknown ppenum)
+            HRESULT IOleContainer.EnumObjects(OLECONTF grfFlags, out IEnumUnknown ppenum)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in EnumObjects");
                 ppenum = null;
-                if ((grfFlags & Ole32.OLECONTF.EMBEDDINGS) != 0)
+                if ((grfFlags & OLECONTF.EMBEDDINGS) != 0)
                 {
                     Debug.Assert(parent != null, "gotta have it...");
                     ArrayList list = new ArrayList();
@@ -710,16 +704,16 @@ namespace System.Windows.Forms
                 return HRESULT.S_OK;
             }
 
-            HRESULT Ole32.IOleContainer.LockContainer(BOOL fLock)
+            HRESULT IOleContainer.LockContainer(BOOL fLock)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in LockContainer");
                 return HRESULT.E_NOTIMPL;
             }
 
             // IOleInPlaceFrame methods:
-            unsafe HRESULT Ole32.IOleInPlaceFrame.GetWindow(IntPtr* phwnd)
+            unsafe HRESULT IOleInPlaceFrame.GetWindow(IntPtr* phwnd)
             {
-                if (phwnd == null)
+                if (phwnd is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -729,25 +723,25 @@ namespace System.Windows.Forms
                 return HRESULT.S_OK;
             }
 
-            HRESULT Ole32.IOleInPlaceFrame.ContextSensitiveHelp(BOOL fEnterMode)
+            HRESULT IOleInPlaceFrame.ContextSensitiveHelp(BOOL fEnterMode)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in ContextSensitiveHelp");
                 return HRESULT.S_OK;
             }
 
-            unsafe HRESULT Ole32.IOleInPlaceFrame.GetBorder(RECT* lprectBorder)
+            unsafe HRESULT IOleInPlaceFrame.GetBorder(RECT* lprectBorder)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in GetBorder");
                 return HRESULT.E_NOTIMPL;
             }
 
-            unsafe HRESULT Ole32.IOleInPlaceFrame.RequestBorderSpace(RECT* pborderwidths)
+            unsafe HRESULT IOleInPlaceFrame.RequestBorderSpace(RECT* pborderwidths)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in RequestBorderSpace");
                 return HRESULT.E_NOTIMPL;
             }
 
-            unsafe HRESULT Ole32.IOleInPlaceFrame.SetBorderSpace(RECT* pborderwidths)
+            unsafe HRESULT IOleInPlaceFrame.SetBorderSpace(RECT* pborderwidths)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in SetBorderSpace");
                 return HRESULT.E_NOTIMPL;
@@ -755,8 +749,8 @@ namespace System.Windows.Forms
 
             internal void OnExitEditMode(AxHost ctl)
             {
-                Debug.Assert(ctlInEditMode == null || ctlInEditMode == ctl, "who is exiting edit mode?");
-                if (ctlInEditMode == null || ctlInEditMode != ctl)
+                Debug.Assert(ctlInEditMode is null || ctlInEditMode == ctl, "who is exiting edit mode?");
+                if (ctlInEditMode is null || ctlInEditMode != ctl)
                 {
                     return;
                 }
@@ -764,7 +758,7 @@ namespace System.Windows.Forms
                 ctlInEditMode = null;
             }
 
-            HRESULT Ole32.IOleInPlaceFrame.SetActiveObject(Ole32.IOleInPlaceActiveObject pActiveObject, string pszObjName)
+            HRESULT IOleInPlaceFrame.SetActiveObject(IOleInPlaceActiveObject pActiveObject, string pszObjName)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in SetActiveObject " + (pszObjName ?? "<null>"));
                 if (siteUIActive != null)
@@ -778,7 +772,7 @@ namespace System.Windows.Forms
                         siteUIActive.iOleInPlaceActiveObjectExternal = pActiveObject;
                     }
                 }
-                if (pActiveObject == null)
+                if (pActiveObject is null)
                 {
                     if (ctlInEditMode != null)
                     {
@@ -788,9 +782,9 @@ namespace System.Windows.Forms
                     return HRESULT.S_OK;
                 }
                 AxHost ctl = null;
-                if (pActiveObject is UnsafeNativeMethods.IOleObject oleObject)
+                if (pActiveObject is IOleObject oleObject)
                 {
-                    HRESULT hr = oleObject.GetClientSite(out Ole32.IOleClientSite clientSite);
+                    HRESULT hr = oleObject.GetClientSite(out IOleClientSite clientSite);
                     Debug.Assert(hr.Succeeded());
                     if (clientSite is OleInterfaces)
                     {
@@ -804,7 +798,7 @@ namespace System.Windows.Forms
                         ctlInEditMode.editMode = EDITM_NONE;
                     }
 
-                    if (ctl == null)
+                    if (ctl is null)
                     {
                         Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "control w/o a valid site called setactiveobject");
                         ctlInEditMode = null;
@@ -825,37 +819,37 @@ namespace System.Windows.Forms
                 return HRESULT.S_OK;
             }
 
-            unsafe HRESULT Ole32.IOleInPlaceFrame.InsertMenus(IntPtr hmenuShared, Ole32.OLEMENUGROUPWIDTHS* lpMenuWidths)
+            unsafe HRESULT IOleInPlaceFrame.InsertMenus(IntPtr hmenuShared, OLEMENUGROUPWIDTHS* lpMenuWidths)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in InsertMenus");
                 return HRESULT.S_OK;
             }
 
-            HRESULT Ole32.IOleInPlaceFrame.SetMenu(IntPtr hmenuShared, IntPtr holemenu, IntPtr hwndActiveObject)
+            HRESULT IOleInPlaceFrame.SetMenu(IntPtr hmenuShared, IntPtr holemenu, IntPtr hwndActiveObject)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in SetMenu");
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT Ole32.IOleInPlaceFrame.RemoveMenus(IntPtr hmenuShared)
+            HRESULT IOleInPlaceFrame.RemoveMenus(IntPtr hmenuShared)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in RemoveMenus");
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT Ole32.IOleInPlaceFrame.SetStatusText(string pszStatusText)
+            HRESULT IOleInPlaceFrame.SetStatusText(string pszStatusText)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in SetStatusText");
                 return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT Ole32.IOleInPlaceFrame.EnableModeless(BOOL fEnable)
+            HRESULT IOleInPlaceFrame.EnableModeless(BOOL fEnable)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in EnableModeless");
                 return HRESULT.E_NOTIMPL;
             }
 
-            unsafe HRESULT Ole32.IOleInPlaceFrame.TranslateAccelerator(User32.MSG* lpmsg, ushort wID)
+            unsafe HRESULT IOleInPlaceFrame.TranslateAccelerator(User32.MSG* lpmsg, ushort wID)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in IOleInPlaceFrame.TranslateAccelerator");
                 return HRESULT.S_FALSE;
@@ -864,10 +858,10 @@ namespace System.Windows.Forms
             // EXPOSED
 
             private class ExtenderProxy :
-                OleAut32.IExtender,
-                Ole32.IVBGetControl,
-                Ole32.IGetVBAObject,
-                Ole32.IGetOleObject,
+                Oleaut32.IExtender,
+                IVBGetControl,
+                IGetVBAObject,
+                IGetOleObject,
                 IReflect
             {
                 private readonly WeakReference _pRef;
@@ -883,18 +877,18 @@ namespace System.Windows.Forms
 
                 private AxContainer GetC() => (AxContainer)_pContainer.Target;
 
-                HRESULT Ole32.IVBGetControl.EnumControls(Ole32.OLECONTF dwOleContF, Ole32.GC_WCH dwWhich, out Ole32.IEnumUnknown ppenum)
+                HRESULT IVBGetControl.EnumControls(OLECONTF dwOleContF, GC_WCH dwWhich, out IEnumUnknown ppenum)
                 {
                     Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in EnumControls for proxy");
                     ppenum = GetC().EnumControls(GetP(), dwOleContF, dwWhich);
                     return HRESULT.S_OK;
                 }
 
-                unsafe HRESULT Ole32.IGetOleObject.GetOleObject(Guid* riid, out object ppvObj)
+                unsafe HRESULT IGetOleObject.GetOleObject(Guid* riid, out object ppvObj)
                 {
                     Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in GetOleObject for proxy");
                     ppvObj = null;
-                    if (riid == null || !riid->Equals(ioleobject_Guid))
+                    if (riid is null || !riid->Equals(ioleobject_Guid))
                     {
                         return HRESULT.E_INVALIDARG;
                     }
@@ -908,10 +902,10 @@ namespace System.Windows.Forms
                     return HRESULT.E_FAIL;
                 }
 
-                unsafe HRESULT Ole32.IGetVBAObject.GetObject(Guid* riid, Ole32.IVBFormat[] rval, uint dwReserved)
+                unsafe HRESULT IGetVBAObject.GetObject(Guid* riid, IVBFormat[] rval, uint dwReserved)
                 {
                     Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in GetObject for proxy");
-                    if (rval == null || riid == null)
+                    if (rval is null || riid is null)
                     {
                         return HRESULT.E_INVALIDARG;
                     }
@@ -1170,7 +1164,7 @@ namespace System.Windows.Forms
                 PropertyInfo IReflect.GetProperty(string name, BindingFlags bindingAttr)
                 {
                     PropertyInfo prop = GetP().GetType().GetProperty(name, bindingAttr);
-                    if (prop == null)
+                    if (prop is null)
                     {
                         prop = GetType().GetProperty(name, bindingAttr);
                     }
@@ -1180,7 +1174,7 @@ namespace System.Windows.Forms
                 PropertyInfo IReflect.GetProperty(string name, BindingFlags bindingAttr, Binder binder, Type returnType, Type[] types, ParameterModifier[] modifiers)
                 {
                     PropertyInfo prop = GetP().GetType().GetProperty(name, bindingAttr, binder, returnType, types, modifiers);
-                    if (prop == null)
+                    if (prop is null)
                     {
                         prop = GetType().GetProperty(name, bindingAttr, binder, returnType, types, modifiers);
                     }
@@ -1192,11 +1186,11 @@ namespace System.Windows.Forms
                     PropertyInfo[] extenderProps = GetType().GetProperties(bindingAttr);
                     PropertyInfo[] ctlProps = GetP().GetType().GetProperties(bindingAttr);
 
-                    if (extenderProps == null)
+                    if (extenderProps is null)
                     {
                         return ctlProps;
                     }
-                    else if (ctlProps == null)
+                    else if (ctlProps is null)
                     {
                         return extenderProps;
                     }
@@ -1222,7 +1216,7 @@ namespace System.Windows.Forms
                 MemberInfo[] IReflect.GetMember(string name, BindingFlags bindingAttr)
                 {
                     MemberInfo[] memb = GetP().GetType().GetMember(name, bindingAttr);
-                    if (memb == null)
+                    if (memb is null)
                     {
                         memb = GetType().GetMember(name, bindingAttr);
                     }
@@ -1234,11 +1228,11 @@ namespace System.Windows.Forms
                     MemberInfo[] extenderMembs = GetType().GetMembers(bindingAttr);
                     MemberInfo[] ctlMembs = GetP().GetType().GetMembers(bindingAttr);
 
-                    if (extenderMembs == null)
+                    if (extenderMembs is null)
                     {
                         return ctlMembs;
                     }
-                    else if (ctlMembs == null)
+                    else if (ctlMembs is null)
                     {
                         return extenderMembs;
                     }

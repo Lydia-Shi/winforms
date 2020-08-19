@@ -2,15 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
 
 namespace System.Windows.Forms
 {
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     public class ToolStripOverflow : ToolStripDropDown, IArrangedElement
     {
 #if DEBUG
@@ -23,7 +22,7 @@ namespace System.Windows.Forms
 
         public ToolStripOverflow(ToolStripItem parentItem) : base(parentItem)
         {
-            if (parentItem == null)
+            if (parentItem is null)
             {
                 throw new ArgumentNullException(nameof(parentItem));
             }
@@ -88,10 +87,6 @@ namespace System.Windows.Forms
             SetBoundsCore(bounds.X, bounds.Y, bounds.Width, bounds.Height, specified);
         }
 
-        /// <summary>
-        ///  Summary of CreateLayoutEngine.
-        /// </summary>
-        /// <param name=item></param>
         public override LayoutEngine LayoutEngine
         {
             get
@@ -135,7 +130,6 @@ namespace System.Windows.Forms
                 }
             }
             base.OnLayout(e);
-
         }
 
         protected override void SetDisplayedItems()
@@ -173,7 +167,5 @@ namespace System.Windows.Forms
                 return ((ToolStripOverflow)Owner).DisplayedItems.Count;
             }
         }
-
     }
-
 }

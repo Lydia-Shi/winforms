@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     using System.ComponentModel;
@@ -28,7 +30,6 @@ namespace System.Windows.Forms
         {
             if (value is string strValue)
             {
-
                 if (string.Compare(strValue, SR.toStringDefault, true, culture) == 0)
                 {
                     return -1;
@@ -50,7 +51,7 @@ namespace System.Windows.Forms
         /// </summary>
         public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
         {
-            if (destinationType == null)
+            if (destinationType is null)
             {
                 throw new ArgumentNullException(nameof(destinationType));
             }
@@ -85,7 +86,7 @@ namespace System.Windows.Forms
 
                 PropertyDescriptor imageListProp = ImageListUtils.GetImageListProperty(context.PropertyDescriptor, ref instance);
 
-                while (instance != null && imageListProp == null)
+                while (instance != null && imageListProp is null)
                 {
                     PropertyDescriptorCollection props = TypeDescriptor.GetProperties(instance);
 
@@ -98,7 +99,7 @@ namespace System.Windows.Forms
                         }
                     }
 
-                    if (imageListProp == null)
+                    if (imageListProp is null)
                     {
                         // We didn't find the image list in this component.  See if the
                         // component has a "parent" property.  If so, walk the tree...
@@ -146,4 +147,3 @@ namespace System.Windows.Forms
         }
     }
 } // Namespace system.windows.forms
-

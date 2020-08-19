@@ -2,11 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Diagnostics;
 using System.Collections;
+using System.Diagnostics;
+using System.Drawing.Design;
 using System.Globalization;
 using System.Reflection;
-using System.Drawing.Design;
 
 namespace System.ComponentModel.Design
 {
@@ -24,7 +24,7 @@ namespace System.ComponentModel.Design
         /// <summary>
         ///  Initializes a new instance of the <see cref='System.ComponentModel.Design.InheritedPropertyDescriptor'/> class.
         /// </summary>
-        public InheritedPropertyDescriptor( PropertyDescriptor propertyDescriptor, object component) : base(propertyDescriptor, new Attribute[] { })
+        public InheritedPropertyDescriptor( PropertyDescriptor propertyDescriptor, object component) : base(propertyDescriptor, Array.Empty<Attribute>())
         {
             Debug.Assert(!(propertyDescriptor is InheritedPropertyDescriptor), "Recursive inheritance propertyDescriptor " + propertyDescriptor.ToString());
             this.propertyDescriptor = propertyDescriptor;
@@ -183,7 +183,7 @@ namespace System.ComponentModel.Design
             DesignerSerializationVisibility serializationVisibility;
 
             // if we have a persist contents guy, we'll need to try to clone the value because otherwise we won't be able to tell when it's been modified.
-            if (dsva == null)
+            if (dsva is null)
             {
                 serializationVisibility = DesignerSerializationVisibility.Visible;
             }

@@ -15,7 +15,8 @@ using static Interop;
 
 namespace System.Windows.Forms.Tests.Serialization
 {
-    public class SerializableTypesTests
+    // NB: doesn't require thread affinity
+    public class SerializableTypesTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void AxHostState_RoundTripAndExchangeWithNet()
@@ -91,8 +92,7 @@ namespace System.Windows.Forms.Tests.Serialization
 
             void ValidateResult(string blob)
             {
-                ImageListStreamer result = BinarySerialization.EnsureDeserialize<ImageListStreamer>(blob);
-
+                using ImageListStreamer result = BinarySerialization.EnsureDeserialize<ImageListStreamer>(blob);
                 using (NativeImageList nativeImageList = result.GetNativeImageList())
                 {
                     Assert.True(ComCtl32.ImageList.GetIconSize(new HandleRef(this, nativeImageList.Handle), out int x, out int y).IsTrue());
@@ -100,7 +100,7 @@ namespace System.Windows.Forms.Tests.Serialization
                     Assert.Equal(16, y);
                     var imageInfo = new ComCtl32.IMAGEINFO();
                     Assert.True(ComCtl32.ImageList.GetImageInfo(new HandleRef(this, nativeImageList.Handle), 0, ref imageInfo).IsTrue());
-                    Assert.True(IntPtr.Zero != imageInfo.hbmImage);
+                    Assert.False(imageInfo.hbmImage.IsNull);
                 }
             }
         }
@@ -220,7 +220,6 @@ namespace System.Windows.Forms.Tests.Serialization
 
                 netBlob = BinarySerialization.ToBase64String(listViewSubItem);
             }
-
 
             // ensure we can deserialise NET serialised data and continue to match the payload
             ValidateResult(netBlob);

@@ -48,12 +48,12 @@ namespace System.Windows.Forms.Design.Behavior
             return null;
         }
 
-        private Bitmap _glyph = null;
+        private Bitmap _glyph;
         private Bitmap MoveGlyph
         {
             get
             {
-                if (_glyph == null)
+                if (_glyph is null)
                 {
                     _glyph = new Icon(typeof(ContainerSelectorGlyph), "MoverGlyph").ToBitmap();
                 }
@@ -68,6 +68,5 @@ namespace System.Windows.Forms.Design.Behavior
         {
             pe.Graphics.DrawImage(MoveGlyph, _glyphBounds);
         }
-
     }
 }

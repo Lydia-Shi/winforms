@@ -9,7 +9,7 @@ using System.Diagnostics;
 namespace System.Windows.Forms.Design
 {
     /// <summary>
-    /// Describes the list of actions that can be performed in the MaskedTextBox control from the 
+    /// Describes the list of actions that can be performed in the MaskedTextBox control from the
     /// Chrome pannel.
     /// </summary>
     internal class MaskedTextBoxDesignerActionList : DesignerActionList
@@ -17,7 +17,7 @@ namespace System.Windows.Forms.Design
         private readonly MaskedTextBox _maskedTextBox;
         private readonly ITypeDiscoveryService _discoverySvc;
         private readonly IUIService _uiSvc;
-        private readonly IHelpService _helpService = null;
+        private readonly IHelpService _helpService;
 
         /// <summary>
         /// Constructor receiving a MaskedTextBox control the action list applies to.  The ITypeDiscoveryService
@@ -31,7 +31,7 @@ namespace System.Windows.Forms.Design
             _uiSvc = GetService(typeof(IUIService)) as IUIService;
             _helpService = GetService(typeof(IHelpService)) as IHelpService;
 
-            if (_discoverySvc == null || _uiSvc == null)
+            if (_discoverySvc is null || _uiSvc is null)
             {
                 Debug.Fail("could not get either ITypeDiscoveryService or IUIService");
             }
@@ -44,7 +44,7 @@ namespace System.Windows.Forms.Design
         {
             string mask = MaskPropertyEditor.EditMask(_discoverySvc, _uiSvc, _maskedTextBox, _helpService);
 
-            if (mask == null)
+            if (mask is null)
             {
                 return;
             }

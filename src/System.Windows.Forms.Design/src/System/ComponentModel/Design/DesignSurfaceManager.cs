@@ -7,7 +7,7 @@ using System.Diagnostics;
 namespace System.ComponentModel.Design
 {
     /// <summary>
-    ///  A service container that supports "fixed" services.  Fixed 
+    ///  A service container that supports "fixed" services.  Fixed
     ///  services cannot be removed.
     /// </summary>
     public class DesignSurfaceManager : IServiceProvider, IDisposable
@@ -53,13 +53,13 @@ namespace System.ComponentModel.Design
             get
             {
                 IDesignerEventService eventService = EventService;
-                if (eventService == null)
+                if (eventService is null)
                 {
                     return null;
                 }
 
                 IDesignerHost activeHost = eventService.ActiveDesigner;
-                if (activeHost == null)
+                if (activeHost is null)
                 {
                     return null;
                 }
@@ -68,9 +68,9 @@ namespace System.ComponentModel.Design
             }
             set
             {
-                // If we are providing IDesignerEventService, then we are responsible for 
-                // notifying it of new designers coming into place.  If we aren't 
-                // the ones providing the event service, then whoever is providing 
+                // If we are providing IDesignerEventService, then we are responsible for
+                // notifying it of new designers coming into place.  If we aren't
+                // the ones providing the event service, then whoever is providing
                 // it will be responsible for updating it when new designers
                 // are created.
                 if (EventService is DesignerEventService eventService)
@@ -104,15 +104,15 @@ namespace System.ComponentModel.Design
         private IDesignerEventService EventService => GetService(typeof(IDesignerEventService)) as IDesignerEventService;
 
         /// <summary>
-        ///  Provides access to the designer application's 
-        ///  ServiceContainer. This property allows 
+        ///  Provides access to the designer application's
+        ///  ServiceContainer. This property allows
         ///  inheritors to add their own services.
         /// </summary>
         protected ServiceContainer ServiceContainer
         {
             get
             {
-                if (_serviceContainer == null)
+                if (_serviceContainer is null)
                 {
                     _serviceContainer = new ServiceContainer(_parentProvider);
                 }
@@ -129,7 +129,7 @@ namespace System.ComponentModel.Design
         {
             add
             {
-                if (_activeDesignSurfaceChanged == null)
+                if (_activeDesignSurfaceChanged is null)
                 {
                     IDesignerEventService eventService = EventService;
                     if (eventService != null)
@@ -164,7 +164,7 @@ namespace System.ComponentModel.Design
         {
             add
             {
-                if (_designSurfaceCreated == null)
+                if (_designSurfaceCreated is null)
                 {
                     IDesignerEventService eventService = EventService;
                     if (eventService != null)
@@ -199,7 +199,7 @@ namespace System.ComponentModel.Design
         {
             add
             {
-                if (_designSurfaceDisposed == null)
+                if (_designSurfaceDisposed is null)
                 {
                     IDesignerEventService eventService = EventService;
                     if (eventService != null)
@@ -235,7 +235,7 @@ namespace System.ComponentModel.Design
         {
             add
             {
-                if (_selectionChanged == null)
+                if (_selectionChanged is null)
                 {
                     IDesignerEventService eventService = EventService;
                     if (eventService != null)
@@ -269,9 +269,9 @@ namespace System.ComponentModel.Design
         {
             DesignSurface surface = CreateDesignSurfaceCore(this);
 
-            // If we are providing IDesignerEventService, then we are responsible for 
-            // notifying it of new designers coming into place.  If we aren't 
-            // the ones providing the event service, then whoever is providing 
+            // If we are providing IDesignerEventService, then we are responsible for
+            // notifying it of new designers coming into place.  If we aren't
+            // the ones providing the event service, then whoever is providing
             // it will be responsible for updating it when new designers are created.
             if (GetService(typeof(IDesignerEventService)) is DesignerEventService eventService)
             {
@@ -283,8 +283,8 @@ namespace System.ComponentModel.Design
 
         /// <summary>
         ///  Public method to create a design surface.  This method
-        ///  takes an additional service provider.  This service 
-        ///  provider will be combined with the service provider 
+        ///  takes an additional service provider.  This service
+        ///  provider will be combined with the service provider
         ///  already contained within DesignSurfaceManager.  Service
         ///  requests will go to this provider first, and then bubble
         ///  up to the service provider owned by DesignSurfaceManager.
@@ -292,7 +292,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         public DesignSurface CreateDesignSurface(IServiceProvider parentProvider)
         {
-            if (parentProvider == null)
+            if (parentProvider is null)
             {
                 throw new ArgumentNullException(nameof(parentProvider));
             }
@@ -301,9 +301,9 @@ namespace System.ComponentModel.Design
 
             DesignSurface surface = CreateDesignSurfaceCore(mergedProvider);
 
-            // If we are providing IDesignerEventService, then we are responsible for 
-            // notifying it of new designers coming into place.  If we aren't 
-            // the ones providing the event service, then whoever is providing 
+            // If we are providing IDesignerEventService, then we are responsible for
+            // notifying it of new designers coming into place.  If we aren't
+            // the ones providing the event service, then whoever is providing
             // it will be responsible for updating it when new designers are created.
             DesignerEventService eventService = GetService(typeof(IDesignerEventService)) as DesignerEventService;
             if (eventService != null)
@@ -315,7 +315,7 @@ namespace System.ComponentModel.Design
         }
 
         /// <summary>
-        ///  Creates an instance of a design surface.  This can be 
+        ///  Creates an instance of a design surface.  This can be
         ///  overridden to provide a derived version of DesignSurface.
         /// </summary>
         protected virtual DesignSurface CreateDesignSurfaceCore(IServiceProvider parentProvider) => new DesignSurface(parentProvider);
@@ -333,7 +333,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposing || _serviceContainer == null)
+            if (!disposing || _serviceContainer is null)
             {
                 return;
             }
@@ -363,7 +363,6 @@ namespace System.ComponentModel.Design
         /// </returns>
         private object OnCreateService(IServiceContainer container, Type serviceType)
         {
-
             if (serviceType == typeof(IDesignerEventService))
             {
                 return new DesignerEventService();
@@ -382,7 +381,6 @@ namespace System.ComponentModel.Design
             Debug.Assert(_activeDesignSurfaceChanged != null, "Should have detached this event handler.");
             if (_activeDesignSurfaceChanged != null)
             {
-
                 DesignSurface newSurface = null;
                 DesignSurface oldSurface = null;
 
@@ -407,7 +405,7 @@ namespace System.ComponentModel.Design
         private void OnDesignerCreated(object sender, DesignerEventArgs e)
         {
             Debug.Assert(_designSurfaceCreated != null, "Should have detached this event handler.");
-            if (_designSurfaceCreated == null)
+            if (_designSurfaceCreated is null)
             {
                 return;
             }
@@ -425,7 +423,7 @@ namespace System.ComponentModel.Design
         private void OnDesignerDisposed(object sender, DesignerEventArgs e)
         {
             Debug.Assert(_designSurfaceDisposed != null, "Should have detached this event handler.");
-            if (_designSurfaceDisposed == null)
+            if (_designSurfaceDisposed is null)
             {
                 return;
             }
@@ -447,7 +445,7 @@ namespace System.ComponentModel.Design
         }
 
         /// <summary>
-        ///  Simple service provider that merges two providers together.  
+        ///  Simple service provider that merges two providers together.
         /// </summary>
         private sealed class MergedServiceProvider : IServiceProvider
         {
@@ -462,14 +460,14 @@ namespace System.ComponentModel.Design
 
             object IServiceProvider.GetService(Type serviceType)
             {
-                if (serviceType == null)
+                if (serviceType is null)
                 {
                     throw new ArgumentNullException(nameof(serviceType));
                 }
 
                 object service = _primaryProvider.GetService(serviceType);
 
-                if (service == null)
+                if (service is null)
                 {
                     service = _secondaryProvider.GetService(serviceType);
                 }

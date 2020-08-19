@@ -2,28 +2,25 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
-    /// Represents the container for multiple-document interface (MDI) child forms. 
+    /// Represents the container for multiple-document interface (MDI) child forms.
     /// This class cannot be inherited.
     /// </summary>
     /// <remarks>
     ///  Don't create an <see cref="MdiClient"/> control.
-    ///  A form creates and uses the <see cref="MdiClient"/> when you set the <see cref="Form.IsMdiContainer"/> property to <see langword="true"/>.  
+    ///  A form creates and uses the <see cref="MdiClient"/> when you set the <see cref="Form.IsMdiContainer"/> property to <see langword="true"/>.
     /// </remarks>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    ToolboxItem(false),
-    DesignTimeVisible(false)
-    ]
+    [ToolboxItem(false)]
+    [DesignTimeVisible(false)]
     public sealed class MdiClient : Control
     {
         // kept in add order, not ZOrder. Need to return the correct
@@ -45,29 +42,24 @@ namespace System.Windows.Forms
         ///  Gets or sets the background image displayed in the <see cref="MdiClient" /> control.
         /// </summary>
         /// <value>The image to display in the background of the control.</value>
-        [
-        Localizable(true)
-        ]
+        [Localizable(true)]
         public override Image BackgroundImage
         {
             get
             {
                 Image result = base.BackgroundImage;
-                if (result == null && ParentInternal != null)
+                if (result is null && ParentInternal != null)
                 {
                     result = ParentInternal.BackgroundImage;
                 }
 
                 return result;
             }
-
-            set
-            {
-                base.BackgroundImage = value;
-            }
+            set => base.BackgroundImage = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override ImageLayout BackgroundImageLayout
         {
             get
@@ -84,10 +76,7 @@ namespace System.Windows.Forms
                 }
                 return base.BackgroundImageLayout;
             }
-            set
-            {
-                base.BackgroundImageLayout = value;
-            }
+            set => base.BackgroundImageLayout = value;
         }
 
         /// <summary>
@@ -111,7 +100,10 @@ namespace System.Windows.Forms
                 // to make them not visible but still present.
                 cp.Style |= (int)(User32.WS.VSCROLL | User32.WS.HSCROLL);
                 cp.ExStyle |= (int)User32.WS_EX.CLIENTEDGE;
-                cp.Param = new NativeMethods.CLIENTCREATESTRUCT(IntPtr.Zero, 1);
+                cp.Param = new User32.CLIENTCREATESTRUCT
+                {
+                    idFirstChild = 1
+                };
                 ISite site = ParentInternal?.Site;
                 if (site != null && site.DesignMode)
                 {
@@ -165,16 +157,16 @@ namespace System.Windows.Forms
             switch (value)
             {
                 case MdiLayout.Cascade:
-                    SendMessage(WindowMessages.WM_MDICASCADE, 0, 0);
+                    User32.SendMessageW(this, User32.WM.MDICASCADE);
                     break;
                 case MdiLayout.TileVertical:
-                    SendMessage(WindowMessages.WM_MDITILE, NativeMethods.MDITILE_VERTICAL, 0);
+                    User32.SendMessageW(this, User32.WM.MDITILE, (IntPtr)User32.MDITILE.VERTICAL);
                     break;
                 case MdiLayout.TileHorizontal:
-                    SendMessage(WindowMessages.WM_MDITILE, NativeMethods.MDITILE_HORIZONTAL, 0);
+                    User32.SendMessageW(this, User32.WM.MDITILE, (IntPtr)User32.MDITILE.HORIZONTAL);
                     break;
                 case MdiLayout.ArrangeIcons:
-                    SendMessage(WindowMessages.WM_MDIICONARRANGE, 0, 0);
+                    User32.SendMessageW(this, User32.WM.MDIICONARRANGE);
                     break;
             }
         }
@@ -221,7 +213,7 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Scales this form's location, size, padding, and margin. The <see cref="MdiClient" /> overrides 
+        ///  Scales this form's location, size, padding, and margin. The <see cref="MdiClient" /> overrides
         ///  <see cref="ScaleControl(SizeF,BoundsSpecified)" /> to enforce a minimum and maximum size.
         /// </summary>
         /// <param name="factor">The factor by which the height and width of the control will be scaled.</param>
@@ -244,7 +236,7 @@ namespace System.Windows.Forms
         protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
         {
             ISite site = ParentInternal?.Site;
-            if (IsHandleCreated && (site == null || !site.DesignMode))
+            if (IsHandleCreated && (site is null || !site.DesignMode))
             {
                 Rectangle oldBounds = Bounds;
                 base.SetBoundsCore(x, y, width, height, specified);
@@ -255,7 +247,7 @@ namespace System.Windows.Forms
                 {
                     // NOTE: This logic is to keep minimized MDI children anchored to
                     // the bottom left of the client area, normally they are anchored
-                    // to the top right which just looks wierd!
+                    // to the top right which just looks weird!
                     for (int i = 0; i < Controls.Count; i++)
                     {
                         Control ctl = Controls[i];
@@ -299,59 +291,37 @@ namespace System.Windows.Forms
         /// </summary>
         private void SetWindowRgn()
         {
-            IntPtr rgn1 = IntPtr.Zero;
-            IntPtr rgn2 = IntPtr.Zero;
             RECT rect = new RECT();
             CreateParams cp = CreateParams;
 
             AdjustWindowRectEx(ref rect, cp.Style, false, cp.ExStyle);
 
             Rectangle bounds = Bounds;
-            rgn1 = Gdi32.CreateRectRgn(0, 0, bounds.Width, bounds.Height);
-            try
+            using var rgn1 = new Gdi32.RegionScope(0, 0, bounds.Width, bounds.Height);
+            using var rgn2 = new Gdi32.RegionScope(
+                -rect.left,
+                -rect.top,
+                bounds.Width - rect.right,
+                bounds.Height - rect.bottom);
+
+            if (rgn1.IsNull || rgn2.IsNull)
             {
-                rgn2 = Gdi32.CreateRectRgn(
-                    -rect.left,
-                    -rect.top,
-                    bounds.Width - rect.right,
-                    bounds.Height - rect.bottom);
-
-                try
-                {
-                    if (rgn1 == IntPtr.Zero || rgn2 == IntPtr.Zero)
-                    {
-                        throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
-                    }
-
-                    if (Gdi32.CombineRgn(rgn1, rgn1, rgn2, Gdi32.CombineMode.RGN_DIFF) == 0)
-                    {
-                        throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
-                    }
-
-                    if (UnsafeNativeMethods.SetWindowRgn(new HandleRef(this, Handle), new HandleRef(null, rgn1), true) == 0)
-                    {
-                        throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
-                    }
-                    else
-                    {
-                        // The hwnd now owns the region.
-                        rgn1 = IntPtr.Zero;
-                    }
-                }
-                finally
-                {
-                    if (rgn2 != IntPtr.Zero)
-                    {
-                        Gdi32.DeleteObject(rgn2);
-                    }
-                }
+                throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
             }
-            finally
+
+            if (Gdi32.CombineRgn(rgn1, rgn1, rgn2, Gdi32.RGN.DIFF) == 0)
             {
-                if (rgn1 != IntPtr.Zero)
-                {
-                    Gdi32.DeleteObject(rgn1);
-                }
+                throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
+            }
+
+            if (User32.SetWindowRgn(this, rgn1, BOOL.TRUE) == 0)
+            {
+                throw new InvalidOperationException(SR.ErrorSettingWindowRegion);
+            }
+            else
+            {
+                // The hwnd now owns the region.
+                rgn1.RelinquishOwnership();
             }
         }
 
@@ -376,24 +346,23 @@ namespace System.Windows.Forms
         /// <param name="m">The Windows <see cref="Message" /> to process.</param>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-
-                case WindowMessages.WM_CREATE:
+                case User32.WM.CREATE:
                     if (ParentInternal != null && ParentInternal.Site != null && ParentInternal.Site.DesignMode && Handle != IntPtr.Zero)
                     {
                         SetWindowRgn();
                     }
                     break;
 
-                case WindowMessages.WM_SETFOCUS:
+                case User32.WM.SETFOCUS:
                     InvokeGotFocus(ParentInternal, EventArgs.Empty);
                     Form childForm = null;
                     if (ParentInternal is Form)
                     {
                         childForm = ((Form)ParentInternal).ActiveMdiChildInternal;
                     }
-                    if (childForm == null && MdiChildren.Length > 0 && MdiChildren[0].IsMdiChildFocusable)
+                    if (childForm is null && MdiChildren.Length > 0 && MdiChildren[0].IsMdiChildFocusable)
                     {
                         childForm = MdiChildren[0];
                     }
@@ -408,7 +377,7 @@ namespace System.Windows.Forms
                     DefWndProc(ref m);
                     InvokeGotFocus(this, EventArgs.Empty);
                     return;
-                case WindowMessages.WM_KILLFOCUS:
+                case User32.WM.KILLFOCUS:
                     InvokeLostFocus(ParentInternal, EventArgs.Empty);
                     break;
             }
@@ -429,7 +398,6 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Collection of controls...
         /// </summary>
-        [ComVisible(false)]
         new public class ControlCollection : Control.ControlCollection
         {
             private readonly MdiClient owner;
@@ -458,17 +426,17 @@ namespace System.Windows.Forms
             /// </summary>
             public override void Add(Control value)
             {
-                if (value == null)
+                if (value is null)
                 {
                     return;
                 }
                 if (!(value is Form) || !((Form)value).IsMdiChild)
                 {
-                    throw new ArgumentException(SR.MDIChildAddToNonMDIParent, "value");
+                    throw new ArgumentException(SR.MDIChildAddToNonMDIParent, nameof(value));
                 }
                 if (owner.CreateThreadId != value.CreateThreadId)
                 {
-                    throw new ArgumentException(SR.AddDifferentThreads, "value");
+                    throw new ArgumentException(SR.AddDifferentThreads, nameof(value));
                 }
                 owner.children.Add((Form)value);
                 base.Add(value);

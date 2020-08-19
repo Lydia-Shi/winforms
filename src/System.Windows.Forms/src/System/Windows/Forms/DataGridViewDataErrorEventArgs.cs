@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     public class DataGridViewDataErrorEventArgs : DataGridViewCellCancelEventArgs
@@ -23,7 +25,7 @@ namespace System.Windows.Forms
             get => _throwException;
             set
             {
-                if (value && Exception == null)
+                if (value && Exception is null)
                 {
                     throw new ArgumentException(SR.DataGridView_CannotThrowNullException);
                 }

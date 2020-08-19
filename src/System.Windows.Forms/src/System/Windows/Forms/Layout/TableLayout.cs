@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Specialized;
 using System.Diagnostics;
@@ -32,7 +34,7 @@ namespace System.Windows.Forms.Layout
 
             internal SorterObjectArray(object[] keys, IComparer comparer)
             {
-                if (comparer == null)
+                if (comparer is null)
                 {
                     comparer = Comparer.Default;
                 }
@@ -144,7 +146,7 @@ namespace System.Windows.Forms.Layout
 
         private static void Sort(object[] array, IComparer comparer)
         {
-            if (array == null)
+            if (array is null)
             {
                 throw new ArgumentNullException(nameof(array));
             }
@@ -215,7 +217,7 @@ namespace System.Windows.Forms.Layout
         ///  (3).  Expand the last row/column to fit the table
         ///  (4).  Set the bounds of the child elements as according to the row/column heights specified in Strip[]
         ///  (a)   Calculate bounds of item
-        ///  (b)   Align and stretch item to fill column/row as according to Dock&Anchor properties.
+        ///  (b)   Align and stretch item to fill column/row as according to Dock and Anchor properties.
         /// </summary>
         private protected override bool LayoutCore(IArrangedElement container, LayoutEventArgs args)
         {
@@ -338,7 +340,6 @@ namespace System.Windows.Forms.Layout
             }
 
             Debug_VerifyAssignmentsAreCurrent(container, containerInfo);
-
         }
 
         /// <summary>
@@ -465,7 +466,6 @@ namespace System.Windows.Forms.Layout
 
             while (fixedElement != null || flowElement != null)
             {
-
                 int colStop = currentCol;
                 int rowStop;
                 if (flowElement != null)
@@ -481,7 +481,7 @@ namespace System.Windows.Forms.Layout
                     }
                 }
                 //test to see if either the absolutely positioned element is null or it fits.
-                if (flowElement != null && (fixedElement == null || (!IsCursorPastInsertionPoint(fixedElement, flowElement.RowStart, colStop) && !IsOverlappingWithReservationGrid(fixedElement, reservationGrid, currentRow))))
+                if (flowElement != null && (fixedElement is null || (!IsCursorPastInsertionPoint(fixedElement, flowElement.RowStart, colStop) && !IsOverlappingWithReservationGrid(fixedElement, reservationGrid, currentRow))))
                 {
                     //Place the flow element.
 
@@ -590,18 +590,17 @@ namespace System.Windows.Forms.Layout
 
             // PERF: prevent overallocation of Strip[] arrays.  We're going to null these guys out
             // anyways... so only allocate when the number of rows and columns is different.
-            if (containerInfo.Rows == null || containerInfo.Rows.Length != numRows)
+            if (containerInfo.Rows is null || containerInfo.Rows.Length != numRows)
             {
                 containerInfo.Rows = new Strip[numRows];
             }
-            if (containerInfo.Columns == null || containerInfo.Columns.Length != numColumns)
+            if (containerInfo.Columns is null || containerInfo.Columns.Length != numColumns)
             {
                 containerInfo.Columns = new Strip[numColumns];
             }
 
             containerInfo.Valid = true;
             return true;
-
         }
 
         /// <summary>
@@ -947,7 +946,6 @@ namespace System.Windows.Forms.Layout
                 // we can skip over absolute row styles, as they've been preallocated
                 if (rowSpan > 1 || !IsAbsolutelySized(layoutInfo.RowStart, containerInfo.RowStyles))
                 {
-
                     int currentWidth = SumStrips(containerInfo.Columns, layoutInfo.ColumnStart, layoutInfo.ColumnSpan);
                     //make sure that the total width is the actual final width to avoid
                     //inconsistency of width between the ApplyStyles and SetElementBounds
@@ -966,7 +964,6 @@ namespace System.Windows.Forms.Layout
                 }
             }
             return DistributeStyles(containerInfo.CellBorderWidth, containerInfo.RowStyles, containerInfo.Rows, proposedConstraints.Height, dontHonorConstraint);
-
         }
 
         private Size GetElementSize(IArrangedElement element, Size proposedConstraints)
@@ -1108,10 +1105,10 @@ namespace System.Windows.Forms.Layout
             return (index < styles.Count) && ((TableLayoutStyle)styles[index]).SizeType == SizeType.Absolute;
         }
 
-        ///<summary>
+        /// <summary>
         ///  Now that we've allocated minimum and maximum sizes to everyone (the strips), distribute the extra space
         ///  as according to the Row/Column styles.
-        ///</summary>
+        /// </summary>
         private int DistributeStyles(int cellBorderWidth, IList styles, Strip[] strips, int maxSize, bool dontHonorConstraint)
         {
             int usedSpace = 0;
@@ -1170,10 +1167,8 @@ namespace System.Windows.Forms.Layout
             //          - divide space amongst % style columns using ratio of %/total % * total extra space
             if (totalPercent > 0)
             {
-
                 if (!dontHonorConstraint)
                 {
-
                     if (totalPercentAllocatedSpace > maxSize - totalAbsoluteAndAutoSizeAllocatedSpace)
                     {
                         // fixup for the case where we've actually allocated more space than we have.
@@ -1215,7 +1210,6 @@ namespace System.Windows.Forms.Layout
                             strip.MinSize = stripSize + cellBorderWidth;
                             strips[i] = strip;
                         }
-
                     }
                 }
                 else
@@ -1247,7 +1241,6 @@ namespace System.Windows.Forms.Layout
                     }
                     usedSpace += maxPercentWidth;
                 }
-
             }
             remainingSpace = maxSize - usedSpace;
 
@@ -1410,7 +1403,7 @@ namespace System.Windows.Forms.Layout
             ArrangedElementCollection children = container.Children;
             ContainerInfo containerInfo = GetContainerInfo(container);
 
-            if (children == null || children.Count == 0)
+            if (children is null || children.Count == 0)
             {
                 //nothing in the container. returns null.
                 return null;
@@ -1435,14 +1428,14 @@ namespace System.Windows.Forms.Layout
 
         internal TableLayoutPanelCellPosition GetPositionFromControl(IArrangedElement container, IArrangedElement child)
         {
-            if (container == null || child == null)
+            if (container is null || child is null)
             {
                 return new TableLayoutPanelCellPosition(-1, -1);
             }
             ArrangedElementCollection children = container.Children;
             ContainerInfo containerInfo = GetContainerInfo(container);
 
-            if (children == null || children.Count == 0)
+            if (children is null || children.Count == 0)
             {
                 //nothing in the container. returns null.
                 return new TableLayoutPanelCellPosition(-1, -1);
@@ -1454,12 +1447,11 @@ namespace System.Windows.Forms.Layout
             }
             LayoutInfo layoutInfo = GetLayoutInfo(child);
             return new TableLayoutPanelCellPosition(layoutInfo.ColumnStart, layoutInfo.RowStart);
-
         }
         internal static LayoutInfo GetLayoutInfo(IArrangedElement element)
         {
             LayoutInfo layoutInfo = (LayoutInfo)element.Properties.GetObject(_layoutInfoProperty);
-            if (layoutInfo == null)
+            if (layoutInfo is null)
             {
                 layoutInfo = new LayoutInfo(element);
                 SetLayoutInfo(element, layoutInfo);
@@ -1473,7 +1465,7 @@ namespace System.Windows.Forms.Layout
             Debug.Assert(GetLayoutInfo(element) == value, "GetLayoutInfo should return the same value as we set it to");
         }
 
-        ///<summary>
+        /// <summary>
         ///  This class contains layout related information pertaining to a child control of the
         ///  container being laid out. It contains Row,column assignments as well as RowSpan/ColumnSpan.
         ///  This class is used from ContainerInfo as a way of caching information about child controls.
@@ -1568,7 +1560,7 @@ namespace System.Windows.Forms.Layout
         internal static ContainerInfo GetContainerInfo(IArrangedElement container)
         {
             ContainerInfo containerInfo = (ContainerInfo)container.Properties.GetObject(_containerInfoProperty);
-            if (containerInfo == null)
+            if (containerInfo is null)
             {
                 containerInfo = new ContainerInfo(container);
                 container.Properties.SetObject(_containerInfoProperty, containerInfo);
@@ -1576,7 +1568,7 @@ namespace System.Windows.Forms.Layout
             return containerInfo;
         }
 
-        ///<summary>
+        /// <summary>
         ///  this class contains layout related information pertaining to the container
         ///  being laid out by this instance of the TableLayout.  It contains references
         ///  to all the information that should be used from the table layout engine,
@@ -1607,7 +1599,7 @@ namespace System.Windows.Forms.Layout
             private int _minColumns; // The minimum number of columns required in order to put all absolutely positioned control on the table
             private int _minRows; // The minimum number of rows required in order to put all absolutely positioned control on the table
 
-            private BitVector32 _state = new BitVector32();
+            private BitVector32 _state;
 
             public ContainerInfo(IArrangedElement container)
             {
@@ -1633,13 +1625,6 @@ namespace System.Windows.Forms.Layout
             {
                 get { return _container; }
             }
-
-            /* Unused
-            //indicates whether the user has only specified the row number of the table
-            public bool IsRowDefined {
-                get { return (_maxRows != 0 && _maxColumns == 0); }
-            }
-            */
 
             public int CellBorderWidth
             {
@@ -1671,9 +1656,7 @@ namespace System.Windows.Forms.Layout
                 {
                     Debug.Assert(_rows.Length != value.Length, "PERF: should not allocate strips, we've already got an array");
                     _rows = value;
-
                 }
-
             }
 
             /// <summary>
@@ -1681,7 +1664,6 @@ namespace System.Windows.Forms.Layout
             /// </summary>
             public int MaxRows
             {
-
                 get { return _maxRows; }
                 set
                 {
@@ -1692,7 +1674,6 @@ namespace System.Windows.Forms.Layout
                         //invalidate the cache whenever we change the number of rows
                         Valid = false;
                     }
-
                 }
             }
 
@@ -1701,7 +1682,6 @@ namespace System.Windows.Forms.Layout
             /// </summary>
             public int MaxColumns
             {
-
                 get { return _maxColumns; }
 
                 set
@@ -1733,7 +1713,6 @@ namespace System.Windows.Forms.Layout
                 {
                     Debug.Assert(ChildInfoValid, "Fetching invalid information");
                     return _minColumns;
-
                 }
             }
 
@@ -1744,7 +1723,6 @@ namespace System.Windows.Forms.Layout
                 {
                     Debug.Assert(ChildInfoValid, "Fetching invalid information");
                     return _minRows;
-
                 }
             }
 
@@ -1773,12 +1751,11 @@ namespace System.Windows.Forms.Layout
             {
                 get
                 {
-                    if (_rowStyles == null)
+                    if (_rowStyles is null)
                     {
                         _rowStyles = new TableLayoutRowStyleCollection(_container);
                     }
                     return _rowStyles;
-
                 }
                 set
                 {
@@ -1787,7 +1764,6 @@ namespace System.Windows.Forms.Layout
                     {
                         _rowStyles.EnsureOwnership(_container);
                     }
-
                 }
             }
 
@@ -1795,7 +1771,7 @@ namespace System.Windows.Forms.Layout
             {
                 get
                 {
-                    if (_colStyles == null)
+                    if (_colStyles is null)
                     {
                         _colStyles = new TableLayoutColumnStyleCollection(_container);
                     }
@@ -1844,7 +1820,6 @@ namespace System.Windows.Forms.Layout
                             if (layoutInfo.IsAbsolutelyPositioned)
                             {
                                 _countFixedChildren++;
-
                             }
                             childInfo[index++] = layoutInfo;
                             _minRowsAndColumns += layoutInfo.RowSpan * layoutInfo.ColumnSpan;
@@ -1853,7 +1828,6 @@ namespace System.Windows.Forms.Layout
                                 _minColumns = Math.Max(_minColumns, layoutInfo.ColumnPosition + layoutInfo.ColumnSpan);
                                 _minRows = Math.Max(_minRows, layoutInfo.RowPosition + layoutInfo.RowSpan);
                             }
-
                         }
 
                         // shorten the array if necessary.
@@ -1968,7 +1942,6 @@ namespace System.Windows.Forms.Layout
                 }
                 return Size.Empty;
             }
-
         }
         #endregion
 
@@ -2163,7 +2136,6 @@ namespace System.Windows.Forms.Layout
                 {
                     _rows.Add(new BitArray(_numColumns));
                 }
-                //Debug.Assert(_numColumns == ((BitArray)_rows[rowOffset]).Length, "length doesn't match");
                 //increase the length of the _rows[rowOffset] if necessary
                 if (column >= ((BitArray)_rows[rowOffset]).Length)
                 {
@@ -2197,7 +2169,6 @@ namespace System.Windows.Forms.Layout
                     _rows.RemoveAt(0);
                 }
             }
-
         }
         #endregion ReservationGrid
 
@@ -2268,9 +2239,9 @@ namespace System.Windows.Forms.Layout
 
             AssignRowsAndColumns(containerInfo);
 
-            Debug.Assert((containerInfo.Columns == null && cols == null) || containerInfo.Columns.Length == cols.Length,
+            Debug.Assert((containerInfo.Columns is null && cols is null) || containerInfo.Columns.Length == cols.Length,
                 "Cached assignment info is invalid: Number of required columns has changed.");
-            Debug.Assert((containerInfo.Rows == null && rows == null) || containerInfo.Rows.Length == rows.Length,
+            Debug.Assert((containerInfo.Rows is null && rows is null) || containerInfo.Rows.Length == rows.Length,
                 "Cached assignment info is invalid: Number of required rows has changed.");
 
             foreach (LayoutInfo layoutInfo in childrenInfo)

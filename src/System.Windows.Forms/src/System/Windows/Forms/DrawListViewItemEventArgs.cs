@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 
 namespace System.Windows.Forms
@@ -58,10 +60,8 @@ namespace System.Windows.Forms
         /// </summary>
         public void DrawBackground()
         {
-            using (var backBrush = new SolidBrush(Item.BackColor))
-            {
-                Graphics.FillRectangle(backBrush, Bounds);
-            }
+            using var backBrush = Item.BackColor.GetCachedSolidBrushScope();
+            Graphics.FillRectangle(backBrush, Bounds);
         }
 
         /// <summary>

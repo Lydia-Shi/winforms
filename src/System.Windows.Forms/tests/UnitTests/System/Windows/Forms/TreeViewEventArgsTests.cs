@@ -7,7 +7,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class TreeViewEventArgsTests
+    // NB: doesn't require thread affinity
+    public class TreeViewEventArgsTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> Ctor_TreeNode_TestData()
         {

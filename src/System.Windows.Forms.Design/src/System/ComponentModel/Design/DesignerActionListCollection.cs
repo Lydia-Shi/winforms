@@ -3,11 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections;
-using System.Runtime.InteropServices;
 
 namespace System.ComponentModel.Design
 {
-    [ComVisible(true)]
     public class DesignerActionListCollection : CollectionBase
     {
         public DesignerActionListCollection()
@@ -29,7 +27,7 @@ namespace System.ComponentModel.Design
 
         public void AddRange(DesignerActionList[] value)
         {
-            if (value == null)
+            if (value is null)
             {
                 throw new ArgumentNullException(nameof(value));
             }
@@ -42,7 +40,7 @@ namespace System.ComponentModel.Design
 
         public void AddRange(DesignerActionListCollection value)
         {
-            if (value == null)
+            if (value is null)
             {
                 throw new ArgumentNullException(nameof(value));
             }

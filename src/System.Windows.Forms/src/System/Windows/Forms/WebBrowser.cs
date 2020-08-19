@@ -1,6 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+#nullable disable
 
 using System.ComponentModel;
 using System.Diagnostics;
@@ -17,16 +19,13 @@ namespace System.Windows.Forms
     /// <summary>
     ///  This is a wrapper over the native WebBrowser control implemented in shdocvw.dll.
     /// </summary>
-    [ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultProperty(nameof(Url)), DefaultEvent(nameof(DocumentCompleted)),
-    Docking(DockingBehavior.AutoDock),
-    SRDescription(nameof(SR.DescriptionWebBrowser)),
-    Designer("System.Windows.Forms.Design.WebBrowserDesigner, " + AssemblyRef.SystemDesign)]
+    [DefaultProperty(nameof(Url))]
+    [DefaultEvent(nameof(DocumentCompleted))]
+    [Docking(DockingBehavior.AutoDock)]
+    [SRDescription(nameof(SR.DescriptionWebBrowser))]
+    [Designer("System.Windows.Forms.Design.WebBrowserDesigner, " + AssemblyRef.SystemDesign)]
     public class WebBrowser : WebBrowserBase
     {
-        private static bool createdInIE;
-
         // Reference to the native ActiveX control's IWebBrowser2
         // Do not reference this directly. Use the AxIWebBrowser2
         // property instead.
@@ -58,8 +57,6 @@ namespace System.Windows.Forms
         /// </summary>
         public WebBrowser() : base("8856f961-340a-11d0-a96b-00c04fd705a2")
         {
-            CheckIfCreatedInIE();
-
             webBrowserState = new Collections.Specialized.BitVector32(WEBBROWSERSTATE_isWebBrowserContextMenuEnabled |
                     WEBBROWSERSTATE_webBrowserShortcutsEnabled | WEBBROWSERSTATE_scrollbarsEnabled);
             AllowNavigation = true;
@@ -74,8 +71,9 @@ namespace System.Windows.Forms
         ///  it has been loaded.  NOTE: it will always be able to navigate before being loaded.
         ///  "Loaded" here means setting Url, DocumentText, or DocumentStream.
         /// </summary>
-        [SRDescription(nameof(SR.WebBrowserAllowNavigationDescr)),
-        SRCategory(nameof(SR.CatBehavior)), DefaultValue(true)]
+        [SRDescription(nameof(SR.WebBrowserAllowNavigationDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
         public bool AllowNavigation
         {
             get
@@ -99,8 +97,9 @@ namespace System.Windows.Forms
         ///  Windows Forms drag/drop i.e. the DragDrop event does not fire.  It does
         ///  control whether you can drag new documents into the browser control.
         /// </summary>
-        [SRDescription(nameof(SR.WebBrowserAllowWebBrowserDropDescr)),
-        SRCategory(nameof(SR.CatBehavior)), DefaultValue(true)]
+        [SRDescription(nameof(SR.WebBrowserAllowWebBrowserDropDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
         public bool AllowWebBrowserDrop
         {
             get
@@ -123,8 +122,9 @@ namespace System.Windows.Forms
         ///  Specifies whether the browser control shows script errors in dialogs or not.
         ///  Maps to IWebBrowser2:Silent.
         /// </summary>
-        [SRDescription(nameof(SR.WebBrowserScriptErrorsSuppressedDescr)),
-        SRCategory(nameof(SR.CatBehavior)), DefaultValue(false)]
+        [SRDescription(nameof(SR.WebBrowserScriptErrorsSuppressedDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
         public bool ScriptErrorsSuppressed
         {
             get
@@ -144,8 +144,9 @@ namespace System.Windows.Forms
         ///  Specifies whether the browser control Shortcuts are enabled.
         ///  Maps to IDocHostUIHandler:TranslateAccelerator event.
         /// </summary>
-        [SRDescription(nameof(SR.WebBrowserWebBrowserShortcutsEnabledDescr)),
-        SRCategory(nameof(SR.CatBehavior)), DefaultValue(true)]
+        [SRDescription(nameof(SR.WebBrowserWebBrowserShortcutsEnabledDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
         public bool WebBrowserShortcutsEnabled
         {
             get
@@ -163,7 +164,8 @@ namespace System.Windows.Forms
         ///  Defaults to false.  After that it's value is kept up to date by hooking the
         ///  DWebBrowserEvents2:CommandStateChange.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CanGoBack
         {
             get
@@ -197,7 +199,8 @@ namespace System.Windows.Forms
         ///  Defaults to false.  After that it's value is kept up to date by hooking the
         ///  DWebBrowserEvents2:CommandStateChange.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool CanGoForward
         {
             get
@@ -230,7 +233,8 @@ namespace System.Windows.Forms
         ///  The HtmlDocument for page hosted in the html page.  If no page is loaded, it returns null.
         ///  Maps to IWebBrowser2:Document.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public HtmlDocument Document
         {
             get
@@ -269,13 +273,14 @@ namespace System.Windows.Forms
         ///  Get/sets the stream for the html document.
         ///  Uses the IPersisteStreamInit interface on the HtmlDocument to set/retrieve the html stream.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Stream DocumentStream
         {
             get
             {
                 HtmlDocument htmlDocument = Document;
-                if (htmlDocument == null)
+                if (htmlDocument is null)
                 {
                     return null;
                 }
@@ -283,7 +288,7 @@ namespace System.Windows.Forms
                 {
                     Ole32.IPersistStreamInit psi = htmlDocument.DomDocument as Ole32.IPersistStreamInit;
                     Debug.Assert(psi != null, "Object isn't an IPersistStreamInit!");
-                    if (psi == null)
+                    if (psi is null)
                     {
                         return null;
                     }
@@ -315,23 +320,25 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Sets/sets the text of the contained html page.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DocumentText
         {
             get
             {
-                Stream stream = DocumentStream;
-                if (stream == null)
+                using Stream stream = DocumentStream;
+                if (stream is null)
                 {
-                    return "";
+                    return string.Empty;
                 }
-                StreamReader reader = new StreamReader(stream);
+
+                using var reader = new StreamReader(stream);
                 stream.Position = 0;
-                return reader.ReadToEnd();
+                return reader.ReadToEnd().TrimEnd('\0');
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -350,7 +357,8 @@ namespace System.Windows.Forms
         ///  The title of the html page currently loaded. If none are loaded, returns empty string.
         ///  Maps to IWebBrowser2:LocationName.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DocumentTitle
         {
             get
@@ -358,7 +366,7 @@ namespace System.Windows.Forms
                 string documentTitle;
 
                 HtmlDocument htmlDocument = Document;
-                if (htmlDocument == null)
+                if (htmlDocument is null)
                 {
                     documentTitle = AxIWebBrowser2.LocationName;
                 }
@@ -383,7 +391,8 @@ namespace System.Windows.Forms
         ///  A string containing the MIME type of the document hosted in the browser control.
         ///  If none are loaded, returns empty string.  Maps to IHTMLDocument2:mimeType.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string DocumentType
         {
             get
@@ -411,12 +420,13 @@ namespace System.Windows.Forms
         ///  Initially set to WebBrowserEncryptionLevel.Insecure.
         ///  After that it's kept up to date by hooking the DWebBrowserEvents2:SetSecureLockIcon.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public WebBrowserEncryptionLevel EncryptionLevel
         {
             get
             {
-                if (Document == null)
+                if (Document is null)
                 {
                     encryptionLevel = WebBrowserEncryptionLevel.Unknown;
                 }
@@ -427,12 +437,13 @@ namespace System.Windows.Forms
         /// <summary>
         ///  True if the browser is engaged in navigation or download.  Maps to IWebBrowser2:Busy.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsBusy
         {
             get
             {
-                if (Document == null)
+                if (Document is null)
                 {
                     return false;
                 }
@@ -446,7 +457,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets the offline state of the browser control. Maps to IWebBrowser2:Offline.
         /// </summary>
-        [SRDescription(nameof(SR.WebBrowserIsOfflineDescr)), Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.WebBrowserIsOfflineDescr))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsOffline
         {
             get
@@ -457,13 +470,14 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Indicates whether to use the WebBrowser context menu.
-        ///  It's technically possible to have both the WebBrowser & Windows Forms context
+        ///  It's technically possible to have both the WebBrowser &amp; Windows Forms context
         ///  menu enabled, but making this property effect the behavior of the Windows Form
         ///  context menu does not lead to a clean OM.  Maps to sinking the
         ///  IDocHostUIHandler:ShowContextMenu
         /// </summary>
-        [SRDescription(nameof(SR.WebBrowserIsWebBrowserContextMenuEnabledDescr)),
-        SRCategory(nameof(SR.CatBehavior)), DefaultValue(true)]
+        [SRDescription(nameof(SR.WebBrowserIsWebBrowserContextMenuEnabledDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
         public bool IsWebBrowserContextMenuEnabled
         {
             get
@@ -482,7 +496,8 @@ namespace System.Windows.Forms
         ///  will be accessible in script as the "window.external" object via IDispatch
         ///  COM interop. Maps to an implementation of the IDocUIHandler.GetExternal event.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public object ObjectForScripting
         {
             get
@@ -493,36 +508,30 @@ namespace System.Windows.Forms
             {
                 if (value != null)
                 {
-                    Type t = value.GetType();
-#if Marshal_IsTypeVisibleFromCom
-                    if (!Marshal.IsTypeVisibleFromCom(t))
+                    if (!Marshal.IsTypeVisibleFromCom(value.GetType()))
                     {
-                        throw new ArgumentException(SR.WebBrowserObjectForScriptingComVisibleOnly);
+                        throw new ArgumentException(SR.WebBrowserObjectForScriptingComVisibleOnly, nameof(value));
                     }
-#endif
                 }
+
                 objectForScripting = value;
             }
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public new Padding Padding
         {
-            get { return base.Padding; }
-            set { base.Padding = value; }
+            get => base.Padding;
+            set => base.Padding = value;
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRCategory(nameof(SR.CatLayout))]
-        [SRDescription(nameof(SR.ControlOnPaddingChangedDescr))
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRCategory(nameof(SR.CatLayout))]
+        [SRDescription(nameof(SR.ControlOnPaddingChangedDescr))]
         public new event EventHandler PaddingChanged
         {
             add => base.PaddingChanged += value;
@@ -533,12 +542,13 @@ namespace System.Windows.Forms
         ///  Gets the ReadyState of the browser control. (ex.. document loading vs. load complete).
         ///  Maps to IWebBrowser2:ReadyState.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public WebBrowserReadyState ReadyState
         {
             get
             {
-                if (Document == null)
+                if (Document is null)
                 {
                     return WebBrowserReadyState.Uninitialized;
                 }
@@ -555,12 +565,13 @@ namespace System.Windows.Forms
         ///  initially an empty string.  After that the value is kept up to date via the
         ///  DWebBrowserEvents2:StatusTextChange event.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual string StatusText
         {
             get
             {
-                if (Document == null)
+                if (Document is null)
                 {
                     statusText = string.Empty;
                 }
@@ -571,16 +582,14 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The url of the HtmlDocument for page hosted in the html page.
         ///  Get Maps to IWebBrowser2:LocationUrl.  Set is the equivalent of calling Navigate(Url).
-        ///  Note this means that setting the Url property & then reading it immediately may not
+        ///  Note this means that setting the Url property &amp; then reading it immediately may not
         ///  return the result that you just set (since the get always returns the url you are currently at).
         /// </summary>
-        [
-            SRDescription(nameof(SR.WebBrowserUrlDescr)),
-            Bindable(true),
-            SRCategory(nameof(SR.CatBehavior)),
-            TypeConverter(typeof(WebBrowserUriTypeConverter)),
-            DefaultValue(null)
-        ]
+        [SRDescription(nameof(SR.WebBrowserUrlDescr))]
+        [Bindable(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [TypeConverter(typeof(WebBrowserUriTypeConverter))]
+        [DefaultValue(null)]
         public Uri Url
         {
             get
@@ -614,7 +623,8 @@ namespace System.Windows.Forms
         ///  Returns the version property of IE.
         ///  Determined by reading the file version of mshtml.dll in the %system% directory.
         /// </summary>
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Version Version
         {
             get
@@ -642,12 +652,8 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.GoBack();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
-                {
-                    throw;
-                }
                 retVal = false;
             }
             return retVal;
@@ -666,12 +672,8 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.GoForward();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
-                {
-                    throw;
-                }
                 retVal = false;
             }
             return retVal;
@@ -777,11 +779,17 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Prints the html document to the default printer w/ no print dialog.
-        ///  Maps to IWebBrowser2:ExecWB w/ IDM_PRINT flag & LECMDEXECOPT_DONTPROMPTUSER.
+        ///  Maps to IWebBrowser2:ExecWB w/ IDM_PRINT flag &amp; LECMDEXECOPT_DONTPROMPTUSER.
         /// </summary>
         public void Print()
         {
-            AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINT, Ole32.OLECMDEXECOPT.DONTPROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            try
+            {
+                AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINT, Ole32.OLECMDEXECOPT.DONTPROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+            {
+            }
         }
 
         /// <summary>
@@ -802,12 +810,8 @@ namespace System.Windows.Forms
                     AxIWebBrowser2.Refresh();
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
-                {
-                    throw;
-                }
             }
         }
 
@@ -832,20 +836,17 @@ namespace System.Windows.Forms
                     AxIWebBrowser2.Refresh2(ref level);
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
-                {
-                    throw;
-                }
             }
         }
 
         /// <summary>
         ///  Enables/disables the webbrowser's scrollbars.
         /// </summary>
-        [SRDescription(nameof(SR.WebBrowserScrollBarsEnabledDescr)),
-        SRCategory(nameof(SR.CatBehavior)), DefaultValue(true)]
+        [SRDescription(nameof(SR.WebBrowserScrollBarsEnabledDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
         public bool ScrollBarsEnabled
         {
             get
@@ -864,20 +865,32 @@ namespace System.Windows.Forms
 
         /// <summary>
         ///  Opens the IE page setup dialog for the current page.
-        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_PAGESETUP flag & LECMDEXECOPT_PROMPTUSER.
+        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_PAGESETUP flag &amp; LECMDEXECOPT_PROMPTUSER.
         /// </summary>
         public void ShowPageSetupDialog()
         {
-            AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PAGESETUP, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            try
+            {
+                AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PAGESETUP, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+            {
+            }
         }
 
         /// <summary>
         ///  Opens the IE print dialog.
-        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_PRINT flag & OLECMDEXECOPT_PROMPTUSER.
+        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_PRINT flag &amp; OLECMDEXECOPT_PROMPTUSER.
         /// </summary>
         public void ShowPrintDialog()
         {
-            AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINT, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            try
+            {
+                AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINT, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+            {
+            }
         }
 
         /// <summary>
@@ -885,25 +898,43 @@ namespace System.Windows.Forms
         /// </summary>
         public void ShowPrintPreviewDialog()
         {
-            AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINTPREVIEW, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            try
+            {
+                AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PRINTPREVIEW, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+            {
+            }
         }
 
         /// <summary>
         ///  Opens the properties dialog for the current html page.
-        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_PROPERTIES flag & LECMDEXECOPT_PROMPTUSER.
+        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_PROPERTIES flag &amp; LECMDEXECOPT_PROMPTUSER.
         /// </summary>
         public void ShowPropertiesDialog()
         {
-            AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PROPERTIES, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            try
+            {
+                AxIWebBrowser2.ExecWB(Ole32.OLECMDID.PROPERTIES, Ole32.OLECMDEXECOPT.PROMPTUSER, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+            {
+            }
         }
 
         /// <summary>
         ///  Opens the IE File-Save dialog.
-        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_SAVEAS flag & LECMDEXECOPT_PROMPTUSER.
+        ///  Maps to IWebBrowser2:ExecWebBrowser w/ IDM_SAVEAS flag &amp; LECMDEXECOPT_PROMPTUSER.
         /// </summary>
         public void ShowSaveAsDialog()
         {
-            AxIWebBrowser2.ExecWB(Ole32.OLECMDID.SAVEAS, Ole32.OLECMDEXECOPT.DODEFAULT, IntPtr.Zero, IntPtr.Zero);
+            try
+            {
+                AxIWebBrowser2.ExecWB(Ole32.OLECMDID.SAVEAS, Ole32.OLECMDEXECOPT.DODEFAULT, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
+            {
+            }
         }
 
         /// <summary>
@@ -915,12 +946,8 @@ namespace System.Windows.Forms
             {
                 AxIWebBrowser2.Stop();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
-                {
-                    throw;
-                }
             }
         }
 
@@ -988,7 +1015,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.WebBrowserNavigatedDescr))]
         public event WebBrowserNavigatedEventHandler Navigated;
-        
+
         /// <summary>
         ///  Occurs before browser control navigation occurs.
         ///  Fires before browser navigation occurs. Allows navigation to be canceled if
@@ -997,7 +1024,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.WebBrowserNavigatingDescr))]
         public event WebBrowserNavigatingEventHandler Navigating;
-        
+
         /// <summary>
         ///  Occurs when a new browser window is created.
         ///  Can be used to cancel the creation of the new browser window. Maps to DWebBrowserEvents2:NewWindow2.
@@ -1005,7 +1032,7 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.WebBrowserNewWindowDescr))]
         public event CancelEventHandler NewWindow;
-        
+
         /// <summary>
         ///  Occurs when an update to the progress of a download occurs.
         ///  Fires whenever the browser control has updated info on the download. Can be
@@ -1015,13 +1042,14 @@ namespace System.Windows.Forms
         [SRCategory(nameof(SR.CatAction))]
         [SRDescription(nameof(SR.WebBrowserProgressChangedDescr))]
         public event WebBrowserProgressChangedEventHandler ProgressChanged;
-        
+
         /// <summary>
         ///  Occurs whenever the status text changes.
         ///  Can be used to keep a status bar populated with uptodate text.
         ///  Maps to DWebBrowserEvents2:StatusTextChange.
         /// </summary>
-        [Browsable(false), SRCategory(nameof(SR.CatPropertyChanged))]
+        [Browsable(false)]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
         [SRDescription(nameof(SR.WebBrowserStatusTextChangedDescr))]
         public event EventHandler StatusTextChanged;
 
@@ -1119,24 +1147,6 @@ namespace System.Windows.Forms
                 cookie = null;
             }
         }
-
-        internal override void OnTopMostActiveXParentChanged(EventArgs e)
-        {
-            if (TopMostParent.IsIEParent)
-            {
-                WebBrowser.createdInIE = true;
-                CheckIfCreatedInIE();
-            }
-            else
-            {
-                WebBrowser.createdInIE = false;
-                base.OnTopMostActiveXParentChanged(e);
-            }
-        }
-
-        //
-        // protected virtuals:
-        //
 
         /// <summary>
         ///  Raises the <see cref='CanGoBackChanged'/> event.
@@ -1244,7 +1254,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (htmlShimManager == null)
+                if (htmlShimManager is null)
                 {
                     htmlShimManager = new HtmlShimManager();
                 }
@@ -1252,26 +1262,6 @@ namespace System.Windows.Forms
             }
         }
         #endregion
-
-        //
-        // Private methods:
-        //
-        private void CheckIfCreatedInIE()
-        {
-            if (WebBrowser.createdInIE)
-            {
-                if (ParentInternal != null)
-                {
-                    ParentInternal.Controls.Remove(this);
-                    Dispose();
-                }
-                else
-                {
-                    Dispose();
-                    throw new NotSupportedException(SR.WebBrowserInIENotSupported);
-                }
-            }
-        }
 
         private string ReadyNavigateToUrl(string urlString)
         {
@@ -1293,7 +1283,7 @@ namespace System.Windows.Forms
         private string ReadyNavigateToUrl(Uri url)
         {
             string urlString;
-            if (url == null)
+            if (url is null)
             {
                 urlString = "about:blank";
             }
@@ -1350,7 +1340,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return Url == null || Url.AbsoluteUri == "about:blank";
+                return Url is null || Url.AbsoluteUri == "about:blank";
             }
         }
 
@@ -1404,11 +1394,11 @@ namespace System.Windows.Forms
 
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_CONTEXTMENU:
-                    int x = NativeMethods.Util.SignedLOWORD(m.LParam);
-                    int y = NativeMethods.Util.SignedHIWORD(m.LParam);
+                case User32.WM.CONTEXTMENU:
+                    int x = PARAM.SignedLOWORD(m.LParam);
+                    int y = PARAM.SignedHIWORD(m.LParam);
 
                     if (!ShowContextMenu(x, y))
                     {
@@ -1425,7 +1415,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (axIWebBrowser2 == null)
+                if (axIWebBrowser2 is null)
                 {
                     if (!IsDisposed)
                     {
@@ -1438,7 +1428,7 @@ namespace System.Windows.Forms
                     }
                 }
                 // We still don't have this.axIWebBrowser2. Throw an exception.
-                if (axIWebBrowser2 == null)
+                if (axIWebBrowser2 is null)
                 {
                     throw new InvalidOperationException(SR.WebBrowserNoCastToIWebBrowser2);
                 }
@@ -1453,8 +1443,7 @@ namespace System.Windows.Forms
         ///  Provides a default WebBrowserSite implementation for use in the CreateWebBrowserSite
         ///  method in the WebBrowser class.
         /// </summary>
-        [ComVisible(false)]
-        protected class WebBrowserSite : WebBrowserSiteBase, UnsafeNativeMethods.IDocHostUIHandler
+        protected class WebBrowserSite : WebBrowserSiteBase, IDocHostUIHandler
         {
             /// <summary>
         ///  Creates an instance of the <see cref='WebBrowserSite'/> class.
@@ -1463,68 +1452,74 @@ namespace System.Windows.Forms
             {
             }
 
-            //
             // IDocHostUIHandler Implementation
-            //
-            int UnsafeNativeMethods.IDocHostUIHandler.ShowContextMenu(uint dwID, ref Point pt, object pcmdtReserved, object pdispReserved)
+            unsafe HRESULT IDocHostUIHandler.ShowContextMenu(uint dwID, Point* pt, object pcmdtReserved, object pdispReserved)
             {
                 WebBrowser wb = (WebBrowser)Host;
 
                 if (wb.IsWebBrowserContextMenuEnabled)
                 {
                     // let MSHTML display its UI
-                    return NativeMethods.S_FALSE;
+                    return HRESULT.S_FALSE;
                 }
-                else
+
+                if (pt is null)
                 {
-                    if (pt.X == 0 && pt.Y == 0)
-                    {
-                        // IDocHostUIHandler::ShowContextMenu sends (0,0) when the context menu is invoked via the keyboard
-                        // make it (-1, -1) for the WebBrowser::ShowContextMenu method
-                        pt.X = -1;
-                        pt.Y = -1;
-                    }
-                    wb.ShowContextMenu(pt.X, pt.Y);
-                    // MSHTML should not display its context menu because we displayed ours
-                    return NativeMethods.S_OK;
+                    return HRESULT.E_INVALIDARG;
                 }
+
+                if (pt->X == 0 && pt->Y == 0)
+                {
+                    // IDocHostUIHandler::ShowContextMenu sends (0,0) when the context menu is invoked via the keyboard
+                    // make it (-1, -1) for the WebBrowser::ShowContextMenu method
+                    pt->X = -1;
+                    pt->Y = -1;
+                }
+                wb.ShowContextMenu(pt->X, pt->Y);
+                // MSHTML should not display its context menu because we displayed ours
+                return HRESULT.S_OK;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.GetHostInfo(NativeMethods.DOCHOSTUIINFO info)
+            unsafe HRESULT IDocHostUIHandler.GetHostInfo(DOCHOSTUIINFO* pInfo)
             {
+                if (pInfo is null)
+                {
+                    return HRESULT.E_POINTER;
+                }
+
                 WebBrowser wb = (WebBrowser)Host;
 
-                info.dwDoubleClick = DOCHOSTUIDBLCLK.DEFAULT;
-                info.dwFlags = DOCHOSTUIFLAG.NO3DOUTERBORDER |
+                pInfo->dwDoubleClick = DOCHOSTUIDBLCLK.DEFAULT;
+                pInfo->dwFlags = DOCHOSTUIFLAG.NO3DOUTERBORDER |
                                DOCHOSTUIFLAG.DISABLE_SCRIPT_INACTIVE;
 
                 if (wb.ScrollBarsEnabled)
                 {
-                    info.dwFlags |= DOCHOSTUIFLAG.FLAT_SCROLLBAR;
+                    pInfo->dwFlags |= DOCHOSTUIFLAG.FLAT_SCROLLBAR;
                 }
                 else
                 {
-                    info.dwFlags |= DOCHOSTUIFLAG.SCROLL_NO;
+                    pInfo->dwFlags |= DOCHOSTUIFLAG.SCROLL_NO;
                 }
 
                 if (Application.RenderWithVisualStyles)
                 {
-                    info.dwFlags |= DOCHOSTUIFLAG.THEME;
+                    pInfo->dwFlags |= DOCHOSTUIFLAG.THEME;
                 }
                 else
                 {
-                    info.dwFlags |= DOCHOSTUIFLAG.NOTHEME;
+                    pInfo->dwFlags |= DOCHOSTUIFLAG.NOTHEME;
                 }
 
-                return NativeMethods.S_OK;
+                return HRESULT.S_OK;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.EnableModeless(bool fEnable)
+            HRESULT IDocHostUIHandler.EnableModeless(BOOL fEnable)
             {
-                return NativeMethods.E_NOTIMPL;
+                return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT UnsafeNativeMethods.IDocHostUIHandler.ShowUI(
+            HRESULT IDocHostUIHandler.ShowUI(
                 uint dwID,
                 Ole32.IOleInPlaceActiveObject activeObject,
                 Ole32.IOleCommandTarget commandTarget,
@@ -1534,37 +1529,37 @@ namespace System.Windows.Forms
                 return HRESULT.S_FALSE;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.HideUI()
-            {
-                return NativeMethods.E_NOTIMPL;
-            }
-
-            int UnsafeNativeMethods.IDocHostUIHandler.UpdateUI()
-            {
-                return NativeMethods.E_NOTIMPL;
-            }
-
-            HRESULT UnsafeNativeMethods.IDocHostUIHandler.OnDocWindowActivate(BOOL fActivate)
+            HRESULT IDocHostUIHandler.HideUI()
             {
                 return HRESULT.E_NOTIMPL;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.OnFrameWindowActivate(bool fActivate)
-            {
-                return NativeMethods.E_NOTIMPL;
-            }
-
-            unsafe HRESULT UnsafeNativeMethods.IDocHostUIHandler.ResizeBorder(RECT* rect, Ole32.IOleInPlaceUIWindow doc, BOOL fFrameWindow)
+            HRESULT IDocHostUIHandler.UpdateUI()
             {
                 return HRESULT.E_NOTIMPL;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.GetOptionKeyPath(string[] pbstrKey, int dw)
+            HRESULT IDocHostUIHandler.OnDocWindowActivate(BOOL fActivate)
             {
-                return NativeMethods.E_NOTIMPL;
+                return HRESULT.E_NOTIMPL;
             }
 
-            HRESULT UnsafeNativeMethods.IDocHostUIHandler.GetDropTarget(Ole32.IDropTarget pDropTarget, out Ole32.IDropTarget ppDropTarget)
+            HRESULT IDocHostUIHandler.OnFrameWindowActivate(BOOL fActivate)
+            {
+                return HRESULT.E_NOTIMPL;
+            }
+
+            unsafe HRESULT IDocHostUIHandler.ResizeBorder(RECT* rect, Ole32.IOleInPlaceUIWindow doc, BOOL fFrameWindow)
+            {
+                return HRESULT.E_NOTIMPL;
+            }
+
+            HRESULT IDocHostUIHandler.GetOptionKeyPath(string[] pbstrKey, uint dw)
+            {
+                return HRESULT.E_NOTIMPL;
+            }
+
+            HRESULT IDocHostUIHandler.GetDropTarget(Ole32.IDropTarget pDropTarget, out Ole32.IDropTarget ppDropTarget)
             {
                 // Set to null no matter what we return, to prevent the marshaller
                 // from having issues if the pointer points to random stuff.
@@ -1572,16 +1567,16 @@ namespace System.Windows.Forms
                 return HRESULT.E_NOTIMPL;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.GetExternal(out object ppDispatch)
+            HRESULT IDocHostUIHandler.GetExternal(out object ppDispatch)
             {
                 WebBrowser wb = (WebBrowser)Host;
                 ppDispatch = wb.ObjectForScripting;
-                return NativeMethods.S_OK;
+                return HRESULT.S_OK;
             }
 
-            unsafe HRESULT UnsafeNativeMethods.IDocHostUIHandler.TranslateAccelerator(User32.MSG* lpMsg, Guid* pguidCmdGroup, uint nCmdID)
+            unsafe HRESULT IDocHostUIHandler.TranslateAccelerator(User32.MSG* lpMsg, Guid* pguidCmdGroup, uint nCmdID)
             {
-                if (lpMsg == null || pguidCmdGroup == null)
+                if (lpMsg is null || pguidCmdGroup is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -1592,7 +1587,7 @@ namespace System.Windows.Forms
                 if (!wb.WebBrowserShortcutsEnabled)
                 {
                     int keyCode = (int)lpMsg->wParam | (int)Control.ModifierKeys;
-                    if (lpMsg->message != User32.WindowMessage.WM_CHAR && Enum.IsDefined(typeof(Shortcut), (Shortcut)keyCode))
+                    if (lpMsg->message != User32.WM.CHAR && Enum.IsDefined(typeof(Shortcut), (Shortcut)keyCode))
                     {
                         return HRESULT.S_OK;
                     }
@@ -1601,22 +1596,20 @@ namespace System.Windows.Forms
                 return HRESULT.S_FALSE;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.TranslateUrl(int dwTranslate, string strUrlIn, out string pstrUrlOut)
+            HRESULT IDocHostUIHandler.TranslateUrl(uint dwTranslate, string strUrlIn, out string pstrUrlOut)
             {
-                //
                 // Set to null no matter what we return, to prevent the marshaller
                 // from having issues if the pointer points to random stuff.
                 pstrUrlOut = null;
-                return NativeMethods.S_FALSE;
+                return HRESULT.S_FALSE;
             }
 
-            int UnsafeNativeMethods.IDocHostUIHandler.FilterDataObject(IComDataObject pDO, out IComDataObject ppDORet)
+            HRESULT IDocHostUIHandler.FilterDataObject(IComDataObject pDO, out IComDataObject ppDORet)
             {
-                //
                 // Set to null no matter what we return, to prevent the marshaller
                 // from having issues if the pointer points to random stuff.
                 ppDORet = null;
-                return NativeMethods.S_FALSE;
+                return HRESULT.S_FALSE;
             }
 
             //
@@ -1662,25 +1655,25 @@ namespace System.Windows.Forms
                 //Note: we want to allow navigation if we haven't already navigated.
                 if (AllowNavigation || !_haveNavigated)
                 {
-                    Debug.Assert(urlObject == null || urlObject is string, "invalid url type");
-                    Debug.Assert(targetFrameName == null || targetFrameName is string, "invalid targetFrameName type");
-                    Debug.Assert(headers == null || headers is string, "invalid headers type");
+                    Debug.Assert(urlObject is null || urlObject is string, "invalid url type");
+                    Debug.Assert(targetFrameName is null || targetFrameName is string, "invalid targetFrameName type");
+                    Debug.Assert(headers is null || headers is string, "invalid headers type");
                     //
                     // If during running interop code, the variant.bstr value gets set
                     // to -1 on return back to native code, if the original value was null, we
                     // have to set targetFrameName and headers to "".
-                    if (targetFrameName == null)
+                    if (targetFrameName is null)
                     {
                         targetFrameName = string.Empty;
                     }
-                    if (headers == null)
+                    if (headers is null)
                     {
                         headers = string.Empty;
                     }
 
-                    string urlString = urlObject == null ? "" : (string)urlObject;
+                    string urlString = urlObject is null ? "" : (string)urlObject;
                     WebBrowserNavigatingEventArgs e = new WebBrowserNavigatingEventArgs(
-                        new Uri(urlString), targetFrameName == null ? "" : (string)targetFrameName);
+                        new Uri(urlString), targetFrameName is null ? "" : (string)targetFrameName);
                     _parent.OnNavigating(e);
                     cancel = e.Cancel;
                 }
@@ -1692,7 +1685,7 @@ namespace System.Windows.Forms
 
             public void DocumentComplete(object pDisp, ref object urlObject)
             {
-                Debug.Assert(urlObject == null || urlObject is string, "invalid url");
+                Debug.Assert(urlObject is null || urlObject is string, "invalid url");
                 _haveNavigated = true;
                 if (_parent.documentStreamToSetOnLoad != null && (string)urlObject == "about:blank")
                 {
@@ -1710,7 +1703,7 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    string urlString = urlObject == null ? "" : urlObject.ToString();
+                    string urlString = urlObject is null ? "" : urlObject.ToString();
                     WebBrowserDocumentCompletedEventArgs e = new WebBrowserDocumentCompletedEventArgs(
                             new Uri(urlString));
                     _parent.OnDocumentCompleted(e);
@@ -1730,8 +1723,8 @@ namespace System.Windows.Forms
 
             public void NavigateComplete2(object pDisp, ref object urlObject)
             {
-                Debug.Assert(urlObject == null || urlObject is string, "invalid url type");
-                string urlString = urlObject == null ? "" : (string)urlObject;
+                Debug.Assert(urlObject is null || urlObject is string, "invalid url type");
+                string urlString = urlObject is null ? "" : (string)urlObject;
                 WebBrowserNavigatedEventArgs e = new WebBrowserNavigatedEventArgs(
                         new Uri(urlString));
                 _parent.OnNavigated(e);

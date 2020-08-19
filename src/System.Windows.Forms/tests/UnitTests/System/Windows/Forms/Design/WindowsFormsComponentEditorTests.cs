@@ -10,7 +10,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Design.Tests
 {
-    public class WindowsFormsComponentEditorTests
+    // NB: doesn't require thread affinity
+    public class WindowsFormsComponentEditorTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> EditComponent_ObjectIWin32Window_TestData()
         {

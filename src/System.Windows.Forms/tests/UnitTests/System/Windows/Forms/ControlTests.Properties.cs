@@ -6,64 +6,163 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms.Layout;
 using Moq;
 using WinForms.Common.Tests;
 using Xunit;
+using static Interop;
 
 namespace System.Windows.Forms.Tests
 {
     public partial class ControlTests
     {
-        [Fact]
-        public void Control_AccessibleNameGetSet()
+        [WinFormsFact]
+        public void Control_AccessibilityObject_Get_ReturnsExpected()
         {
-            var cont = new Control
-            {
-                AccessibleName = "Foo"
-            };
-
-            Assert.Equal("Foo", cont.AccessibleName);
+            using var control = new Control();
+            Control.ControlAccessibleObject accessibleObject = Assert.IsType<Control.ControlAccessibleObject>(control.AccessibilityObject);
+            Assert.Same(accessibleObject, control.AccessibilityObject);
+            Assert.True(control.IsHandleCreated);
+            Assert.Same(control, accessibleObject.Owner);
         }
 
-        /// <summary>
-        ///  Data for the AccessibleRole test
-        /// </summary>
-        public static TheoryData<AccessibleRole> AccessibleRoleData =>
-            CommonTestHelper.GetEnumTheoryData<AccessibleRole>();
-
-        [Theory]
-        [MemberData(nameof(AccessibleRoleData))]
-        public void Control_SetItemCheckState(AccessibleRole expected)
+        [WinFormsFact]
+        public void Control_AccessibilityObject_GetWithHandle_ReturnsExpected()
         {
-            var cont = new Control
-            {
-                AccessibleRole = expected
-            };
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
 
-            Assert.Equal(expected, cont.AccessibleRole);
+            Control.ControlAccessibleObject accessibleObject = Assert.IsType<Control.ControlAccessibleObject>(control.AccessibilityObject);
+            Assert.Same(accessibleObject, control.AccessibilityObject);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+            Assert.Same(control, accessibleObject.Owner);
         }
 
-        /// <summary>
-        ///  Data for the AccessibleRoleInvalid test
-        /// </summary>
-        public static TheoryData<CheckState> AccessibleRoleInvalidData =>
-            CommonTestHelper.GetEnumTheoryDataInvalid<CheckState>();
-
-        [Theory]
-        [MemberData(nameof(AccessibleRoleInvalidData))]
-        public void Control_AccessibleRoleInvalid(AccessibleRole expected)
+        public static IEnumerable<object[]> AccessibilityObject_CustomCreateAccessibilityInstance_TestData()
         {
-            var cont = new Control();
+            yield return new object[] { null, null };
+            yield return new object[] { new AccessibleObject(), null };
 
-            InvalidEnumArgumentException ex = Assert.Throws<InvalidEnumArgumentException>(() => cont.AccessibleRole = expected);
-            Assert.Equal("value", ex.ParamName);
+            var controlAccessibleObject = new Control.ControlAccessibleObject(new Control());
+            yield return new object[] { controlAccessibleObject, controlAccessibleObject };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(AccessibilityObject_CustomCreateAccessibilityInstance_TestData))]
+        public void Control_AccessibilityObject_GetCustomCreateAccessibilityInstance_ReturnsExpected(AccessibleObject result, AccessibleObject expected)
+        {
+            using (new NoAssertContext())
+            {
+                using var control = new CustomCreateAccessibilityInstanceControl
+                {
+                    CreateAccessibilityResult = result
+                };
+                Assert.Same(expected, control.AccessibilityObject);
+                Assert.Same(control.AccessibilityObject, control.AccessibilityObject);
+                Assert.False(control.IsHandleCreated);
+            }
+        }
+
+        private class CustomCreateAccessibilityInstanceControl : Control
+        {
+            public AccessibleObject CreateAccessibilityResult { get; set; }
+
+            protected override AccessibleObject CreateAccessibilityInstance() => CreateAccessibilityResult;
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        public void Control_AccessibleDefaultActionDescription_Set_GetReturnsExpected(string value)
+        {
+            using var control = new Control
+            {
+                AccessibleDefaultActionDescription = value
+            };
+            Assert.Equal(value, control.AccessibleDefaultActionDescription);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.AccessibleDefaultActionDescription = value;
+            Assert.Equal(value, control.AccessibleDefaultActionDescription);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        public void Control_AccessibleDescription_Set_GetReturnsExpected(string value)
+        {
+            using var control = new Control
+            {
+                AccessibleDescription = value
+            };
+            Assert.Equal(value, control.AccessibleDescription);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.AccessibleDescription = value;
+            Assert.Equal(value, control.AccessibleDescription);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
+        public void Control_AccessibleName_Set_GetReturnsExpected(string value)
+        {
+            using var control = new Control
+            {
+                AccessibleName = value
+            };
+            Assert.Equal(value, control.AccessibleName);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.AccessibleName = value;
+            Assert.Equal(value, control.AccessibleName);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(AccessibleRole))]
+        public void Control_AccessibleRole_Set_GetReturnsExpected(AccessibleRole value)
+        {
+            using var control = new Control
+            {
+                AccessibleRole = value
+            };
+            Assert.Equal(value, control.AccessibleRole);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.AccessibleRole = value;
+            Assert.Equal(value, control.AccessibleRole);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(AccessibleRole))]
+        public void Control_AccessibleRole_SetInvalidValue_ThrowsInvalidEnumArgumentException(AccessibleRole value)
+        {
+            using var control = new Control();
+            Assert.Throws<InvalidEnumArgumentException>("value", () => control.AccessibleRole = value);
         }
 
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Control_AllowDrop_Set_GetReturnsExpected(bool value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 AllowDrop = value
             };
@@ -81,7 +180,108 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_AllowDrop_SetWithHandle_GetReturnsExpected(bool value)
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.AllowDrop = value;
+            Assert.Equal(value, control.AllowDrop);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.AllowDrop = value;
+            Assert.Equal(value, control.AllowDrop);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set different.
+            control.AllowDrop = value;
+            Assert.Equal(value, control.AllowDrop);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_AllowDrop_SetWithHandleAlreadyRegistered_GetReturnsExpected(bool value)
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            var dropTarget = new CustomDropTarget();
+            Assert.Equal(ApartmentState.STA, Application.OleRequired());
+            Assert.Equal(HRESULT.S_OK, Ole32.RegisterDragDrop(control.Handle, dropTarget));
+
+            control.AllowDrop = value;
+            Assert.Equal(value, control.AllowDrop);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.AllowDrop = value;
+            Assert.Equal(value, control.AllowDrop);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set different.
+            control.AllowDrop = value;
+            Assert.Equal(value, control.AllowDrop);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        private class CustomDropTarget : Ole32.IDropTarget
+        {
+            public HRESULT DragEnter([MarshalAs(UnmanagedType.Interface)] object pDataObj, uint grfKeyState, Point pt, ref uint pdwEffect)
+            {
+                throw new NotImplementedException();
+            }
+
+            public HRESULT DragOver(uint grfKeyState, Point pt, ref uint pdwEffect)
+            {
+                throw new NotImplementedException();
+            }
+
+            public HRESULT DragLeave()
+            {
+                throw new NotImplementedException();
+            }
+
+            public HRESULT Drop([MarshalAs(UnmanagedType.Interface)] object pDataObj, uint grfKeyState, Point pt, ref uint pdwEffect)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Fact] // non-UI thread
         public void Control_AllowDrop_SetWithHandleNonSTAThread_ThrowsInvalidOperationException()
         {
             using var control = new Control();
@@ -103,43 +303,6 @@ namespace System.Windows.Forms.Tests
             // Can set to false.
             control.AllowDrop = false;
             Assert.False(control.AllowDrop);
-            Assert.True(control.IsHandleCreated);
-            Assert.Equal(0, invalidatedCallCount);
-            Assert.Equal(0, styleChangedCallCount);
-            Assert.Equal(0, createdCallCount);
-        }
-
-        [WinFormsTheory]
-        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
-        public void Control_AllowDrop_SetWithHandleSTA_GetReturnsExpected(bool value)
-        {
-            using var control = new Control();
-            Assert.NotEqual(IntPtr.Zero, control.Handle);
-            int invalidatedCallCount = 0;
-            control.Invalidated += (sender, e) => invalidatedCallCount++;
-            int styleChangedCallCount = 0;
-            control.StyleChanged += (sender, e) => styleChangedCallCount++;
-            int createdCallCount = 0;
-            control.HandleCreated += (sender, e) => createdCallCount++;
-
-            control.AllowDrop = value;
-            Assert.Equal(value, control.AllowDrop);
-            Assert.True(control.IsHandleCreated);
-            Assert.Equal(0, invalidatedCallCount);
-            Assert.Equal(0, styleChangedCallCount);
-            Assert.Equal(0, createdCallCount);
-
-            // Set same.
-            control.AllowDrop = value;
-            Assert.Equal(value, control.AllowDrop);
-            Assert.True(control.IsHandleCreated);
-            Assert.Equal(0, invalidatedCallCount);
-            Assert.Equal(0, styleChangedCallCount);
-            Assert.Equal(0, createdCallCount);
-
-            // Set different.
-            control.AllowDrop = value;
-            Assert.Equal(value, control.AllowDrop);
             Assert.True(control.IsHandleCreated);
             Assert.Equal(0, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -172,40 +335,399 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { (AnchorStyles)int.MaxValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Anchor_Set_TestData))]
         public void Control_Anchor_Set_GetReturnsExpected(AnchorStyles value, AnchorStyles expected)
         {
-            var control = new Control
-            {
-                Anchor = value
-            };
+            using var control = new Control();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.Anchor = value;
             Assert.Equal(expected, control.Anchor);
             Assert.Equal(DockStyle.None, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Anchor = value;
             Assert.Equal(expected, control.Anchor);
             Assert.Equal(DockStyle.None, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Anchor_Set_TestData))]
         public void Control_Anchor_SetWithOldValue_GetReturnsExpected(AnchorStyles value, AnchorStyles expected)
         {
-            var control = new Control
+            using var control = new Control
             {
                 Anchor = AnchorStyles.Left
             };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
 
             control.Anchor = value;
             Assert.Equal(expected, control.Anchor);
             Assert.Equal(DockStyle.None, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Anchor = value;
             Assert.Equal(expected, control.Anchor);
             Assert.Equal(DockStyle.None, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        public static IEnumerable<object[]> Anchor_SetWithParent_TestData()
+        {
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top, 1, 1 };
+            yield return new object[] { AnchorStyles.Top | AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, 1, 1 };
+            yield return new object[] { AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1 };
+            yield return new object[] { AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, 1, 1 };
+            yield return new object[] { AnchorStyles.Top | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, 0, 0 };
+            yield return new object[] { AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+            yield return new object[] { AnchorStyles.Top | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Right, 1, 1 };
+            yield return new object[] { AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Bottom, 1, 1 };
+            yield return new object[] { AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, 1, 1 };
+            yield return new object[] { AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Right, 1, 1 };
+            yield return new object[] { AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Left, 1, 1 };
+            yield return new object[] { AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Right, 1, 1 };
+
+            yield return new object[] { AnchorStyles.None, AnchorStyles.None, 1, 1 };
+            yield return new object[] { (AnchorStyles)(-1), AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 2 };
+            yield return new object[] { (AnchorStyles)int.MaxValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 2 };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Anchor_SetWithParent_TestData))]
+        public void Control_Anchor_SetWithParent_GetReturnsExpected(AnchorStyles value, AnchorStyles expected, int expectedParentLayoutCallCount1, int expectedParentLayoutCallCount2)
+        {
+            using var parent = new Control();
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Anchor", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+
+            try
+            {
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount1, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+
+                // Set same.
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount2, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Anchor_SetWithParent_TestData))]
+        public void Control_Anchor_SetWithGrandparent_GetReturnsExpected(AnchorStyles value, AnchorStyles expected, int expectedParentLayoutCallCount1, int expectedParentLayoutCallCount2)
+        {
+            using var grandparent = new Control();
+            using var parent = new Control
+            {
+                Parent = grandparent
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Anchor", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            int grandparentLayoutCallCount = 0;
+            void grandparentHandler(object sender, LayoutEventArgs e)
+            {
+                grandparentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+            grandparent.Layout += grandparentHandler;
+
+            try
+            {
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount1, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+
+                // Set same.
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount2, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+                grandparent.Layout -= parentHandler;
+            }
+        }
+
+        public static IEnumerable<object[]> Anchor_SetWithOldValueWithParent_TestData()
+        {
+            foreach (AnchorStyles oldValue in new AnchorStyles[] { AnchorStyles.Left, AnchorStyles.Top, AnchorStyles.Right, AnchorStyles.Left })
+            {
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Right, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+
+                yield return new object[] { oldValue, AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Right, 1, 1 };
+                yield return new object[] { oldValue, AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+
+                yield return new object[] { oldValue, AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Left | AnchorStyles.Right, 1, 1 };
+
+                yield return new object[] { oldValue, AnchorStyles.None, AnchorStyles.None, 1, 1 };
+                yield return new object[] { oldValue, (AnchorStyles)(-1), AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 2 };
+                yield return new object[] { oldValue, (AnchorStyles)int.MaxValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 2 };
+            }
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top, AnchorStyles.Top, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top, AnchorStyles.Top, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Top, AnchorStyles.Top, 1, 1 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Top, AnchorStyles.Top, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Bottom, AnchorStyles.Bottom, 1, 1 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Bottom, AnchorStyles.Bottom, 0, 0 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Bottom, AnchorStyles.Bottom, 1, 1 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Bottom, AnchorStyles.Bottom, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Left, AnchorStyles.Left, 1, 1 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Left, AnchorStyles.Left, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Left, AnchorStyles.Left, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Left, AnchorStyles.Left, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Right, AnchorStyles.Right, 1, 1 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Right, AnchorStyles.Right, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Right, AnchorStyles.Right, 1, 1 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Right, AnchorStyles.Right, 0, 0 };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Anchor_SetWithOldValueWithParent_TestData))]
+        public void Control_Anchor_SetWithOldValueWithParent_GetReturnsExpected(AnchorStyles oldValue, AnchorStyles value, AnchorStyles expected, int expectedParentLayoutCallCount1, int expectedParentLayoutCallCount2)
+        {
+            using var parent = new Control();
+            using var control = new Control
+            {
+                Anchor = oldValue,
+                Parent = parent
+            };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Anchor", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+
+            try
+            {
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount1, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+
+                // Set same.
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount2, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
+        }
+
+        public static IEnumerable<object[]> Anchor_SetWithOldValueWithGrandparent_TestData()
+        {
+            foreach (AnchorStyles oldValue in new AnchorStyles[] { AnchorStyles.Left, AnchorStyles.Top, AnchorStyles.Right, AnchorStyles.Left })
+            {
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, 1, 1, 0, 0 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, 1, 1, 0, 0 };
+                yield return new object[] { oldValue, AnchorStyles.Top | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Right, 1, 1, 0, 0 };
+
+                yield return new object[] { oldValue, AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Right, 1, 1, 0, 0 };
+                yield return new object[] { oldValue, AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1, 0, 0 };
+
+                yield return new object[] { oldValue, AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Left | AnchorStyles.Right, 1, 1, 0, 0 };
+
+                yield return new object[] { oldValue, (AnchorStyles)(-1), AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 2, 0, 0 };
+                yield return new object[] { oldValue, (AnchorStyles)int.MaxValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 2, 0, 0 };
+            }
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top | AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, 1, 1, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, 1, 1, 0, 0 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.None, AnchorStyles.None, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.None, AnchorStyles.None, 1, 1, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.None, AnchorStyles.None, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.None, AnchorStyles.None, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Top, AnchorStyles.Top, 0, 0, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Top, AnchorStyles.Top, 1, 1, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Top, AnchorStyles.Top, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Top, AnchorStyles.Top, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Bottom, AnchorStyles.Bottom, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Bottom, AnchorStyles.Bottom, 0, 0, 0, 0 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Bottom, AnchorStyles.Bottom, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Bottom, AnchorStyles.Bottom, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Left, AnchorStyles.Left, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Left, AnchorStyles.Left, 1, 1, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Left, AnchorStyles.Left, 0, 0, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Left, AnchorStyles.Left, 1, 1, 1, 1 };
+
+            yield return new object[] { AnchorStyles.Top, AnchorStyles.Right, AnchorStyles.Right, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Bottom, AnchorStyles.Right, AnchorStyles.Right, 1, 1, 1, 1 };
+            yield return new object[] { AnchorStyles.Left, AnchorStyles.Right, AnchorStyles.Right, 1, 1, 0, 0 };
+            yield return new object[] { AnchorStyles.Right, AnchorStyles.Right, AnchorStyles.Right, 0, 0, 0, 0 };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Anchor_SetWithOldValueWithGrandparent_TestData))]
+        public void Control_Anchor_SetWithOldValueWithGrandparent_GetReturnsExpected(AnchorStyles oldValue, AnchorStyles value, AnchorStyles expected, int expectedParentLayoutCallCount1, int expectedParentLayoutCallCount2, int expectedGrandparentLayoutCallCount1, int expectedGrandparentLayoutCallCount2)
+        {
+            using var grandparent = new Control();
+            using var parent = new Control
+            {
+                Parent = grandparent
+            };
+            using var control = new Control
+            {
+                Anchor = oldValue,
+                Parent = parent
+            };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Anchor", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            int grandparentLayoutCallCount = 0;
+            void grandparentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(grandparent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Anchor", e.AffectedProperty);
+                grandparentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+            grandparent.Layout += grandparentHandler;
+
+            try
+            {
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount1, parentLayoutCallCount);
+                Assert.Equal(expectedGrandparentLayoutCallCount1, grandparentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+
+                // Set same.
+                control.Anchor = value;
+                Assert.Equal(expected, control.Anchor);
+                Assert.Equal(DockStyle.None, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount2, parentLayoutCallCount);
+                Assert.Equal(expectedGrandparentLayoutCallCount2, grandparentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+                grandparent.Layout -= grandparentHandler;
+            }
         }
 
         public static IEnumerable<object[]> Anchor_SetWithDock_TestData()
@@ -237,30 +759,147 @@ namespace System.Windows.Forms.Tests
             }
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Anchor_SetWithDock_TestData))]
         public void Control_Anchor_SetWithDock_GetReturnsExpected(DockStyle dock, AnchorStyles value, AnchorStyles expectedAnchor, DockStyle expectedDock)
         {
-            var control = new Control
+            using var control = new Control
             {
                 Dock = dock
             };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
 
             control.Anchor = value;
             Assert.Equal(expectedAnchor, control.Anchor);
             Assert.Equal(expectedDock, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Anchor = value;
             Assert.Equal(expectedAnchor, control.Anchor);
             Assert.Equal(expectedDock, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        public static IEnumerable<object[]> Anchor_SetWithDockWithParent_TestData()
+        {
+            foreach (DockStyle dock in new DockStyle[] { DockStyle.Bottom, DockStyle.Fill, DockStyle.Left, DockStyle.Right, DockStyle.Top })
+            {
+                yield return new object[] { dock, AnchorStyles.Top, AnchorStyles.Top, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Top | AnchorStyles.Bottom, AnchorStyles.Top | AnchorStyles.Bottom, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Top | AnchorStyles.Left, AnchorStyles.Top | AnchorStyles.Left, dock, 0 };
+                yield return new object[] { dock, AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Top | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Right, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, DockStyle.None, 1 };
+
+                yield return new object[] { dock, AnchorStyles.Bottom, AnchorStyles.Bottom, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Bottom | AnchorStyles.Left, AnchorStyles.Bottom | AnchorStyles.Left, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Bottom | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Right, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, DockStyle.None, 1 };
+
+                yield return new object[] { dock, AnchorStyles.Left, AnchorStyles.Left, DockStyle.None, 1 };
+                yield return new object[] { dock, AnchorStyles.Left | AnchorStyles.Right, AnchorStyles.Left | AnchorStyles.Right, DockStyle.None, 1 };
+
+                yield return new object[] { dock, AnchorStyles.Right, AnchorStyles.Right, DockStyle.None, 1 };
+
+                yield return new object[] { dock, AnchorStyles.None, AnchorStyles.None, DockStyle.None, 1 };
+                yield return new object[] { dock, (AnchorStyles)(-1), AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, DockStyle.None, 1 };
+                yield return new object[] { dock, (AnchorStyles)int.MaxValue, AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, DockStyle.None, 1 };
+            }
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Anchor_SetWithDockWithParent_TestData))]
+        public void Control_Anchor_SetWithDockWithParent_GetReturnsExpected(DockStyle dock, AnchorStyles value, AnchorStyles expectedAnchor, DockStyle expectedDock, int expectedParentLayoutCallCount)
+        {
+            using var parent = new Control();
+            using var control = new Control
+            {
+                Parent = parent,
+                Dock = dock
+            };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                if (e.AffectedProperty == "Dock")
+                {
+                    Assert.Same(parent, sender);
+                    Assert.Same(control, e.AffectedControl);
+                    parentLayoutCallCount++;
+                }
+            }
+            parent.Layout += parentHandler;
+
+            try
+            {
+                control.Anchor = value;
+                Assert.Equal(expectedAnchor, control.Anchor);
+                Assert.Equal(expectedDock, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+
+                // Set same.
+                control.Anchor = value;
+                Assert.Equal(expectedAnchor, control.Anchor);
+                Assert.Equal(expectedDock, control.Dock);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Anchor_Set_TestData))]
+        public void Control_Anchor_SetWithHandle_GetReturnsExpected(AnchorStyles value, AnchorStyles expected)
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.Anchor = value;
+            Assert.Equal(expected, control.Anchor);
+            Assert.Equal(DockStyle.None, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.Anchor = value;
+            Assert.Equal(expected, control.Anchor);
+            Assert.Equal(DockStyle.None, control.Dock);
+            Assert.Equal(0, layoutCallCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetPointTheoryData))]
         public void Control_AutoScrollOffset_Set_GetReturnsExpected(Point value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 AutoScrollOffset = value
             };
@@ -308,35 +947,110 @@ namespace System.Windows.Forms.Tests
                 Parent = parent
             };
             int layoutCallCount = 0;
-            parent.Layout += (sender, e) =>
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
             {
-                if (e.AffectedProperty == "Parent")
-                {
-                    return;
-                }
-
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
                 Assert.Equal("AutoSize", e.AffectedProperty);
-                layoutCallCount++;
+                parentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+
+            try
+            {
+                control.AutoSize = value;
+                Assert.Equal(value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+                Assert.False(parent.IsHandleCreated);
+
+                // Set same.
+                control.AutoSize = value;
+                Assert.Equal(value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+                Assert.False(parent.IsHandleCreated);
+
+                // Set different.
+                control.AutoSize = !value;
+                Assert.Equal(!value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount + 1, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+                Assert.False(parent.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, 1)]
+        [InlineData(false, 0)]
+        public void Control_AutoSize_SetWithParentWithCustomLayoutEngine_GetReturnsExpected(bool value, int expectedLayoutCallCount)
+        {
+            using var parent = new CustomLayoutEngineControl();
+            using var control = new Control
+            {
+                Parent = parent
             };
+            var mockLayoutEngine = new Mock<LayoutEngine>(MockBehavior.Strict);
+            mockLayoutEngine
+                .Setup(e => e.Layout(parent, It.IsAny<LayoutEventArgs>()))
+                .Returns(false)
+                .Verifiable();
+            mockLayoutEngine
+                .Setup(e => e.InitLayout(control, BoundsSpecified.None));
+            parent.SetLayoutEngine(mockLayoutEngine.Object);
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("AutoSize", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
 
-            control.AutoSize = value;
-            Assert.Equal(value, control.AutoSize);
-            Assert.False(control.IsHandleCreated);
-            Assert.Equal(expectedLayoutCallCount, layoutCallCount);
+            try
+            {
+                control.AutoSize = value;
+                Assert.Equal(value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount, parentLayoutCallCount);
+                mockLayoutEngine.Verify(e => e.Layout(parent, It.IsAny<LayoutEventArgs>()), Times.Exactly(expectedLayoutCallCount));
+                Assert.False(control.IsHandleCreated);
+                Assert.False(parent.IsHandleCreated);
 
-            // Set same.
-            control.AutoSize = value;
-            Assert.Equal(value, control.AutoSize);
-            Assert.False(control.IsHandleCreated);
-            Assert.Equal(expectedLayoutCallCount, layoutCallCount);
+                // Set same.
+                control.AutoSize = value;
+                Assert.Equal(value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount, parentLayoutCallCount);
+                mockLayoutEngine.Verify(e => e.Layout(parent, It.IsAny<LayoutEventArgs>()), Times.Exactly(expectedLayoutCallCount));
+                Assert.False(control.IsHandleCreated);
+                Assert.False(parent.IsHandleCreated);
 
-            // Set different.
-            control.AutoSize = !value;
-            Assert.Equal(!value, control.AutoSize);
-            Assert.False(control.IsHandleCreated);
-            Assert.Equal(expectedLayoutCallCount + 1, layoutCallCount);
+                // Set different.
+                control.AutoSize = !value;
+                Assert.Equal(!value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount + 1, parentLayoutCallCount);
+                mockLayoutEngine.Verify(e => e.Layout(parent, It.IsAny<LayoutEventArgs>()), Times.Exactly(expectedLayoutCallCount + 1));
+                Assert.False(control.IsHandleCreated);
+                Assert.False(parent.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
         }
 
         [WinFormsTheory]
@@ -379,6 +1093,90 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
             Assert.Equal(0, layoutCallCount);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, 1)]
+        [InlineData(false, 0)]
+        public void Control_AutoSize_SetWithParentWithHandle_GetReturnsExpected(bool value, int expectedLayoutCallCount)
+        {
+            using var parent = new Control();
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.NotEqual(IntPtr.Zero, parent.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+            int parentInvalidatedCallCount = 0;
+            parent.Invalidated += (sender, e) => parentInvalidatedCallCount++;
+            int parentStyleChangedCallCount = 0;
+            parent.StyleChanged += (sender, e) => parentStyleChangedCallCount++;
+            int parentCreatedCallCount = 0;
+            parent.HandleCreated += (sender, e) => parentCreatedCallCount++;
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("AutoSize", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+
+            try
+            {
+                control.AutoSize = value;
+                Assert.Equal(value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount, parentLayoutCallCount);
+                Assert.True(control.IsHandleCreated);
+                Assert.Equal(0, invalidatedCallCount);
+                Assert.Equal(0, styleChangedCallCount);
+                Assert.Equal(0, createdCallCount);
+                Assert.True(parent.IsHandleCreated);
+                Assert.Equal(0, parentInvalidatedCallCount);
+                Assert.Equal(0, parentStyleChangedCallCount);
+                Assert.Equal(0, parentCreatedCallCount);
+
+                // Set same.
+                control.AutoSize = value;
+                Assert.Equal(value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount, parentLayoutCallCount);
+                Assert.True(control.IsHandleCreated);
+                Assert.Equal(0, invalidatedCallCount);
+                Assert.Equal(0, styleChangedCallCount);
+                Assert.Equal(0, createdCallCount);
+                Assert.True(parent.IsHandleCreated);
+                Assert.Equal(0, parentInvalidatedCallCount);
+                Assert.Equal(0, parentStyleChangedCallCount);
+                Assert.Equal(0, parentCreatedCallCount);
+
+                // Set different.
+                control.AutoSize = !value;
+                Assert.Equal(!value, control.AutoSize);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedLayoutCallCount + 1, parentLayoutCallCount);
+                Assert.True(control.IsHandleCreated);
+                Assert.Equal(0, invalidatedCallCount);
+                Assert.Equal(0, styleChangedCallCount);
+                Assert.Equal(0, createdCallCount);
+                Assert.True(parent.IsHandleCreated);
+                Assert.Equal(0, parentInvalidatedCallCount);
+                Assert.Equal(0, parentStyleChangedCallCount);
+                Assert.Equal(0, parentCreatedCallCount);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
         }
 
         [WinFormsFact]
@@ -827,11 +1625,11 @@ namespace System.Windows.Forms.Tests
             Assert.False(property.ShouldSerializeValue(control));
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
         public void Control_BackgroundImage_Set_GetReturnsExpected(Image value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 BackgroundImage = value
             };
@@ -850,11 +1648,11 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { null, 0 };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BackgroundImage_SetWithHandle_TestData))]
         public void Control_BackgroundImage_SetWithHandle_GetReturnsExpected(Image value, int expectedInvalidatedCallCount)
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -879,13 +1677,13 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
         public void Control_BackgroundImage_SetWithChildren_GetReturnsExpected(Image value)
         {
-            var child1 = new Control();
-            var child2 = new Control();
-            var control = new Control();
+            using var child1 = new Control();
+            using var child2 = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -901,21 +1699,21 @@ namespace System.Windows.Forms.Tests
             Assert.Null(child2.BackgroundImage);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetImageTheoryData))]
         public void Control_BackgroundImage_SetWithChildrenWithBackgroundImage_GetReturnsExpected(Image value)
         {
-            var image1 = new Bitmap(10, 10);
-            var image2 = new Bitmap(10, 10);
-            var child1 = new Control
+            using var image1 = new Bitmap(10, 10);
+            using var image2 = new Bitmap(10, 10);
+            using var child1 = new Control
             {
                 BackgroundImage = image1
             };
-            var child2 = new Control
+            using var child2 = new Control
             {
                 BackgroundImage = image2
             };
-            var control = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -931,10 +1729,10 @@ namespace System.Windows.Forms.Tests
             Assert.Same(image2, child2.BackgroundImage);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BackgroundImage_SetWithHandler_CallsBackgroundImageChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -973,10 +1771,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, callCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BackgroundImage_SetWithHandlerInDisposing_DoesNotCallBackgroundImageChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             int callCount = 0;
@@ -999,12 +1797,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, disposedCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BackgroundImage_SetWithChildrenWithHandler_CallsBackgroundImageChanged()
         {
-            var child1 = new Control();
-            var child2 = new Control();
-            var control = new Control();
+            using var child1 = new Control();
+            using var child2 = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -1084,20 +1882,20 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, child2CallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BackgroundImage_SetWithChildrenWithBackgroundImageWithHandler_CallsBackgroundImageChanged()
         {
-            var childBackgroundImage1 = new Bitmap(10, 10);
-            var childBackgroundImage2 = new Bitmap(10, 10);
-            var child1 = new Control
+            using var childBackgroundImage1 = new Bitmap(10, 10);
+            using var childBackgroundImage2 = new Bitmap(10, 10);
+            using var child1 = new Control
             {
                 BackgroundImage = childBackgroundImage1
             };
-            var child2 = new Control
+            using var child2 = new Control
             {
                 BackgroundImage = childBackgroundImage2
             };
-            var control = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -1177,11 +1975,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, child2CallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(ImageLayout))]
         public void Control_BackgroundImageLayout_Set_GetReturnsExpected(ImageLayout value)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 BackgroundImageLayout = value
             };
@@ -1196,7 +1994,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [InlineData(ImageLayout.Center, 1)]
         [InlineData(ImageLayout.None, 1)]
         [InlineData(ImageLayout.Stretch, 1)]
@@ -1204,7 +2002,7 @@ namespace System.Windows.Forms.Tests
         [InlineData(ImageLayout.Zoom, 1)]
         public void Control_BackgroundImageLayout_SetWithHandle_GetReturnsExpected(ImageLayout value, int expectedInvalidatedCallCount)
         {
-            var control = new SubControl();
+            using var control = new SubControl();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -1246,11 +2044,11 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new Bitmap(10, 10, PixelFormat.Format32bppRgb), ImageLayout.Zoom, false };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BackgroundImageLayout_SetWithBackgroundImage_TestData))]
         public void Control_BackgroundImageLayout_SetWithBackgroundImage_GetReturnsExpected(Image backgroundImage, ImageLayout value, bool expectedDoubleBuffered)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 BackgroundImage = backgroundImage,
                 BackgroundImageLayout = value
@@ -1264,10 +2062,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedDoubleBuffered, control.DoubleBuffered);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BackgroundImageLayout_SetWithHandler_CallsBackgroundImageLayoutChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -1299,10 +2097,10 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BackgroundImageLayout_SetWithHandlerInDisposing_DoesNotCallBackgroundImageLayoutChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             int callCount = 0;
@@ -1324,12 +2122,42 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, disposedCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImageLayout))]
         public void Control_BackgroundImageLayout_SetInvalid_ThrowsInvalidEnumArgumentException(ImageLayout value)
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.BackgroundImageLayout = value);
+        }
+
+        [WinFormsFact]
+        public void Control_BindingContext_GetWithParent_ReturnsExpected()
+        {
+            var bindingContext = new BindingContext();
+            using var parent = new Control
+            {
+                BindingContext = bindingContext
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.Same(bindingContext, control.BindingContext);
+        }
+
+        [WinFormsFact]
+        public void Control_BindingContext_GetWithParentCantAccessProperties_ReturnsExpected()
+        {
+            var bindingContext = new BindingContext();
+            using var parent = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            {
+                BindingContext = bindingContext
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.Null(control.BindingContext);
         }
 
         public static IEnumerable<object[]> BindingContext_Set_TestData()
@@ -1338,42 +2166,46 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new BindingContext() };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BindingContext_Set_TestData))]
         public void Control_BindingContext_Set_GetReturnsExpected(BindingContext value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 BindingContext = value
             };
             Assert.Same(value, control.BindingContext);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.BindingContext = value;
             Assert.Same(value, control.BindingContext);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(BindingContext_Set_TestData))]
         public void Control_BindingContext_SetWithNonNullBindingContext_GetReturnsExpected(BindingContext value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 BindingContext = new BindingContext()
             };
 
             control.BindingContext = value;
             Assert.Same(value, control.BindingContext);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.BindingContext = value;
             Assert.Same(value, control.BindingContext);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BindingContext_SetWithHandler_CallsBindingContextChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -1412,12 +2244,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, callCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BindingContext_SetWithChildrenWithHandler_CallsBindingContextChanged()
         {
-            var child1 = new Control();
-            var child2 = new Control();
-            var control = new Control();
+            using var child1 = new Control();
+            using var child2 = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -1497,20 +2329,20 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, childCallCount2);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_BindingContext_SetWithChildrenWithBindingContextWithHandler_CallsBindingContextChanged()
         {
             var childContext1 = new BindingContext();
             var childContext2 = new BindingContext();
-            var child1 = new Control
+            using var child1 = new Control
             {
                 BindingContext = childContext1
             };
-            var child2 = new Control
+            using var child2 = new Control
             {
                 BindingContext = childContext2
             };
-            var control = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -2198,22 +3030,149 @@ namespace System.Windows.Forms.Tests
             }
         }
 
-        /// <summary>
-        ///  Data for the CaptureGetSet test
-        /// </summary>
-        public static TheoryData<bool> CaptureGetSetData =>
-            CommonTestHelper.GetBoolTheoryData();
-
-        [Theory]
-        [MemberData(nameof(CaptureGetSetData))]
-        public void Control_CaptureGetSet(bool expected)
+        [WinFormsTheory]
+        [InlineData(true, true)]
+        [InlineData(true, false)]
+        [InlineData(false, true)]
+        [InlineData(false, false)]
+        public void Control_CanFocus_GetWithHandle_ReturnsExpected(bool enabled, bool visible)
         {
-            var cont = new Control
+            using var control = new Control
             {
-                Capture = expected
+                Enabled = enabled,
+                Visible = visible
             };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.False(control.CanFocus);
+        }
 
-            Assert.Equal(expected, cont.Capture);
+        [WinFormsTheory]
+        [InlineData(true, true, true)]
+        [InlineData(true, false, false)]
+        [InlineData(false, true, false)]
+        [InlineData(false, false, false)]
+        public void Control_CanSelect_Get_ReturnsExpected(bool enabled, bool visible, bool expected)
+        {
+            using var control = new Control
+            {
+                Enabled = enabled,
+                Visible = visible
+            };
+            Assert.Equal(expected, control.CanSelect);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, true, true)]
+        [InlineData(true, false, false)]
+        [InlineData(false, true, false)]
+        [InlineData(false, false, false)]
+        public void Control_CanSelect_GetWithParent_ReturnsExpected(bool enabled, bool visible, bool expected)
+        {
+            using var parent = new Control
+            {
+                Enabled = enabled,
+                Visible = visible
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.Equal(expected, control.CanSelect);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, true, true)]
+        [InlineData(true, false, false)]
+        [InlineData(false, true, false)]
+        [InlineData(false, false, false)]
+        public void Control_CanSelect_GetWithHandle_ReturnsExpected(bool enabled, bool visible, bool expected)
+        {
+            using var control = new Control
+            {
+                Enabled = enabled,
+                Visible = visible
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.Equal(expected, control.CanSelect);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, true, true)]
+        [InlineData(true, false, false)]
+        [InlineData(false, true, false)]
+        [InlineData(false, false, false)]
+        public void Control_CanSelect_GetWithParentWithHandle_ReturnsExpected(bool enabled, bool visible, bool expected)
+        {
+            using var parent = new Control
+            {
+                Enabled = enabled,
+                Visible = visible
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.NotEqual(IntPtr.Zero, parent.Handle);
+            Assert.Equal(expected, control.CanSelect);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_Capture_Set_GetReturnsExpected(bool value)
+        {
+            using var control = new Control
+            {
+                Capture = value
+            };
+            Assert.Equal(value, control.Capture);
+            Assert.Equal(value, control.IsHandleCreated);
+
+            // Set same.
+            control.Capture = value;
+            Assert.Equal(value, control.Capture);
+            Assert.Equal(value, control.IsHandleCreated);
+
+            // Set different.
+            control.Capture = !value;
+            Assert.Equal(!value, control.Capture);
+            Assert.True(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_Capture_SetWithHandle_GetReturnsExpected(bool value)
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.Capture = value;
+            Assert.Equal(value, control.Capture);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.Capture = value;
+            Assert.Equal(value, control.Capture);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set different.
+            control.Capture = !value;
+            Assert.Equal(!value, control.Capture);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
         }
 
         [WinFormsTheory]
@@ -2275,7 +3234,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_CausesValidation_SetWithHandler_CallsCausesValidationChanged()
         {
             using var control = new Control
@@ -2311,19 +3270,6 @@ namespace System.Windows.Forms.Tests
             control.CausesValidation = false;
             Assert.False(control.CausesValidation);
             Assert.Equal(2, callCount);
-        }
-
-        [Theory]
-        [InlineData(false, false)]
-        [InlineData(true, false)] // giving true cannot set to true
-        public void Control_CacheTextInternalGetSet(bool given, bool expected)
-        {
-            var cont = new Control
-            {
-                CacheTextInternal = given
-            };
-
-            Assert.Equal(expected, cont.CacheTextInternal);
         }
 
         public static IEnumerable<object[]> ClientSize_Get_TestData()
@@ -2578,42 +3524,47 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new ContextMenuStrip() };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ContextMenuStrip_Set_TestData))]
         public void Control_ContextMenuStrip_Set_GetReturnsExpected(ContextMenuStrip value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 ContextMenuStrip = value
             };
             Assert.Same(value, control.ContextMenuStrip);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.ContextMenuStrip = value;
             Assert.Same(value, control.ContextMenuStrip);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ContextMenuStrip_Set_TestData))]
-        public void Control_ContextMenuStrip_SetWithNonNullOldValue_GetReturnsExpected(ContextMenuStrip value)
+        public void Control_ContextMenuStrip_SetWithCustomOldValue_GetReturnsExpected(ContextMenuStrip value)
         {
-            var control = new Control
+            var oldValue = new ContextMenuStrip();
+            using var control = new Control
             {
-                ContextMenuStrip = new ContextMenuStrip()
+                ContextMenuStrip = oldValue
             };
             control.ContextMenuStrip = value;
             Assert.Same(value, control.ContextMenuStrip);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.ContextMenuStrip = value;
             Assert.Same(value, control.ContextMenuStrip);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_ContextMenuStrip_SetDisposeNew_RemovesContextMenuStrip()
         {
-            var menu = new ContextMenuStrip();
-            var control = new Control
+            using var menu = new ContextMenuStrip();
+            using var control = new Control
             {
                 ContextMenuStrip = menu
             };
@@ -2623,12 +3574,12 @@ namespace System.Windows.Forms.Tests
             Assert.Null(control.ContextMenuStrip);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_ContextMenuStrip_SetDisposeOld_RemovesContextMenuStrip()
         {
-            var menu1 = new ContextMenuStrip();
-            var menu2 = new ContextMenuStrip();
-            var control = new Control
+            using var menu1 = new ContextMenuStrip();
+            using var menu2 = new ContextMenuStrip();
+            using var control = new Control
             {
                 ContextMenuStrip = menu1
             };
@@ -2641,10 +3592,10 @@ namespace System.Windows.Forms.Tests
             Assert.Same(menu2, control.ContextMenuStrip);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_ContextMenuStrip_SetWithHandler_CallsContextMenuStripChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -2655,7 +3606,7 @@ namespace System.Windows.Forms.Tests
             control.ContextMenuStripChanged += handler;
 
             // Set different.
-            var menu1 = new ContextMenuStrip();
+            using var menu1 = new ContextMenuStrip();
             control.ContextMenuStrip = menu1;
             Assert.Same(menu1, control.ContextMenuStrip);
             Assert.Equal(1, callCount);
@@ -2666,7 +3617,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
 
             // Set different.
-            var menu2 = new ContextMenuStrip();
+            using var menu2 = new ContextMenuStrip();
             control.ContextMenuStrip = menu2;
             Assert.Same(menu2, control.ContextMenuStrip);
             Assert.Equal(2, callCount);
@@ -2683,43 +3634,219 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, callCount);
         }
 
-        [Theory]
+        public static IEnumerable<object[]> Controls_CustomCreateControlsInstance_TestData()
+        {
+            yield return new object[] { null };
+            yield return new object[] { new Control.ControlCollection(new Control()) };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Controls_CustomCreateControlsInstance_TestData))]
+        public void Control_Controls_GetCustomCreateControlsInstance_ReturnsExpected(Control.ControlCollection result)
+        {
+            using var control = new CustomCreateControlsInstanceControl
+            {
+                CreateControlsResult = result
+            };
+            Assert.Same(result, control.Controls);
+            Assert.Same(control.Controls, control.Controls);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        private class CustomCreateControlsInstanceControl : Control
+        {
+            public Control.ControlCollection CreateControlsResult { get; set; }
+
+            protected override Control.ControlCollection CreateControlsInstance() => CreateControlsResult;
+        }
+
+        [WinFormsFact]
+        public void Control_Controls_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Controls)];
+            using var control = new Control();
+            Assert.False(property.CanResetValue(control));
+
+            Assert.Empty(control.Controls);
+            Assert.False(property.CanResetValue(control));
+
+            using var child = new Control();
+            control.Controls.Add(child);
+            Assert.Same(child, Assert.Single(control.Controls));
+            Assert.False(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.Same(child, Assert.Single(control.Controls));
+            Assert.False(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Controls_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Controls)];
+            using var control = new Control();
+            Assert.True(property.ShouldSerializeValue(control));
+
+            Assert.Empty(control.Controls);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            using var child = new Control();
+            control.Controls.Add(child);
+            Assert.Same(child, Assert.Single(control.Controls));
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.Same(child, Assert.Single(control.Controls));
+            Assert.True(property.ShouldSerializeValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Cursor_GetUseWaitCursor_ReturnsExpected()
+        {
+            using var cursor = new Cursor((IntPtr)1);
+            using var control = new Control
+            {
+                UseWaitCursor = true
+            };
+            Assert.Same(Cursors.WaitCursor, control.Cursor);
+
+            // Set custom.
+            control.Cursor = cursor;
+            Assert.Same(Cursors.WaitCursor, control.Cursor);
+        }
+
+        [WinFormsFact]
+        public void Control_Cursor_GetWithParent_ReturnsExpected()
+        {
+            using var cursor1 = new Cursor((IntPtr)1);
+            using var cursor2 = new Cursor((IntPtr)2);
+            using var parent = new Control
+            {
+                Cursor = cursor1
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.Same(cursor1, control.Cursor);
+
+            // Set custom.
+            control.Cursor = cursor2;
+            Assert.Same(cursor2, control.Cursor);
+        }
+
+        [WinFormsFact]
+        public void Control_Cursor_GetWithParentCantAccessProperties_ReturnsExpected()
+        {
+            using var cursor1 = new Cursor((IntPtr)1);
+            using var cursor2 = new Cursor((IntPtr)2);
+            using var parent = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            {
+                Cursor = cursor1
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.Same(cursor1, control.Cursor);
+
+            // Set custom.
+            control.Cursor = cursor2;
+            Assert.Same(cursor2, control.Cursor);
+        }
+
+        [WinFormsFact]
+        public void Control_Cursor_GetWithDefaultCursor_ReturnsExpected()
+        {
+            using var cursor = new Cursor((IntPtr)1);
+            using var control = new CustomDefaultCursorControl();
+            Assert.Same(control.DefaultCursorResult, control.Cursor);
+
+            // Set custom.
+            control.Cursor = cursor;
+            Assert.Same(cursor, control.Cursor);
+        }
+
+        [WinFormsFact]
+        public void Control_Cursor_GetWithDefaultCursorWithParent_ReturnsExpected()
+        {
+            using var cursor1 = new Cursor((IntPtr)1);
+            using var cursor2 = new Cursor((IntPtr)2);
+            using var parent = new Control
+            {
+                Cursor = cursor1
+            };
+            using var control = new CustomDefaultCursorControl
+            {
+                Parent = parent
+            };
+            Assert.Same(control.DefaultCursorResult, control.Cursor);
+
+            // Set custom.
+            control.Cursor = cursor2;
+            Assert.Same(cursor2, control.Cursor);
+        }
+
+        private class CustomDefaultCursorControl : Control
+        {
+            public Cursor DefaultCursorResult { get; } = new Cursor((IntPtr)1);
+
+            protected override Cursor DefaultCursor => DefaultCursorResult;
+        }
+
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetCursorTheoryData))]
         public void Control_Cursor_Set_GetReturnsExpected(Cursor value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 Cursor = value
             };
             Assert.Same(value ?? Cursors.Default, control.Cursor);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Cursor = value;
             Assert.Same(value ?? Cursors.Default, control.Cursor);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetCursorTheoryData))]
         public void Control_Cursor_SetWithHandle_GetReturnsExpected(Cursor value)
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
 
             control.Cursor = value;
             Assert.Same(value ?? Cursors.Default, control.Cursor);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
 
             // Set same.
             control.Cursor = value;
             Assert.Same(value ?? Cursors.Default, control.Cursor);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetCursorTheoryData))]
         public void Control_Cursor_SetWithChildren_GetReturnsExpected(Cursor value)
         {
-            var child1 = new Control();
-            var child2 = new Control();
-            var control = new Control();
+            using var child1 = new Control();
+            using var child2 = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -2735,21 +3862,21 @@ namespace System.Windows.Forms.Tests
             Assert.Same(value ?? Cursors.Default, child2.Cursor);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetCursorTheoryData))]
         public void Control_Cursor_SetWithChildrenWithCursor_GetReturnsExpected(Cursor value)
         {
             var cursor1 = new Cursor((IntPtr)1);
             var cursor2 = new Cursor((IntPtr)1);
-            var child1 = new Control
+            using var child1 = new Control
             {
                 Cursor = cursor1
             };
-            var child2 = new Control
+            using var child2 = new Control
             {
                 Cursor = cursor2
             };
-            var control = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -2765,10 +3892,10 @@ namespace System.Windows.Forms.Tests
             Assert.Same(cursor2, child2.Cursor);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_Cursor_SetWithHandler_CallsCursorChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -2779,7 +3906,7 @@ namespace System.Windows.Forms.Tests
             control.CursorChanged += handler;
 
             // Set different.
-            var cursor1 = new Cursor((IntPtr)1);
+            using var cursor1 = new Cursor((IntPtr)1);
             control.Cursor = cursor1;
             Assert.Same(cursor1, control.Cursor);
             Assert.Equal(1, callCount);
@@ -2790,7 +3917,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
 
             // Set different.
-            var cursor2 = new Cursor((IntPtr)2);
+            using var cursor2 = new Cursor((IntPtr)2);
             control.Cursor = cursor2;
             Assert.Same(cursor2, control.Cursor);
             Assert.Equal(2, callCount);
@@ -2807,12 +3934,12 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, callCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_Cursor_SetWithChildrenWithHandler_CallsCursorChanged()
         {
-            var child1 = new Control();
-            var child2 = new Control();
-            var control = new Control();
+            using var child1 = new Control();
+            using var child2 = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -2842,7 +3969,7 @@ namespace System.Windows.Forms.Tests
             child2.CursorChanged += childHandler2;
 
             // Set different.
-            var cursor1 = new Cursor((IntPtr)1);
+            using var cursor1 = new Cursor((IntPtr)1);
             control.Cursor = cursor1;
             Assert.Same(cursor1, control.Cursor);
             Assert.Same(cursor1, child1.Cursor);
@@ -2861,7 +3988,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, child2CallCount);
 
             // Set different.
-            var cursor2 = new Cursor((IntPtr)2);
+            using var cursor2 = new Cursor((IntPtr)2);
             control.Cursor = cursor2;
             Assert.Same(cursor2, control.Cursor);
             Assert.Same(cursor2, child1.Cursor);
@@ -2892,20 +4019,20 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, child2CallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_Cursor_SetWithChildrenWithCursorWithHandler_CallsCursorChanged()
         {
-            var childCursor1 = new Cursor((IntPtr)1);
-            var childCursor2 = new Cursor((IntPtr)2);
-            var child1 = new Control
+            using var childCursor1 = new Cursor((IntPtr)1);
+            using var childCursor2 = new Cursor((IntPtr)2);
+            using var child1 = new Control
             {
                 Cursor = childCursor1
             };
-            var child2 = new Control
+            using var child2 = new Control
             {
                 Cursor = childCursor2
             };
-            var control = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -2935,7 +4062,7 @@ namespace System.Windows.Forms.Tests
             child2.CursorChanged += childHandler2;
 
             // Set different.
-            var cursor1 = new Cursor((IntPtr)3);
+            using var cursor1 = new Cursor((IntPtr)3);
             control.Cursor = cursor1;
             Assert.Same(cursor1, control.Cursor);
             Assert.Same(childCursor1, child1.Cursor);
@@ -2954,7 +4081,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, child2CallCount);
 
             // Set different.
-            var cursor2 = new Cursor((IntPtr)4);
+            using var cursor2 = new Cursor((IntPtr)4);
             control.Cursor = cursor2;
             Assert.Same(cursor2, control.Cursor);
             Assert.Same(childCursor1, child1.Cursor);
@@ -2985,40 +4112,195 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, child2CallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DockStyle))]
         public void Control_Dock_Set_GetReturnsExpected(DockStyle value)
         {
-            var control = new Control
-            {
-                Dock = value
-            };
+            using var control = new Control();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.Dock = value;
             Assert.Equal(value, control.Dock);
             Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Dock = value;
             Assert.Equal(value, control.Dock);
             Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DockStyle))]
         public void Control_Dock_SetWithOldValue_GetReturnsExpected(DockStyle value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 Dock = DockStyle.Top
             };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
 
             control.Dock = value;
             Assert.Equal(value, control.Dock);
             Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Dock = value;
             Assert.Equal(value, control.Dock);
             Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+            Assert.Equal(0, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        public static IEnumerable<object[]> Dock_SetWithParent_TestData()
+        {
+            yield return new object[] { DockStyle.Bottom, 1 };
+            yield return new object[] { DockStyle.Fill, 1 };
+            yield return new object[] { DockStyle.Left, 1 };
+            yield return new object[] { DockStyle.None, 0 };
+            yield return new object[] { DockStyle.Right, 1 };
+            yield return new object[] { DockStyle.Top, 1 };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Dock_SetWithParent_TestData))]
+        public void Control_Dock_SetWithParent_GetReturnsExpected(DockStyle value, int expectedParentLayoutCallCount)
+        {
+            using var parent = new Control();
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Dock", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+
+            try
+            {
+                control.Dock = value;
+                Assert.Equal(value, control.Dock);
+                Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+
+                // Set same.
+                control.Dock = value;
+                Assert.Equal(value, control.Dock);
+                Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
+        }
+
+        public static IEnumerable<object[]> Control_Dock_SetWithOldValueWithParent_TestData()
+        {
+            yield return new object[] { DockStyle.Bottom, DockStyle.Bottom, 0 };
+            yield return new object[] { DockStyle.Fill, DockStyle.Bottom, 1 };
+            yield return new object[] { DockStyle.Left, DockStyle.Bottom, 1 };
+            yield return new object[] { DockStyle.None, DockStyle.Bottom, 1 };
+            yield return new object[] { DockStyle.Right, DockStyle.Bottom, 1 };
+            yield return new object[] { DockStyle.Top, DockStyle.Bottom, 1 };
+
+            yield return new object[] { DockStyle.Bottom, DockStyle.Fill, 1 };
+            yield return new object[] { DockStyle.Fill, DockStyle.Fill, 0 };
+            yield return new object[] { DockStyle.Left, DockStyle.Fill, 1 };
+            yield return new object[] { DockStyle.None, DockStyle.Fill, 1 };
+            yield return new object[] { DockStyle.Right, DockStyle.Fill, 1 };
+            yield return new object[] { DockStyle.Top, DockStyle.Fill, 1 };
+
+            yield return new object[] { DockStyle.Bottom, DockStyle.Left, 1 };
+            yield return new object[] { DockStyle.Fill, DockStyle.Left, 1 };
+            yield return new object[] { DockStyle.Left, DockStyle.Left, 0 };
+            yield return new object[] { DockStyle.None, DockStyle.Left, 1 };
+            yield return new object[] { DockStyle.Right, DockStyle.Left, 1 };
+            yield return new object[] { DockStyle.Top, DockStyle.Left, 1 };
+
+            yield return new object[] { DockStyle.Bottom, DockStyle.None, 1 };
+            yield return new object[] { DockStyle.Fill, DockStyle.None, 1 };
+            yield return new object[] { DockStyle.Left, DockStyle.None, 1 };
+            yield return new object[] { DockStyle.None, DockStyle.None, 0 };
+            yield return new object[] { DockStyle.Right, DockStyle.None, 1 };
+            yield return new object[] { DockStyle.Top, DockStyle.None, 1 };
+
+            yield return new object[] { DockStyle.Bottom, DockStyle.Right, 1 };
+            yield return new object[] { DockStyle.Fill, DockStyle.Right, 1 };
+            yield return new object[] { DockStyle.Left, DockStyle.Right, 1 };
+            yield return new object[] { DockStyle.None, DockStyle.Right, 1 };
+            yield return new object[] { DockStyle.Right, DockStyle.Right, 0 };
+            yield return new object[] { DockStyle.Top, DockStyle.Right, 1 };
+
+            yield return new object[] { DockStyle.Bottom, DockStyle.Top, 1 };
+            yield return new object[] { DockStyle.Fill, DockStyle.Top, 1 };
+            yield return new object[] { DockStyle.Left, DockStyle.Top, 1 };
+            yield return new object[] { DockStyle.None, DockStyle.Top, 1 };
+            yield return new object[] { DockStyle.Right, DockStyle.Top, 1 };
+            yield return new object[] { DockStyle.Top, DockStyle.Top, 0 };
+        }
+
+        [WinFormsTheory]
+        [MemberData(nameof(Control_Dock_SetWithOldValueWithParent_TestData))]
+        public void Control_Dock_SetWithOldValueWithParent_GetReturnsExpected(DockStyle oldValue, DockStyle value, int expectedParentLayoutCallCount)
+        {
+            using var parent = new Control();
+            using var control = new Control
+            {
+                Dock = oldValue,
+                Parent = parent
+            };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+            int parentLayoutCallCount = 0;
+            void parentHandler(object sender, LayoutEventArgs e)
+            {
+                Assert.Same(parent, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Dock", e.AffectedProperty);
+                parentLayoutCallCount++;
+            }
+            parent.Layout += parentHandler;
+
+            try
+            {
+                control.Dock = value;
+                Assert.Equal(value, control.Dock);
+                Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+
+                // Set same.
+                control.Dock = value;
+                Assert.Equal(value, control.Dock);
+                Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+                Assert.Equal(0, layoutCallCount);
+                Assert.Equal(expectedParentLayoutCallCount, parentLayoutCallCount);
+                Assert.False(control.IsHandleCreated);
+            }
+            finally
+            {
+                parent.Layout -= parentHandler;
+            }
         }
 
         public static IEnumerable<object[]> Dock_SetWithAnchor_TestData()
@@ -3032,11 +4314,11 @@ namespace System.Windows.Forms.Tests
             }
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Dock_SetWithAnchor_TestData))]
         public void Control_Dock_SetWithAnchor_GetReturnsExpected(AnchorStyles anchor, DockStyle value, AnchorStyles expectedAnchor)
         {
-            var control = new Control
+            using var control = new Control
             {
                 Anchor = anchor
             };
@@ -3051,10 +4333,48 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(expectedAnchor, control.Anchor);
         }
 
-        [Fact]
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(DockStyle))]
+        public void Control_Dock_SetWithHandle_GetReturnsExpected(DockStyle value)
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.Dock = value;
+            Assert.Equal(value, control.Dock);
+            Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+            Assert.Equal(0, layoutCallCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.Dock = value;
+            Assert.Equal(value, control.Dock);
+            Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
+            Assert.Equal(0, layoutCallCount);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsFact]
         public void Control_Dock_SetWithHandler_CallsDockChanged()
         {
-            var control = new Control();
+            using var control = new Control
+            {
+                Dock = DockStyle.None
+            };
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -3086,28 +4406,28 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(DockStyle))]
         public void Control_Dock_SetInvalid_ThrowsInvalidEnumArgumentException(DockStyle value)
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.Dock = value);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Control_DoubleBuffered_Get_ReturnsExpected(bool value)
         {
-            var control = new SubControl();
+            using var control = new SubControl();
             control.SetStyle(ControlStyles.OptimizedDoubleBuffer, value);
             Assert.Equal(value, control.DoubleBuffered);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Control_DoubleBuffered_Set_GetReturnsExpected(bool value)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 DoubleBuffered = value
             };
@@ -3128,11 +4448,11 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Control_DoubleBuffered_SetWithHandle_GetReturnsExpected(bool value)
         {
-            var control = new SubControl();
+            using var control = new SubControl();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
@@ -3167,6 +4487,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, styleChangedCallCount);
             Assert.Equal(0, createdCallCount);
         }
+
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Control_Enabled_Set_GetReturnsExpected(bool value)
@@ -3429,11 +4750,83 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, childCallCount2);
         }
 
+        [WinFormsFact]
+        public void Control_Enabled_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Enabled)];
+            using var control = new Control();
+            Assert.False(property.CanResetValue(control));
+
+            control.Enabled = false;
+            Assert.False(control.Enabled);
+            Assert.True(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.True(control.Enabled);
+            Assert.False(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Enabled_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Enabled)];
+            using var control = new Control();
+            Assert.False(property.ShouldSerializeValue(control));
+
+            control.Enabled = false;
+            Assert.False(control.Enabled);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.True(control.Enabled);
+            Assert.False(property.ShouldSerializeValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Font_GetWithParent_ReturnsExpected()
+        {
+            using var font1 = new Font("Arial", 8.25f);
+            using var font2 = new Font("Arial", 8.5f);
+            using var parent = new Control
+            {
+                Font = font1
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.Same(font1, control.Font);
+
+            // Set custom.
+            control.Font = font2;
+            Assert.Same(font2, control.Font);
+        }
+
+        [WinFormsFact]
+        public void Control_Font_GetWithParentCantAccessProperties_ReturnsExpected()
+        {
+            using var font1 = new Font("Arial", 8.25f);
+            using var font2 = new Font("Arial", 8.5f);
+            using var parent = new SubAxHost("00000000-0000-0000-0000-000000000000")
+            {
+                Font = font1
+            };
+            using var control = new Control
+            {
+                Parent = parent
+            };
+            Assert.Equal(Control.DefaultFont, control.Font);
+
+            // Set custom.
+            control.Font = font2;
+            Assert.Same(font2, control.Font);
+        }
+
         [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
         public void Control_Font_Set_GetReturnsExpected(Font value)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 Font = value
             };
@@ -3459,7 +4852,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(Font_SetWithFontHeight_TestData))]
         public void Control_Font_SetWithFontHeight_GetReturnsExpected(Font value, int expectedFontHeight)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 FontHeight = 10,
                 Font = value
@@ -3486,7 +4879,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(Font_SetNonNullOldValueWithFontHeight_TestData))]
         public void Control_Font_SetNonNullOldValueWithFontHeight_GetReturnsExpected(Font value, int expectedFontHeight)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 FontHeight = 10,
                 Font = new Font("Arial", 1)
@@ -3508,7 +4901,7 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetFontTheoryData))]
         public void Control_Font_SetWithNonNullOldValue_GetReturnsExpected(Font value)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 Font = new Font("Arial", 1)
             };
@@ -3538,7 +4931,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(Font_SetWithHandle_TestData))]
         public void Control_Font_SetWithHandle_GetReturnsExpected(bool userPaint, Font value, int expectedInvalidatedCallCount)
         {
-            var control = new SubControl();
+            using var control = new SubControl();
             control.SetStyle(ControlStyles.UserPaint, userPaint);
             Assert.NotEqual(IntPtr.Zero, control.Handle);
             Assert.Equal(userPaint, control.GetStyle(ControlStyles.UserPaint));
@@ -3581,7 +4974,7 @@ namespace System.Windows.Forms.Tests
         [MemberData(nameof(Font_SetWithNonNullOldValueWithHandle_TestData))]
         public void Control_Font_SetWithNonNullOldValueWithHandle_GetReturnsExpected(bool userPaint, Font value)
         {
-            var control = new SubControl
+            using var control = new SubControl
             {
                 Font = new Font("Arial", 1)
             };
@@ -3617,7 +5010,7 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void Control_Font_SetWithHandler_CallsFontChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -3628,7 +5021,7 @@ namespace System.Windows.Forms.Tests
             control.FontChanged += handler;
 
             // Set different.
-            Font font1 = new Font("Arial", 8.25f);
+            using var font1 = new Font("Arial", 8.25f);
             control.Font = font1;
             Assert.Same(font1, control.Font);
             Assert.Equal(1, callCount);
@@ -3639,7 +5032,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, callCount);
 
             // Set different.
-            Font font2 = SystemFonts.DialogFont;
+            using var font2 = SystemFonts.DialogFont;
             control.Font = font2;
             Assert.Same(font2, control.Font);
             Assert.Equal(2, callCount);
@@ -3659,9 +5052,9 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void Control_Font_SetWithChildrenWithHandler_CallsFontChanged()
         {
-            var child1 = new Control();
-            var child2 = new Control();
-            var control = new Control();
+            using var child1 = new Control();
+            using var child2 = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -3691,7 +5084,7 @@ namespace System.Windows.Forms.Tests
             child2.FontChanged += childHandler2;
 
             // Set different.
-            Font font1 = new Font("Arial", 8.25f);
+            using var font1 = new Font("Arial", 8.25f);
             control.Font = font1;
             Assert.Same(font1, control.Font);
             Assert.Same(font1, child1.Font);
@@ -3710,7 +5103,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(1, childCallCount2);
 
             // Set different.
-            Font font2 = SystemFonts.DialogFont;
+            using var font2 = SystemFonts.DialogFont;
             control.Font = font2;
             Assert.Same(font2, control.Font);
             Assert.Same(font2, child1.Font);
@@ -3744,17 +5137,17 @@ namespace System.Windows.Forms.Tests
         [WinFormsFact]
         public void Control_Font_SetWithChildrenWithFontWithHandler_CallsFontChanged()
         {
-            var childFont1 = new Font("Arial", 1);
-            var childFont2 = new Font("Arial", 1);
-            var child1 = new Control
+            using var childFont1 = new Font("Arial", 1);
+            using var childFont2 = new Font("Arial", 1);
+            using var child1 = new Control
             {
                 Font = childFont1
             };
-            var child2 = new Control
+            using var child2 = new Control
             {
                 Font = childFont2
             };
-            var control = new Control();
+            using var control = new Control();
             control.Controls.Add(child1);
             control.Controls.Add(child2);
 
@@ -3784,7 +5177,7 @@ namespace System.Windows.Forms.Tests
             child2.FontChanged += childHandler2;
 
             // Set different.
-            Font font1 = new Font("Arial", 8.25f);
+            using var font1 = new Font("Arial", 8.25f);
             control.Font = font1;
             Assert.Same(font1, control.Font);
             Assert.Same(childFont1, child1.Font);
@@ -3803,7 +5196,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, childCallCount2);
 
             // Set different.
-            Font font2 = SystemFonts.DialogFont;
+            using var font2 = SystemFonts.DialogFont;
             control.Font = font2;
             Assert.Same(font2, control.Font);
             Assert.Same(childFont1, child1.Font);
@@ -3832,6 +5225,56 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(3, callCount);
             Assert.Equal(0, childCallCount1);
             Assert.Equal(0, childCallCount2);
+        }
+
+        [WinFormsFact]
+        public void Control_Font_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Font)];
+            using var control = new Control();
+            Assert.False(property.CanResetValue(control));
+
+            using var font = new Font("Arial", 8.25f);
+            control.Font = font;
+            Assert.Same(font, control.Font);
+            Assert.True(property.CanResetValue(control));
+
+            control.Font = null;
+            Assert.Equal(Control.DefaultFont, control.Font);
+            Assert.False(property.CanResetValue(control));
+
+            control.Font = font;
+            Assert.Same(font, control.Font);
+            Assert.True(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(Control.DefaultFont, control.Font);
+            Assert.False(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Font_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Font)];
+            using var control = new Control();
+            Assert.False(property.ShouldSerializeValue(control));
+
+            using var font = new Font("Arial", 8.25f);
+            control.Font = font;
+            Assert.Same(font, control.Font);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.Font = null;
+            Assert.Equal(Control.DefaultFont, control.Font);
+            Assert.False(property.ShouldSerializeValue(control));
+
+            control.Font = font;
+            Assert.Same(font, control.Font);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(Control.DefaultFont, control.Font);
+            Assert.False(property.ShouldSerializeValue(control));
         }
 
         [WinFormsTheory]
@@ -4212,15 +5655,16 @@ namespace System.Windows.Forms.Tests
             Assert.False(property.ShouldSerializeValue(control));
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_GetHandle()
         {
-            var cont = new Control();
+            using var cont = new Control();
 
             IntPtr intptr = cont.Handle;
 
             Assert.NotEqual(IntPtr.Zero, intptr);
         }
+
         [WinFormsTheory]
         [InlineData(-4, 1)]
         [InlineData(0, 0)]
@@ -4901,7 +6345,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { ImeMode.OnHalf, ImeMode.On };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImeMode_Set_TestData))]
         public void Control_ImeMode_Set_GetReturnsExpected(ImeMode value, ImeMode expected)
         {
@@ -4918,7 +6362,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImeMode_Set_TestData))]
         public void Control_ImeMode_SetWithHandle_GetReturnsExpected(ImeMode value, ImeMode expected)
         {
@@ -4947,7 +6391,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_ImeMode_SetWithHandler_CallsImeModeChanged()
         {
             using var control = new Control();
@@ -4982,7 +6426,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
         public void Control_ImeMode_SetInvalid_ThrowsInvalidEnumArgumentException(ImeMode value)
         {
@@ -5008,7 +6452,7 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { ImeMode.OnHalf, ImeMode.OnHalf };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImeModeBase_Set_TestData))]
         public void Control_ImeModeBase_Set_GetReturnsExpected(ImeMode value, ImeMode expected)
         {
@@ -5025,7 +6469,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(ImeModeBase_Set_TestData))]
         public void Control_ImeModeBase_SetWithHandle_GetReturnsExpected(ImeMode value, ImeMode expected)
         {
@@ -5054,7 +6498,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_ImeModeBase_SetWithHandler_CallsImeModeChanged()
         {
             using var control = new SubControl();
@@ -5089,7 +6533,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(ImeMode))]
         public void Control_ImeModeBase_SetInvalid_ThrowsInvalidEnumArgumentException(ImeMode value)
         {
@@ -5097,22 +6541,107 @@ namespace System.Windows.Forms.Tests
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.ImeModeBase = value);
         }
 
-        /// <summary>
-        ///  Data for the IsAccessibleGetSet test
-        /// </summary>
-        public static TheoryData<bool> IsAccessibleGetSetData =>
-            CommonTestHelper.GetBoolTheoryData();
-
-        [Theory]
-        [MemberData(nameof(IsAccessibleGetSetData))]
-        public void Control_IsAccessibleGetSet(bool expected)
+        [WinFormsFact]
+        public async Task Control_InvokeRequired_Get_ReturnsExpected()
         {
-            var cont = new Control
-            {
-                IsAccessible = expected
-            };
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.False(control.InvokeRequired);
 
-            Assert.Equal(expected, cont.IsAccessible);
+            await Task.Run(() =>
+            {
+                Assert.True(control.InvokeRequired);
+            });
+        }
+
+        [WinFormsFact]
+        public async Task Control_InvokeRequired_GetWithHandle_ReturnsExpected()
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.False(control.InvokeRequired);
+
+            await Task.Run(() =>
+            {
+                Assert.True(control.InvokeRequired);
+            });
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_IsAccessible_Set_GetReturnsExpected(bool value)
+        {
+            using var control = new Control
+            {
+                IsAccessible = value
+            };
+            Assert.Equal(value, control.IsAccessible);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.IsAccessible = value;
+            Assert.Equal(value, control.IsAccessible);
+            Assert.False(control.IsHandleCreated);
+
+            // Set different.
+            control.IsAccessible = !value;
+            Assert.Equal(!value, control.IsAccessible);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsFact]
+        public void Control_IsMirrored_Get_ReturnsExpected()
+        {
+            using var control = new Control();
+            Assert.False(control.IsMirrored);
+
+            // Call again to test caching behavior.
+            Assert.False(control.IsMirrored);
+        }
+
+        [WinFormsFact]
+        public void Control_IsMirrored_GetLayoutRtl_ReturnsExpected()
+        {
+            using var control = new RightToLeftControl();
+            Assert.True(control.IsMirrored);
+
+            // Call again to test caching behavior.
+            Assert.True(control.IsMirrored);
+        }
+
+        [WinFormsFact]
+        public void Control_IsMirrored_GetLayoutRtlWithHandle_ReturnsExpected()
+        {
+            using var control = new RightToLeftControl();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.True(control.IsMirrored);
+
+            // Call again to test caching behavior.
+            Assert.True(control.IsMirrored);
+        }
+
+        [WinFormsFact]
+        public void Control_IsMirrored_GetWithHandle_ReturnsExpected()
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.False(control.IsMirrored);
+
+            // Call again to test caching behavior.
+            Assert.False(control.IsMirrored);
+        }
+
+        private class RightToLeftControl : Control
+        {
+            protected override CreateParams CreateParams
+            {
+                get
+                {
+                    CreateParams cp = base.CreateParams;
+                    cp.ExStyle |= (int)User32.WS_EX.LAYOUTRTL;
+                    return cp;
+                }
+            }
         }
 
         [WinFormsTheory]
@@ -5299,7 +6828,7 @@ namespace System.Windows.Forms.Tests
 
         [WinFormsTheory]
         [MemberData(nameof(Left_SetWithHandle_TestData))]
-        public void Control_Left_SetWithHandle_GetReturnsExpected(bool resizeRedraw, int value,  int expectedLocationChangedCallCount)
+        public void Control_Left_SetWithHandle_GetReturnsExpected(bool resizeRedraw, int value, int expectedLocationChangedCallCount)
         {
             using var control = new SubControl();
             control.SetStyle(ControlStyles.ResizeRedraw, resizeRedraw);
@@ -6023,6 +7552,54 @@ namespace System.Windows.Forms.Tests
         }
 
         [WinFormsFact]
+        public void Control_Location_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Location)];
+            using var control = new Control();
+            Assert.True(property.CanResetValue(control));
+
+            control.Location = new Point(1, 0);
+            Assert.Equal(new Point(1, 0), control.Location);
+            Assert.True(property.CanResetValue(control));
+
+            control.Location = new Point(0, 1);
+            Assert.Equal(new Point(0, 1), control.Location);
+            Assert.True(property.CanResetValue(control));
+
+            control.Location = new Point(1, 2);
+            Assert.Equal(new Point(1, 2), control.Location);
+            Assert.True(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(Point.Empty, control.Location);
+            Assert.True(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Location_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Location)];
+            using var control = new Control();
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.Location = new Point(1, 0);
+            Assert.Equal(new Point(1, 0), control.Location);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.Location = new Point(0, 1);
+            Assert.Equal(new Point(0, 1), control.Location);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.Location = new Point(1, 2);
+            Assert.Equal(new Point(1, 2), control.Location);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(Point.Empty, control.Location);
+            Assert.True(property.ShouldSerializeValue(control));
+        }
+
+        [WinFormsFact]
         public void Control_Location_SetWithHandler_CallsLocationChanged()
         {
             using var control = new Control();
@@ -6411,7 +7988,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -6468,7 +8045,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -6517,7 +8094,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MaximumSize", e.AffectedProperty);
+                Assert.Equal("MaximumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -6572,7 +8149,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MaximumSize", e.AffectedProperty);
+                Assert.Equal("MaximumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -6724,7 +8301,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MaximumSize", e.AffectedProperty);
+                Assert.Equal("MaximumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -6791,7 +8368,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MaximumSize", e.AffectedProperty);
+                Assert.Equal("MaximumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -6848,6 +8425,14 @@ namespace System.Windows.Forms.Tests
             using var control = new Control();
             Assert.False(property.CanResetValue(control));
 
+            control.MaximumSize = new Size(1, 0);
+            Assert.Equal(new Size(1, 0), control.MaximumSize);
+            Assert.True(property.CanResetValue(control));
+
+            control.MaximumSize = new Size(0, 1);
+            Assert.Equal(new Size(0, 1), control.MaximumSize);
+            Assert.True(property.CanResetValue(control));
+
             control.MaximumSize = new Size(1, 2);
             Assert.Equal(new Size(1, 2), control.MaximumSize);
             Assert.True(property.CanResetValue(control));
@@ -6863,6 +8448,14 @@ namespace System.Windows.Forms.Tests
             PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.MaximumSize)];
             using var control = new Control();
             Assert.False(property.ShouldSerializeValue(control));
+
+            control.MaximumSize = new Size(1, 0);
+            Assert.Equal(new Size(1, 0), control.MaximumSize);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.MaximumSize = new Size(0, 1);
+            Assert.Equal(new Size(0, 1), control.MaximumSize);
+            Assert.True(property.ShouldSerializeValue(control));
 
             control.MaximumSize = new Size(1, 2);
             Assert.Equal(new Size(1, 2), control.MaximumSize);
@@ -6929,7 +8522,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -6976,7 +8569,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -7029,7 +8622,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -7060,7 +8653,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -7092,7 +8685,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
 
@@ -7139,7 +8732,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
             int parentLayoutCallCount = 0;
@@ -7147,7 +8740,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MinimumSize", e.AffectedProperty);
+                Assert.Equal("MinimumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -7200,7 +8793,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
             int parentLayoutCallCount = 0;
@@ -7208,7 +8801,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MinimumSize", e.AffectedProperty);
+                Assert.Equal("MinimumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -7259,7 +8852,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -7319,7 +8912,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -7385,7 +8978,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
             Assert.NotEqual(IntPtr.Zero, control.Handle);
@@ -7445,7 +9038,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
             int parentLayoutCallCount = 0;
@@ -7453,7 +9046,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MinimumSize", e.AffectedProperty);
+                Assert.Equal("MinimumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -7533,7 +9126,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(control, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Bounds", e.AffectedProperty);
+                Assert.Equal("Bounds", e.AffectedProperty);
                 layoutCallCount++;
             };
             int parentLayoutCallCount = 0;
@@ -7541,7 +9134,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("MinimumSize", e.AffectedProperty);
+                Assert.Equal("MinimumSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -7598,6 +9191,14 @@ namespace System.Windows.Forms.Tests
             using var control = new Control();
             Assert.False(property.CanResetValue(control));
 
+            control.MinimumSize = new Size(1, 0);
+            Assert.Equal(new Size(1, 0), control.MinimumSize);
+            Assert.True(property.CanResetValue(control));
+
+            control.MinimumSize = new Size(0, 1);
+            Assert.Equal(new Size(0, 1), control.MinimumSize);
+            Assert.True(property.CanResetValue(control));
+
             control.MinimumSize = new Size(1, 2);
             Assert.Equal(new Size(1, 2), control.MinimumSize);
             Assert.True(property.CanResetValue(control));
@@ -7614,6 +9215,14 @@ namespace System.Windows.Forms.Tests
             using var control = new Control();
             Assert.False(property.ShouldSerializeValue(control));
 
+            control.MinimumSize = new Size(1, 0);
+            Assert.Equal(new Size(1, 0), control.MinimumSize);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.MinimumSize = new Size(0, 1);
+            Assert.Equal(new Size(0, 1), control.MinimumSize);
+            Assert.True(property.ShouldSerializeValue(control));
+
             control.MinimumSize = new Size(1, 2);
             Assert.Equal(new Size(1, 2), control.MinimumSize);
             Assert.True(property.ShouldSerializeValue(control));
@@ -7621,6 +9230,34 @@ namespace System.Windows.Forms.Tests
             property.ResetValue(control);
             Assert.Equal(Size.Empty, control.MinimumSize);
             Assert.False(property.ShouldSerializeValue(control));
+        }
+
+        [WinFormsTheory]
+        [InlineData(0, 0, 0, 0, 0, MouseButtons.None)]
+        [InlineData(1, 2, 3, 4, 5, MouseButtons.None)]
+        [InlineData(byte.MaxValue, 0, 0, 0, 0, MouseButtons.Left)]
+        [InlineData(0, byte.MaxValue, 0, 0, 0, MouseButtons.Middle)]
+        [InlineData(0, 0, byte.MaxValue, 0, 0, MouseButtons.Right)]
+        [InlineData(0, 0, 0, byte.MaxValue, 0, MouseButtons.XButton1)]
+        [InlineData(0, 0, 0, 0, byte.MaxValue, MouseButtons.XButton2)]
+        [InlineData(byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, MouseButtons.Left | MouseButtons.Middle | MouseButtons.Right | MouseButtons.XButton1 | MouseButtons.XButton2)]
+        public unsafe void MouseButtons_Get_ReturnsExpected(byte lState, byte mState, byte rState, byte xState1, byte xState2, MouseButtons expected)
+        {
+            using var control = new SubControl();
+
+            var keyState = new byte[256];
+            fixed (byte* b = keyState)
+            {
+                Assert.True(User32.GetKeyboardState(b).IsTrue());
+                keyState[(int)Keys.LButton] = lState;
+                keyState[(int)Keys.MButton] = mState;
+                keyState[(int)Keys.RButton] = rState;
+                keyState[(int)Keys.XButton1] = xState1;
+                keyState[(int)Keys.XButton2] = xState2;
+                User32.SetKeyboardState(b);
+            }
+
+            Assert.Equal(expected, Control.MouseButtons);
         }
 
         [WinFormsTheory]
@@ -7794,7 +9431,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Padding", e.AffectedProperty);
+                Assert.Equal("Padding", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -7892,7 +9529,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("Padding", e.AffectedProperty);
+                Assert.Equal("Padding", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -8013,6 +9650,7 @@ namespace System.Windows.Forms.Tests
         {
             yield return new object[] { null };
             yield return new object[] { new Control() };
+            yield return new object[] { new Form() };
         }
 
         [WinFormsTheory]
@@ -8208,27 +9846,29 @@ namespace System.Windows.Forms.Tests
             yield return new object[] { new Region(new Rectangle(1, 2, 3, 4)) };
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Region_Set_TestData))]
         public void Control_Region_Set_GetReturnsExpected(Region value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 Region = value
             };
             Assert.Same(value, control.Region);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Region = value;
             Assert.Same(value, control.Region);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Region_Set_TestData))]
         public void Control_Region_SetWithNonNullOldValue_GetReturnsExpected(Region value)
         {
-            var oldValue = new Region();
-            var control = new Control
+            using var oldValue = new Region();
+            using var control = new Control
             {
                 Region = oldValue
             };
@@ -8237,54 +9877,84 @@ namespace System.Windows.Forms.Tests
             control.Region = value;
             Assert.Same(value, control.Region);
             Assert.Throws<ArgumentException>(null, () => oldValue.MakeEmpty());
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.Region = value;
             Assert.Same(value, control.Region);
             Assert.Throws<ArgumentException>(null, () => oldValue.MakeEmpty());
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Region_Set_TestData))]
         public void Control_Region_SetWithHandle_GetReturnsExpected(Region value)
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
 
             control.Region = value;
             Assert.Same(value, control.Region);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
 
             // Set same.
             control.Region = value;
             Assert.Same(value, control.Region);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(Region_Set_TestData))]
         public void Control_Region_SetWithNonNullOldValueWithHandle_GetReturnsExpected(Region value)
         {
-            var oldValue = new Region();
-            var control = new Control
+            using var oldValue = new Region();
+            using var control = new Control
             {
                 Region = oldValue
             };
             oldValue.MakeEmpty();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
 
             control.Region = value;
             Assert.Same(value, control.Region);
             Assert.Throws<ArgumentException>(null, () => oldValue.MakeEmpty());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
 
             // Set same.
             control.Region = value;
             Assert.Same(value, control.Region);
             Assert.Throws<ArgumentException>(null, () => oldValue.MakeEmpty());
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_Region_SetWithHandler_CallsRegionChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -8295,20 +9965,20 @@ namespace System.Windows.Forms.Tests
             control.RegionChanged += handler;
 
             // Set different.
-            var context1 = new Region();
-            control.Region = context1;
-            Assert.Same(context1, control.Region);
+            using var region1 = new Region();
+            control.Region = region1;
+            Assert.Same(region1, control.Region);
             Assert.Equal(1, callCount);
 
             // Set same.
-            control.Region = context1;
-            Assert.Same(context1, control.Region);
+            control.Region = region1;
+            Assert.Same(region1, control.Region);
             Assert.Equal(1, callCount);
 
             // Set different.
-            var context2 = new Region();
-            control.Region = context2;
-            Assert.Same(context2, control.Region);
+            using var region2 = new Region();
+            control.Region = region2;
+            Assert.Same(region2, control.Region);
             Assert.Equal(2, callCount);
 
             // Set null.
@@ -8319,12 +9989,12 @@ namespace System.Windows.Forms.Tests
 
             // Remove handler.
             control.RegionChanged -= handler;
-            control.Region = context1;
-            Assert.Same(context1, control.Region);
+            control.Region = region1;
+            Assert.Same(region1, control.Region);
             Assert.Equal(3, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Control_ResizeRedraw_Get_ReturnsExpected(bool value)
         {
@@ -8333,7 +10003,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value, control.ResizeRedraw);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Control_ResizeRedraw_Set_GetReturnsExpected(bool value)
         {
@@ -8355,44 +10025,165 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(!value, control.GetStyle(ControlStyles.ResizeRedraw));
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetRightToLeftTheoryData))]
         public void Control_RightToLeft_Set_GetReturnsExpected(RightToLeft value, RightToLeft expected)
         {
-            var control = new Control
+            using var control = new Control
             {
                 RightToLeft = value
             };
             Assert.Equal(expected, control.RightToLeft);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.RightToLeft = value;
             Assert.Equal(expected, control.RightToLeft);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetRightToLeftTheoryData))]
-        public void Control_RightToLeft_SetAsParent_GetReturnsExpected(RightToLeft value, RightToLeft expected)
+        public void Control_RightToLeft_SetWithOldValue_GetReturnsExpected(RightToLeft value, RightToLeft expected)
         {
-            var parent = new Control
+            using var control = new Control
             {
-                RightToLeft = value
+                RightToLeft = RightToLeft.Yes
             };
-            var control = new Control
-            {
-                Parent = parent
-            };
+
+            control.RightToLeft = value;
             Assert.Equal(expected, control.RightToLeft);
+            Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.RightToLeft = value;
             Assert.Equal(expected, control.RightToLeft);
+            Assert.False(control.IsHandleCreated);
         }
 
-        [Fact]
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetRightToLeftTheoryData))]
+        public void Control_RightToLeft_SetWithChildren_GetReturnsExpected(RightToLeft value, RightToLeft expected)
+        {
+            using var child1 = new Control();
+            using var child2 = new Control();
+            using var control = new Control();
+            control.Controls.Add(child1);
+            control.Controls.Add(child2);
+
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.Equal(expected, child1.RightToLeft);
+            Assert.Equal(expected, child2.RightToLeft);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.Equal(expected, child1.RightToLeft);
+            Assert.Equal(expected, child2.RightToLeft);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetRightToLeftTheoryData))]
+        public void Control_RightToLeft_SetWithChildrenWithRightToLeft_GetReturnsExpected(RightToLeft value, RightToLeft expected)
+        {
+            using var child1 = new Control
+            {
+                RightToLeft = RightToLeft.Yes
+            };
+            using var child2 = new Control
+            {
+                RightToLeft = RightToLeft.No
+            };
+            using var control = new Control();
+            control.Controls.Add(child1);
+            control.Controls.Add(child2);
+
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.No, child2.RightToLeft);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.No, child2.RightToLeft);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [InlineData(RightToLeft.Yes, RightToLeft.Yes, 1)]
+        [InlineData(RightToLeft.No, RightToLeft.No, 0)]
+        [InlineData(RightToLeft.Inherit, RightToLeft.No, 0)]
+        public void Control_RightToLeft_SetWithHandle_GetReturnsExpected(RightToLeft value, RightToLeft expected, int expectedCreatedCallCount)
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(expectedCreatedCallCount, createdCallCount);
+
+            // Set same.
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(expectedCreatedCallCount, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [InlineData(RightToLeft.Yes, RightToLeft.Yes, 0)]
+        [InlineData(RightToLeft.No, RightToLeft.No, 1)]
+        [InlineData(RightToLeft.Inherit, RightToLeft.No, 1)]
+        public void Control_RightToLeft_SetWithOldValueWithHandle_GetReturnsExpected(RightToLeft value, RightToLeft expected, int expectedCreatedCallCount)
+        {
+            using var control = new Control
+            {
+                RightToLeft = RightToLeft.Yes
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(expectedCreatedCallCount, createdCallCount);
+
+            // Set same.
+            control.RightToLeft = value;
+            Assert.Equal(expected, control.RightToLeft);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(expectedCreatedCallCount, createdCallCount);
+        }
+
+        [WinFormsFact]
         public void Control_RightToLeft_SetWithHandler_CallsRightToLeftChanged()
         {
-            var control = new Control();
+            using var control = new Control();
             int callCount = 0;
             EventHandler handler = (sender, e) =>
             {
@@ -8424,12 +10215,358 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsFact]
+        public void Control_RightToLeft_SetWithHandlerInDisposing_DoesNotCallRightToLeftChanged()
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+
+            int callCount = 0;
+            control.RightToLeftChanged += (sender, e) => callCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            int disposedCallCount = 0;
+            control.Disposed += (sender, e) =>
+            {
+                control.RightToLeft = RightToLeft.Yes;
+                Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+                Assert.Equal(0, callCount);
+                Assert.Equal(0, createdCallCount);
+                disposedCallCount++;
+            };
+
+            control.Dispose();
+            Assert.Equal(1, disposedCallCount);
+        }
+
+        [WinFormsFact]
+        public void Control_RightToLeft_SetWithChildrenWithHandler_CallsRightToLeftChanged()
+        {
+            using var child1 = new Control();
+            using var child2 = new Control
+            {
+                RightToLeft = RightToLeft.Inherit
+            };
+            using var control = new Control();
+            control.Controls.Add(child1);
+            control.Controls.Add(child2);
+
+            int callCount = 0;
+            int childCallCount1 = 0;
+            int childCallCount2 = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Same(EventArgs.Empty, e);
+                Assert.Equal(callCount, childCallCount1);
+                Assert.Equal(childCallCount1, childCallCount2);
+                callCount++;
+            };
+            EventHandler childHandler1 = (sender, e) =>
+            {
+                Assert.Same(child1, sender);
+                Assert.Same(EventArgs.Empty, e);
+                Assert.Equal(callCount - 1, childCallCount1);
+                Assert.Equal(childCallCount1, childCallCount2);
+                childCallCount1++;
+            };
+            EventHandler childHandler2 = (sender, e) =>
+            {
+                Assert.Same(child2, sender);
+                Assert.Same(EventArgs.Empty, e);
+                Assert.Equal(callCount, childCallCount1);
+                Assert.Equal(childCallCount1 - 1, childCallCount2);
+                childCallCount2++;
+            };
+            control.RightToLeftChanged += handler;
+            child1.RightToLeftChanged += childHandler1;
+            child2.RightToLeftChanged += childHandler2;
+
+            // Set different.
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child2.RightToLeft);
+            Assert.Equal(1, callCount);
+            Assert.Equal(1, childCallCount1);
+            Assert.Equal(1, childCallCount2);
+
+            // Set same.
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child2.RightToLeft);
+            Assert.Equal(1, callCount);
+            Assert.Equal(1, childCallCount1);
+            Assert.Equal(1, childCallCount2);
+
+            // Set different.
+            control.RightToLeft = RightToLeft.Inherit;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.Equal(RightToLeft.No, child1.RightToLeft);
+            Assert.Equal(RightToLeft.No, child2.RightToLeft);
+            Assert.Equal(2, callCount);
+            Assert.Equal(2, childCallCount1);
+            Assert.Equal(2, childCallCount2);
+
+            // Remove handler.
+            control.RightToLeftChanged -= handler;
+            child1.RightToLeftChanged -= childHandler1;
+            child2.RightToLeftChanged -= childHandler2;
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child2.RightToLeft);
+            Assert.Equal(2, callCount);
+            Assert.Equal(2, childCallCount1);
+            Assert.Equal(2, childCallCount2);
+        }
+
+        [WinFormsFact]
+        public void Control_RightToLeft_SetWithChildrenWithRightToLeftWithHandler_CallsRightToLeftChanged()
+        {
+            using var child1 = new Control
+            {
+                RightToLeft = RightToLeft.Yes
+            };
+            using var child2 = new Control
+            {
+                RightToLeft = RightToLeft.No
+            };
+            using var control = new Control();
+            control.Controls.Add(child1);
+            control.Controls.Add(child2);
+
+            int callCount = 0;
+            int childCallCount1 = 0;
+            int childCallCount2 = 0;
+            EventHandler handler = (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Same(EventArgs.Empty, e);
+                callCount++;
+            };
+            EventHandler childHandler1 = (sender, e) =>
+            {
+                Assert.Same(child1, sender);
+                Assert.Same(EventArgs.Empty, e);
+                childCallCount1++;
+            };
+            EventHandler childHandler2 = (sender, e) =>
+            {
+                Assert.Same(child2, sender);
+                Assert.Same(EventArgs.Empty, e);
+                childCallCount2++;
+            };
+            control.RightToLeftChanged += handler;
+            child1.RightToLeftChanged += childHandler1;
+            child2.RightToLeftChanged += childHandler2;
+
+            // Set different.
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.No, child2.RightToLeft);
+            Assert.Equal(1, callCount);
+            Assert.Equal(0, childCallCount1);
+            Assert.Equal(0, childCallCount2);
+
+            // Set same.
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.No, child2.RightToLeft);
+            Assert.Equal(1, callCount);
+            Assert.Equal(0, childCallCount1);
+            Assert.Equal(0, childCallCount2);
+
+            // Set different.
+            control.RightToLeft = RightToLeft.Inherit;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.No, child2.RightToLeft);
+            Assert.Equal(2, callCount);
+            Assert.Equal(0, childCallCount1);
+            Assert.Equal(0, childCallCount2);
+
+            // Remove handler.
+            control.RightToLeftChanged -= handler;
+            child1.RightToLeftChanged -= childHandler1;
+            child2.RightToLeftChanged -= childHandler2;
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.Equal(RightToLeft.Yes, child1.RightToLeft);
+            Assert.Equal(RightToLeft.No, child2.RightToLeft);
+            Assert.Equal(2, callCount);
+            Assert.Equal(0, childCallCount1);
+            Assert.Equal(0, childCallCount2);
+        }
+
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryDataInvalid), typeof(RightToLeft))]
         public void Control_RightToLeft_SetInvalid_ThrowsInvalidEnumArgumentException(RightToLeft value)
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.Throws<InvalidEnumArgumentException>("value", () => control.RightToLeft = value);
+        }
+
+        [WinFormsFact]
+        public void Control_RightToLeft_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.RightToLeft)];
+            using var control = new Control();
+            Assert.False(property.CanResetValue(control));
+
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.True(property.CanResetValue(control));
+
+            control.RightToLeft = RightToLeft.No;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.True(property.CanResetValue(control));
+
+            control.RightToLeft = RightToLeft.Inherit;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.False(property.CanResetValue(control));
+
+            control.RightToLeft = RightToLeft.No;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.True(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.False(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_RightToLeft_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.RightToLeft)];
+            using var control = new Control();
+            Assert.False(property.ShouldSerializeValue(control));
+
+            control.RightToLeft = RightToLeft.Yes;
+            Assert.Equal(RightToLeft.Yes, control.RightToLeft);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.RightToLeft = RightToLeft.No;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.RightToLeft = RightToLeft.Inherit;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.False(property.ShouldSerializeValue(control));
+
+            control.RightToLeft = RightToLeft.No;
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.False(property.ShouldSerializeValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_ShowFocusCues_GetWithHandle_ReturnsExpected()
+        {
+            using var control = new SubControl();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.False(control.ShowFocusCues);
+        }
+
+        [WinFormsTheory]
+        [InlineData((int)User32.UIS.CLEAR | ((int)User32.UISF.ACTIVE << 16), false)]
+        [InlineData((int)User32.UIS.CLEAR | ((int)User32.UISF.HIDEACCEL << 16), false)]
+        [InlineData((int)User32.UIS.CLEAR | ((int)User32.UISF.HIDEFOCUS << 16), true)]
+        [InlineData((int)User32.UIS.CLEAR | ((int)(User32.UISF.HIDEACCEL | User32.UISF.HIDEFOCUS) << 16), true)]
+        [InlineData((int)User32.UIS.SET | ((int)User32.UISF.ACTIVE << 16), false)]
+        [InlineData((int)User32.UIS.SET | ((int)User32.UISF.HIDEACCEL << 16), false)]
+        [InlineData((int)User32.UIS.SET | ((int)User32.UISF.HIDEFOCUS << 16), false)]
+        [InlineData((int)User32.UIS.SET | ((int)(User32.UISF.HIDEACCEL | User32.UISF.HIDEFOCUS) << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)User32.UISF.ACTIVE << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)User32.UISF.HIDEACCEL << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)User32.UISF.HIDEFOCUS << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)(User32.UISF.HIDEACCEL | User32.UISF.HIDEFOCUS) << 16), false)]
+        public void Control_ShowFocusCues_GetWithHandleMessageSent_ReturnsExpected(int wParam, bool expected)
+        {
+            using var control = new SubControl();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            User32.SendMessageW(control.Handle, User32.WM.UPDATEUISTATE, (IntPtr)wParam, IntPtr.Zero);
+            Assert.Equal(expected, control.ShowFocusCues);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_ShowFocusCues_GetWithSiteWithHandle_ReturnsExpected(bool designMode)
+        {
+            var mockSite = new Mock<ISite>(MockBehavior.Strict);
+            mockSite
+                .Setup(s => s.Container)
+                .Returns((IContainer)null);
+            mockSite
+                .Setup(s => s.GetService(typeof(AmbientProperties)))
+                .Returns(null);
+            mockSite
+                .Setup(s => s.DesignMode)
+                .Returns(designMode);
+            using var control = new SubControl
+            {
+                Site = mockSite.Object
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.False(control.ShowFocusCues);
+        }
+
+        [WinFormsFact]
+        public void Control_ShowKeyboardCues_GetWithHandle_ReturnsExpected()
+        {
+            using var control = new SubControl();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.False(control.ShowKeyboardCues);
+        }
+
+        [WinFormsTheory]
+        [InlineData((int)User32.UIS.CLEAR | ((int)User32.UISF.ACTIVE << 16), false)]
+        [InlineData((int)User32.UIS.CLEAR | ((int)User32.UISF.HIDEACCEL << 16), true)]
+        [InlineData((int)User32.UIS.CLEAR | ((int)User32.UISF.HIDEFOCUS << 16), false)]
+        [InlineData((int)User32.UIS.CLEAR | ((int)(User32.UISF.HIDEACCEL | User32.UISF.HIDEFOCUS) << 16), true)]
+        [InlineData((int)User32.UIS.SET | ((int)User32.UISF.ACTIVE << 16), false)]
+        [InlineData((int)User32.UIS.SET | ((int)User32.UISF.HIDEACCEL << 16), false)]
+        [InlineData((int)User32.UIS.SET | ((int)User32.UISF.HIDEFOCUS << 16), false)]
+        [InlineData((int)User32.UIS.SET | ((int)(User32.UISF.HIDEACCEL | User32.UISF.HIDEFOCUS) << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)User32.UISF.ACTIVE << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)User32.UISF.HIDEACCEL << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)User32.UISF.HIDEFOCUS << 16), false)]
+        [InlineData((int)User32.UIS.INITIALIZE | ((int)(User32.UISF.HIDEACCEL | User32.UISF.HIDEFOCUS) << 16), false)]
+        public void Control_ShowKeyboardCues_GetWithHandleMessageSent_ReturnsExpected(int wParam, bool expected)
+        {
+            using var control = new SubControl();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            User32.SendMessageW(control.Handle, User32.WM.UPDATEUISTATE, (IntPtr)wParam, IntPtr.Zero);
+            Assert.Equal(expected, control.ShowKeyboardCues);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_ShowKeyboardCues_GetWithSiteWithHandle_ReturnsExpected(bool designMode)
+        {
+            var mockSite = new Mock<ISite>(MockBehavior.Strict);
+            mockSite
+                .Setup(s => s.Container)
+                .Returns((IContainer)null);
+            mockSite
+                .Setup(s => s.GetService(typeof(AmbientProperties)))
+                .Returns(null);
+            mockSite
+                .Setup(s => s.DesignMode)
+                .Returns(designMode);
+            using var control = new SubControl
+            {
+                Site = mockSite.Object
+            };
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            Assert.Equal(designMode, control.ShowKeyboardCues);
         }
 
         public static IEnumerable<object[]> Site_Set_TestData()
@@ -9567,6 +11704,54 @@ namespace System.Windows.Forms.Tests
             }
         }
 
+        [WinFormsFact]
+        public void Control_Size_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Size)];
+            using var control = new Control();
+            Assert.False(property.CanResetValue(control));
+
+            control.Size = new Size(1, 0);
+            Assert.Equal(new Size(1, 0), control.Size);
+            Assert.True(property.CanResetValue(control));
+
+            control.Size = new Size(0, 1);
+            Assert.Equal(new Size(0, 1), control.Size);
+            Assert.True(property.CanResetValue(control));
+
+            control.Size = new Size(1, 2);
+            Assert.Equal(new Size(1, 2), control.Size);
+            Assert.True(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(Size.Empty, control.Size);
+            Assert.False(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Size_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Size)];
+            using var control = new Control();
+            Assert.False(property.ShouldSerializeValue(control));
+
+            control.Size = new Size(1, 0);
+            Assert.Equal(new Size(1, 0), control.Size);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.Size = new Size(0, 1);
+            Assert.Equal(new Size(0, 1), control.Size);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            control.Size = new Size(1, 2);
+            Assert.Equal(new Size(1, 2), control.Size);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.Equal(Size.Empty, control.Size);
+            Assert.False(property.ShouldSerializeValue(control));
+        }
+
         [WinFormsTheory]
         [InlineData(0)]
         [InlineData(1)]
@@ -9789,12 +11974,12 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set same.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set different.
@@ -9805,8 +11990,62 @@ namespace System.Windows.Forms.Tests
             // Remove handler.
             control.TextChanged -= handler;
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(2, callCount);
+        }
+
+        [WinFormsFact]
+        public void Control_Text_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Text)];
+            using var control = new Control();
+            Assert.False(property.CanResetValue(control));
+
+            // Set null.
+            control.Text = null;
+            Assert.Empty(control.Text);
+            Assert.False(property.CanResetValue(control));
+
+            // Set empty.
+            control.Text = string.Empty;
+            Assert.Empty(control.Text);
+            Assert.False(property.CanResetValue(control));
+
+            // Set custom
+            control.Text = "text";
+            Assert.Equal("text", control.Text);
+            Assert.True(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.Empty(control.Text);
+            Assert.False(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Text_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Text)];
+            using var control = new Control();
+            Assert.False(property.ShouldSerializeValue(control));
+
+            // Set null.
+            control.Text = null;
+            Assert.Empty(control.Text);
+            Assert.False(property.ShouldSerializeValue(control));
+
+            // Set empty.
+            control.Text = string.Empty;
+            Assert.Empty(control.Text);
+            Assert.False(property.ShouldSerializeValue(control));
+
+            // Set custom
+            control.Text = "text";
+            Assert.Equal("text", control.Text);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.Empty(control.Text);
+            Assert.False(property.ShouldSerializeValue(control));
         }
 
         [WinFormsTheory]
@@ -10312,22 +12551,116 @@ namespace System.Windows.Forms.Tests
             Assert.Same(grandparent, grandparent.TopLevelControl);
         }
 
-        /// <summary>
-        ///  Data for the UseWaitCursorGetSet test
-        /// </summary>
-        public static TheoryData<bool> UseWaitCursorGetSetData =>
-            CommonTestHelper.GetBoolTheoryData();
-
-        [Theory]
-        [MemberData(nameof(UseWaitCursorGetSetData))]
-        public void Control_UseWaitCursorGetSet(bool expected)
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_UseWaitCursor_Set_GetReturnsExpected(bool value)
         {
-            var cont = new Control
+            using var control = new Control
             {
-                UseWaitCursor = expected
+                UseWaitCursor = value
             };
+            Assert.Equal(value, control.UseWaitCursor);
+            Assert.False(control.IsHandleCreated);
 
-            Assert.Equal(expected, cont.UseWaitCursor);
+            // Set same.
+            control.UseWaitCursor = value;
+            Assert.Equal(value, control.UseWaitCursor);
+            Assert.False(control.IsHandleCreated);
+
+            // Set different.
+            control.UseWaitCursor = !value;
+            Assert.Equal(!value, control.UseWaitCursor);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_UseWaitCursor_SetWithChildren_GetReturnsExpected(bool value)
+        {
+            using var control = new Control();
+            using var child1 = new Control();
+            using var child2 = new Control();
+            control.Controls.Add(child1);
+            control.Controls.Add(child2);
+
+            control.UseWaitCursor = value;
+            Assert.Equal(value, control.UseWaitCursor);
+            Assert.Equal(value, child1.UseWaitCursor);
+            Assert.Equal(value, child2.UseWaitCursor);
+            Assert.False(control.IsHandleCreated);
+
+            // Set same.
+            control.UseWaitCursor = value;
+            Assert.Equal(value, control.UseWaitCursor);
+            Assert.Equal(value, child1.UseWaitCursor);
+            Assert.Equal(value, child2.UseWaitCursor);
+            Assert.False(control.IsHandleCreated);
+
+            // Set different.
+            control.UseWaitCursor = !value;
+            Assert.Equal(!value, control.UseWaitCursor);
+            Assert.Equal(!value, child1.UseWaitCursor);
+            Assert.Equal(!value, child2.UseWaitCursor);
+            Assert.False(control.IsHandleCreated);
+        }
+
+        [WinFormsTheory]
+        [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
+        public void Control_UseWaitCursor_SetWithHandle_GetReturnsExpected(bool value)
+        {
+            using var control = new Control();
+            Assert.NotEqual(IntPtr.Zero, control.Handle);
+            int invalidatedCallCount = 0;
+            control.Invalidated += (sender, e) => invalidatedCallCount++;
+            int styleChangedCallCount = 0;
+            control.StyleChanged += (sender, e) => styleChangedCallCount++;
+            int createdCallCount = 0;
+            control.HandleCreated += (sender, e) => createdCallCount++;
+
+            control.UseWaitCursor = value;
+            Assert.Equal(value, control.UseWaitCursor);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set same.
+            control.UseWaitCursor = value;
+            Assert.Equal(value, control.UseWaitCursor);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+
+            // Set different.
+            control.UseWaitCursor = !value;
+            Assert.Equal(!value, control.UseWaitCursor);
+            Assert.True(control.IsHandleCreated);
+            Assert.Equal(0, invalidatedCallCount);
+            Assert.Equal(0, styleChangedCallCount);
+            Assert.Equal(0, createdCallCount);
+        }
+
+        [WinFormsTheory]
+        [InlineData(true, true, true)]
+        [InlineData(true, false, false)]
+        [InlineData(false, true, false)]
+        [InlineData(false, false, false)]
+        public void Control_Visible_GetWithParent_ReturnsExpected(bool parentVisible, bool visible, bool expected)
+        {
+            using var parent = new Control
+            {
+                Visible = parentVisible
+            };
+            using var item = new Control
+            {
+                Parent = parent
+            };
+            Assert.Equal(parentVisible, item.Visible);
+
+            // Set custom.
+            item.Visible = visible;
+            Assert.Equal(expected, item.Visible);
         }
 
         [WinFormsTheory]
@@ -10681,6 +13014,38 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
             Assert.Equal(0, childCallCount1);
             Assert.Equal(0, childCallCount2);
+        }
+
+        [WinFormsFact]
+        public void Control_Visible_ResetValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Visible)];
+            using var control = new Control();
+            Assert.False(property.CanResetValue(control));
+
+            control.Visible = false;
+            Assert.False(control.Visible);
+            Assert.True(property.CanResetValue(control));
+
+            property.ResetValue(control);
+            Assert.True(control.Visible);
+            Assert.False(property.CanResetValue(control));
+        }
+
+        [WinFormsFact]
+        public void Control_Visible_ShouldSerializeValue_Success()
+        {
+            PropertyDescriptor property = TypeDescriptor.GetProperties(typeof(Control))[nameof(Control.Visible)];
+            using var control = new Control();
+            Assert.False(property.ShouldSerializeValue(control));
+
+            control.Visible = false;
+            Assert.False(control.Visible);
+            Assert.True(property.ShouldSerializeValue(control));
+
+            property.ResetValue(control);
+            Assert.True(control.Visible);
+            Assert.False(property.ShouldSerializeValue(control));
         }
 
         [WinFormsTheory]
@@ -11345,10 +13710,10 @@ namespace System.Windows.Forms.Tests
             }
         }
 
-        [Fact]
+        [WinFormsFact]
         public void Control_WindowTargetGetSet()
         {
-            var cont = new Control();
+            using var cont = new Control();
             var mock = new Mock<IWindowTarget>(MockBehavior.Strict);
 
             cont.WindowTarget = mock.Object;
@@ -11356,11 +13721,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(mock.Object, cont.WindowTarget);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void Control_WindowText_Set_GetReturnsExpected(string value)
         {
-            var control = new Control
+            using var control = new Control
             {
                 WindowText = value
             };
@@ -11371,11 +13736,11 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(value ?? string.Empty, control.WindowText);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringWithNullTheoryData))]
         public void Control_WindowText_SetWithHandle_GetReturnsExpected(string value)
         {
-            var control = new Control();
+            using var control = new Control();
             Assert.NotEqual(IntPtr.Zero, control.Handle);
 
             control.WindowText = value;
@@ -11384,6 +13749,13 @@ namespace System.Windows.Forms.Tests
             // Set same.
             control.WindowText = value;
             Assert.Equal(value ?? string.Empty, control.WindowText);
+        }
+
+        private class SubAxHost : AxHost
+        {
+            public SubAxHost(string clsid) : base(clsid)
+            {
+            }
         }
     }
 }

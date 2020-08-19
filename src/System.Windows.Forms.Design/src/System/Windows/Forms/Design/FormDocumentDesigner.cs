@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -19,21 +19,21 @@ namespace System.Windows.Forms.Design
     internal class FormDocumentDesigner : DocumentDesigner
     {
         private Size _autoScaleBaseSize = Size.Empty;
-        private bool _inAutoscale = false;
-        private bool _initializing = false;
-        private bool _autoSize = false;
-        private ToolStripAdornerWindowService _toolStripAdornerWindowService = null;
+        private bool _inAutoscale;
+        private bool _initializing;
+        private bool _autoSize;
+        private ToolStripAdornerWindowService _toolStripAdornerWindowService;
 
         /// <summary>
         ///  Shadow the AcceptButton property at design-time so that we can preserve it when the form is rebuilt.  Otherwise, form.Controls.Clear() will clear it out when we don't want it to.
         /// </summary>
         private IButtonControl AcceptButton
         {
-            get => ShadowProperties["AcceptButton"] as IButtonControl;
+            get => ShadowProperties[nameof(AcceptButton)] as IButtonControl;
             set
             {
                 ((Form)Component).AcceptButton = value;
-                ShadowProperties["AcceptButton"] = value;
+                ShadowProperties[nameof(AcceptButton)] = value;
             }
         }
 
@@ -42,11 +42,11 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private IButtonControl CancelButton
         {
-            get => ShadowProperties["CancelButton"] as IButtonControl;
+            get => ShadowProperties[nameof(CancelButton)] as IButtonControl;
             set
             {
                 ((Form)Component).CancelButton = value;
-                ShadowProperties["CancelButton"] = value;
+                ShadowProperties[nameof(CancelButton)] = value;
             }
         }
 
@@ -67,7 +67,7 @@ namespace System.Windows.Forms.Design
             {
                 // We do nothing at design time for this property; we always want to use the calculated value from the component.
                 _autoScaleBaseSize = value;
-                ShadowProperties["AutoScaleBaseSize"] = value;
+                ShadowProperties[nameof(AutoScaleBaseSize)] = value;
             }
         }
 
@@ -85,7 +85,7 @@ namespace System.Windows.Forms.Design
             // Never serialize this unless AutoScale is turned on
 #pragma warning disable 618
             return _initializing ? false
-                : ((Form)Component).AutoScale && ShadowProperties.Contains("AutoScaleBaseSize");
+                : ((Form)Component).AutoScale && ShadowProperties.Contains(nameof(AutoScaleBaseSize));
 #pragma warning restore 618
         }
 
@@ -151,15 +151,15 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private double Opacity
         {
-            get => (double)ShadowProperties["Opacity"];
+            get => (double)ShadowProperties[nameof(Opacity)];
             set
             {
                 if (value < 0.0f || value > 1.0f)
                 {
                     throw new ArgumentException(string.Format(SR.InvalidBoundArgument, "value", value.ToString(CultureInfo.CurrentCulture),
-                                                                    (0.0f).ToString(CultureInfo.CurrentCulture), (1.0f).ToString(CultureInfo.CurrentCulture)), "value");
+                                                                    (0.0f).ToString(CultureInfo.CurrentCulture), (1.0f).ToString(CultureInfo.CurrentCulture)), nameof(value));
                 }
-                ShadowProperties["Opacity"] = value;
+                ShadowProperties[nameof(Opacity)] = value;
             }
         }
 
@@ -172,7 +172,7 @@ namespace System.Windows.Forms.Design
             {
                 ArrayList snapLines = null;
                 base.AddPaddingSnapLines(ref snapLines);
-                if (snapLines == null)
+                if (snapLines is null)
                 {
                     Debug.Fail("why did base.AddPaddingSnapLines return null?");
                     snapLines = new ArrayList(4);
@@ -235,8 +235,8 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private bool ShowInTaskbar
         {
-            get => (bool)ShadowProperties["ShowInTaskbar"];
-            set => ShadowProperties["ShowInTaskbar"] = value;
+            get => (bool)ShadowProperties[nameof(ShowInTaskbar)];
+            set => ShadowProperties[nameof(ShowInTaskbar)] = value;
         }
 
         /// <summary>
@@ -244,8 +244,8 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private FormWindowState WindowState
         {
-            get => (FormWindowState)ShadowProperties["WindowState"];
-            set => ShadowProperties["WindowState"] = value;
+            get => (FormWindowState)ShadowProperties[nameof(WindowState)];
+            set => ShadowProperties[nameof(WindowState)] = value;
         }
 
         private void ApplyAutoScaling(SizeF baseVar, Form form)
@@ -294,7 +294,7 @@ namespace System.Windows.Forms.Design
 
         private void EnsureToolStripWindowAdornerService()
         {
-            if (_toolStripAdornerWindowService == null)
+            if (_toolStripAdornerWindowService is null)
             {
                 _toolStripAdornerWindowService = (ToolStripAdornerWindowService)GetService(typeof(ToolStripAdornerWindowService));
             }
@@ -320,8 +320,8 @@ namespace System.Windows.Forms.Design
 
             Form form = (Form)Control;
             form.WindowState = FormWindowState.Normal;
-            ShadowProperties["AcceptButton"] = form.AcceptButton;
-            ShadowProperties["CancelButton"] = form.CancelButton;
+            ShadowProperties[nameof(AcceptButton)] = form.AcceptButton;
+            ShadowProperties[nameof(CancelButton)] = form.CancelButton;
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private void OnComponentAdded(object source, ComponentEventArgs ce)
         {
-            if (ce.Component is ToolStrip && _toolStripAdornerWindowService == null)
+            if (ce.Component is ToolStrip && _toolStripAdornerWindowService is null)
             {
                 IDesignerHost host = (IDesignerHost)GetService(typeof(IDesignerHost));
                 if (host != null)
@@ -350,11 +350,11 @@ namespace System.Windows.Forms.Design
             }
             if (ce.Component is IButtonControl)
             {
-                if (ce.Component == ShadowProperties["AcceptButton"])
+                if (ce.Component == ShadowProperties[nameof(AcceptButton)])
                 {
                     AcceptButton = null;
                 }
-                if (ce.Component == ShadowProperties["CancelButton"])
+                if (ce.Component == ShadowProperties[nameof(CancelButton)])
                 {
                     CancelButton = null;
                 }
@@ -368,7 +368,7 @@ namespace System.Windows.Forms.Design
             Control control = Control;
             if (control != null && control.IsHandleCreated)
             {
-                NativeMethods.SendMessage(control.Handle, WindowMessages.WM_NCACTIVATE, 1, 0);
+                User32.SendMessageW(control.Handle, User32.WM.NCACTIVATE, (IntPtr)1, IntPtr.Zero);
                 User32.RedrawWindow(control.Handle, null, IntPtr.Zero, User32.RDW.FRAME);
             }
         }
@@ -381,7 +381,7 @@ namespace System.Windows.Forms.Design
             Control control = Control;
             if (control != null && control.IsHandleCreated)
             {
-                NativeMethods.SendMessage(control.Handle, WindowMessages.WM_NCACTIVATE, 0, 0);
+                User32.SendMessageW(control.Handle, User32.WM.NCACTIVATE, IntPtr.Zero, IntPtr.Zero);
                 User32.RedrawWindow(control.Handle, null, IntPtr.Zero, User32.RDW.FRAME);
             }
         }
@@ -416,7 +416,6 @@ namespace System.Windows.Forms.Design
 
                 form.PerformLayout();
             }
-
         }
 
         /// <summary>
@@ -475,9 +474,9 @@ namespace System.Windows.Forms.Design
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_WINDOWPOSCHANGING:
+                case User32.WM.WINDOWPOSCHANGING:
                     WmWindowPosChanging(ref m);
                     break;
             }

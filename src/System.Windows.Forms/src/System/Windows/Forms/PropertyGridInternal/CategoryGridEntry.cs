@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 //#define PAINT_CATEGORY_TRIANGLE
 
 using System.Collections;
@@ -14,8 +16,8 @@ namespace System.Windows.Forms.PropertyGridInternal
     internal class CategoryGridEntry : GridEntry
     {
         internal string name;
-        private Brush backBrush = null;
-        private static Hashtable categoryStates = null;
+        private Brush backBrush;
+        private static Hashtable categoryStates;
 
         public CategoryGridEntry(PropertyGrid ownerGrid, GridEntry peParent, string name, GridEntry[] childGridEntries)
         : base(ownerGrid, peParent)
@@ -28,7 +30,7 @@ namespace System.Windows.Forms.PropertyGridInternal
                 Debug.Assert(childGridEntries[n] != null, "Null item in category subproperty list");
             }
 #endif
-            if (categoryStates == null)
+            if (categoryStates is null)
             {
                 categoryStates = new Hashtable();
             }
@@ -89,41 +91,24 @@ namespace System.Windows.Forms.PropertyGridInternal
 
         public override void DisposeChildren()
         {
-            // categories should never dispose
-            //
+            // Categories should never dispose
             return;
         }
 
-        // we don't want this guy participating in property depth.
-        public override int PropertyDepth
-        {
-            get
-            {
-                return base.PropertyDepth - 1;
-            }
-        }
+        // Don't want this participating in property depth.
+        public override int PropertyDepth => base.PropertyDepth - 1;
 
         /// <summary>
         ///  Gets the accessibility object for the current category grid entry.
         /// </summary>
-        /// <returns></returns>
         protected override GridEntryAccessibleObject GetAccessibilityObject()
         {
             return new CategoryGridEntryAccessibleObject(this);
         }
 
-        protected override Brush GetBackgroundBrush(Graphics g)
-        {
-            return GridEntryHost.GetLineBrush(g);
-        }
+        protected override Color GetBackgroundColor() => GridEntryHost.GetLineColor();
 
-        protected override Color LabelTextColor
-        {
-            get
-            {
-                return ownerGrid.CategoryForeColor;
-            }
-        }
+        protected override Color LabelTextColor => ownerGrid.CategoryForeColor;
 
         public override bool Expandable
         {
@@ -229,7 +214,7 @@ namespace System.Windows.Forms.PropertyGridInternal
 
                 int indent = PropertyLabelIndent - 2;
                 Rectangle focusRect = new Rectangle(indent, rect.Y, labelWidth + 3, rect.Height - 1);
-                if (SystemInformation.HighContrast && !OwnerGrid.developerOverride)
+                if (SystemInformation.HighContrast && !OwnerGrid._developerOverride)
                 {
                     // we changed line color to SystemColors.ControlDarkDark in high contrast mode
                     ControlPaint.DrawFocusRectangle(g, focusRect, SystemColors.ControlText, OwnerGrid.LineColor);
@@ -243,10 +228,8 @@ namespace System.Windows.Forms.PropertyGridInternal
             // draw the line along the top
             if (parentPE.GetChildIndex(this) > 0)
             {
-                using (Pen topLinePen = new Pen(ownerGrid.CategorySplitterColor, 1))
-                {
-                    g.DrawLine(topLinePen, rect.X - 1, rect.Y - 1, rect.Width + 2, rect.Y - 1);
-                }
+                using var topLinePen = ownerGrid.CategorySplitterColor.GetCachedPenScope();
+                g.DrawLine(topLinePen, rect.X - 1, rect.Y - 1, rect.Width + 2, rect.Y - 1);
             }
         }
 
@@ -257,10 +240,8 @@ namespace System.Windows.Forms.PropertyGridInternal
             // draw the line along the top
             if (parentPE.GetChildIndex(this) > 0)
             {
-                using (Pen topLinePen = new Pen(ownerGrid.CategorySplitterColor, 1))
-                {
-                    g.DrawLine(topLinePen, rect.X - 2, rect.Y - 1, rect.Width + 1, rect.Y - 1);
-                }
+                using var topLinePen = ownerGrid.CategorySplitterColor.GetCachedPenScope();
+                g.DrawLine(topLinePen, rect.X - 2, rect.Y - 1, rect.Width + 1, rect.Y - 1);
             }
         }
 
@@ -272,7 +253,6 @@ namespace System.Windows.Forms.PropertyGridInternal
         /// <summary>
         ///  Defines the Category Grid Entry accessible object that is derived from Grid Entry accessible object.
         /// </summary>
-        [Runtime.InteropServices.ComVisible(true)]
         internal class CategoryGridEntryAccessibleObject : GridEntryAccessibleObject
         {
             private readonly CategoryGridEntry _owningCategoryGridEntry;
@@ -349,19 +329,19 @@ namespace System.Windows.Forms.PropertyGridInternal
                 get
                 {
                     var parent = Parent as PropertyGridView.PropertyGridViewAccessibleObject;
-                    if (parent == null)
+                    if (parent is null)
                     {
                         return -1;
                     }
 
                     var gridView = parent.Owner as PropertyGridView;
-                    if (gridView == null || gridView.OwnerGrid == null || !gridView.OwnerGrid.SortedByCategories)
+                    if (gridView is null || gridView.OwnerGrid is null || !gridView.OwnerGrid.SortedByCategories)
                     {
                         return -1;
                     }
 
                     var topLevelGridEntries = gridView.TopLevelGridEntries;
-                    if (topLevelGridEntries == null)
+                    if (topLevelGridEntries is null)
                     {
                         return -1;
                     }
@@ -387,5 +367,4 @@ namespace System.Windows.Forms.PropertyGridInternal
             internal override int Column => 0; // Category is in the first column.
         }
     }
-
 }

@@ -13,7 +13,7 @@ using Xunit;
 
 namespace System.Windows.Forms.Design.Serialization.Tests
 {
-    public class CodeDomSerializerExceptionTests
+    public class CodeDomSerializerExceptionTests : IClassFixture<ThreadExceptionFixture>
     {
         public static IEnumerable<object[]> Ctor_String_CodeLinePragma_TestData()
         {
@@ -95,7 +95,9 @@ namespace System.Windows.Forms.Design.Serialization.Tests
             {
                 var formatter = new BinaryFormatter();
                 var exception = new CodeDomSerializerException("message", new CodeLinePragma("fileName.cs", 11));
+#pragma warning disable CS0618 // Type or member is obsolete
                 Assert.Throws<SerializationException>(() => formatter.Serialize(stream, exception));
+#pragma warning restore CS0618 // Type or member is obsolete
             }
         }
 

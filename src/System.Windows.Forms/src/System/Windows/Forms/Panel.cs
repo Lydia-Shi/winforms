@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -13,8 +15,6 @@ namespace System.Windows.Forms
     /// <summary>
     ///  Represents a <see cref='Panel'/> control.
     /// </summary>
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
     [DefaultProperty(nameof(BorderStyle))]
     [DefaultEvent(nameof(Paint))]
     [Docking(DockingBehavior.Ask)]
@@ -194,7 +194,8 @@ namespace System.Windows.Forms
         }
 
         [Browsable(false)]
-        [EditorBrowsable(EditorBrowsableState.Never), Bindable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Bindable(false)]
         public override string Text
         {
             get => base.Text;
@@ -225,12 +226,12 @@ namespace System.Windows.Forms
             base.OnResize(eventargs);
         }
 
-        private protected override void PrintToMetaFileRecursive(IntPtr hDC, IntPtr lParam, Rectangle bounds)
+        private protected override void PrintToMetaFileRecursive(Gdi32.HDC hDC, IntPtr lParam, Rectangle bounds)
         {
             base.PrintToMetaFileRecursive(hDC, lParam, bounds);
 
-            using var mapping = new WindowsFormsUtils.DCMapping(hDC, bounds);
-            using Graphics g = Graphics.FromHdcInternal(hDC);
+            using var mapping = new DCMapping(hDC, bounds);
+            using Graphics g = hDC.CreateGraphics();
             ControlPaint.PrintBorder(g, new Rectangle(Point.Empty, Size), BorderStyle, Border3DStyle.Sunken);
         }
 

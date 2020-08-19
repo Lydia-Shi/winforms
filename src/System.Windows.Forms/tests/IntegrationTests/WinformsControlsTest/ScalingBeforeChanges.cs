@@ -9,7 +9,6 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using static Interop;
 
-
 namespace WinformsControlsTest
 {
     public partial class ScalingBeforeChanges : Form
@@ -18,10 +17,6 @@ namespace WinformsControlsTest
         {
             InitializeComponent();
         }
-
-        [DllImport("User32", ExactSpelling = true, CharSet = CharSet.Auto)]
-        public static extern bool SetWindowPos(HandleRef hWnd, HandleRef hWndInsertAfter,
-                                               int x, int y, int cx, int cy, int flags);
 
         [DllImport("user32", ExactSpelling = true)]
         internal static extern bool EnableNonClientDpiScaling(HandleRef hWnd);
@@ -37,13 +32,13 @@ namespace WinformsControlsTest
         {
             x = LogicalDpi;
             y = LogicalDpi;
-            IntPtr hDC = User32.GetDC(handleRef);
-            if (hDC != IntPtr.Zero)
+            Gdi32.HDC hDC = User32.GetDC(handleRef);
+            if (!hDC.IsNull)
             {
                 x = Gdi32.GetDeviceCaps(hDC, Gdi32.DeviceCapability.LOGPIXELSX);
                 y = Gdi32.GetDeviceCaps(hDC, Gdi32.DeviceCapability.LOGPIXELSY);
 
-                User32.ReleaseDC(handleRef, new HandleRef(null, hDC));
+                User32.ReleaseDC(handleRef, hDC);
             }
         }
 
@@ -79,17 +74,22 @@ namespace WinformsControlsTest
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_DPICHANGED:
+                case User32.WM.DPICHANGED:
                     int x = LOWORD(m.WParam);
                     int y = HIWORD(m.WParam);
                     if (x != deviceDpiX || y != deviceDpiY)
                     {
                         RECT suggestedRect = Marshal.PtrToStructure<RECT>(m.LParam);
 
-                        SetWindowPos(new HandleRef(this, Handle), new HandleRef(null, IntPtr.Zero), suggestedRect.left, suggestedRect.top,
-                            suggestedRect.right - suggestedRect.left, suggestedRect.bottom - suggestedRect.top, 0x4 | 0x10);
+                        User32.SetWindowPos(
+                            new HandleRef(this, Handle),
+                            IntPtr.Zero, suggestedRect.left,
+                            suggestedRect.top,
+                            suggestedRect.right - suggestedRect.left,
+                            suggestedRect.bottom - suggestedRect.top,
+                            User32.SWP.NOZORDER | User32.SWP.NOACTIVATE);
 
                         float factorX = (float)(x / deviceDpiX);
                         float factorY = (float)(y / deviceDpiY);
@@ -102,32 +102,29 @@ namespace WinformsControlsTest
                     }
                     m.Result = IntPtr.Zero;
                     break;
-
             }
         }
     }
 
     public class MyCheckBox : CheckBox
     {
-        [DllImport("User32", ExactSpelling = true, SetLastError = true)]
-        public static extern uint GetDpiForWindow(HandleRef hWnd);
-
         public MyCheckBox() : base()
         {
         }
+
         protected override void WndProc(ref Message m)
         {
             uint dpi;
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_DPICHANGED_BEFOREPARENT:
-                    dpi = GetDpiForWindow(new HandleRef(this, Handle));
+                case User32.WM.DPICHANGED_BEFOREPARENT:
+                    dpi = User32.GetDpiForWindow(Handle);
                     Debug.WriteLine($"WM_DPICHANGED_BEFOREPARENT  {dpi}");
 
                     m.Result = (IntPtr)1;
                     break;
-                case WindowMessages.WM_DPICHANGED_AFTERPARENT:
-                    dpi = GetDpiForWindow(new HandleRef(this, Handle));
+                case User32.WM.DPICHANGED_AFTERPARENT:
+                    dpi = User32.GetDpiForWindow(this);
                     Debug.WriteLine($"WM_DPICHANGED_AFTERPARENT {dpi}");
                     m.Result = (IntPtr)1;
                     break;

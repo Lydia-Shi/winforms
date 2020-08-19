@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -35,15 +37,15 @@ namespace System.Windows.Forms
 
             private Dictionary<UIntPtr, ComponentHashtableEntry> _oleComponents;
             private UIntPtr _cookieCounter = UIntPtr.Zero;
-            private IMsoComponent _activeComponent = null;
-            private IMsoComponent _trackingComponent = null;
-            private msocstate _currentState = 0;
+            private IMsoComponent _activeComponent;
+            private IMsoComponent _trackingComponent;
+            private msocstate _currentState;
 
             private Dictionary<UIntPtr, ComponentHashtableEntry> OleComponents
             {
                 get
                 {
-                    if (_oleComponents == null)
+                    if (_oleComponents is null)
                     {
                         _oleComponents = new Dictionary<UIntPtr, ComponentHashtableEntry>();
                     }
@@ -81,7 +83,7 @@ namespace System.Windows.Forms
                 MSOCRINFO* pcrinfo,
                 UIntPtr* pdwComponentID)
             {
-                if (pcrinfo == null || pdwComponentID == null
+                if (pcrinfo is null || pdwComponentID is null
                     || pcrinfo->cbSize < sizeof(MSOCRINFO))
                 {
                     return BOOL.FALSE;
@@ -133,7 +135,7 @@ namespace System.Windows.Forms
                 MSOCRINFO* pcrinfo)
             {
                 // Update the registration info
-                if (pcrinfo == null
+                if (pcrinfo is null
                     || !OleComponents.TryGetValue(dwComponentID, out ComponentHashtableEntry entry))
                 {
                     return BOOL.FALSE;
@@ -309,7 +311,7 @@ namespace System.Windows.Forms
                                     Debug.Assert(msg.hwnd == IntPtr.Zero || User32.IsWindowUnicode(msg.hwnd).IsTrue());
                                 }
 
-                                if (msg.message == User32.WindowMessage.WM_QUIT)
+                                if (msg.message == User32.WM.QUIT)
                                 {
                                     Debug.WriteLineIf(
                                         CompModSwitches.MSOComponentManager.TraceInfo,
@@ -453,7 +455,7 @@ namespace System.Windows.Forms
                     _ => null
                 };
 
-                if (component == null)
+                if (component is null)
                     return BOOL.FALSE;
 
                 if (pcrinfo != null)

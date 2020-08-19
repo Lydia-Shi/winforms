@@ -23,13 +23,13 @@ namespace System.ComponentModel.Design
 
         internal object GetService(Type serviceType)
         {
-            if (_context == null)
+            if (_context is null)
             {
                 return null;
             }
 
             IDesignerHost host = _context.GetService(typeof(IDesignerHost)) as IDesignerHost;
-            if (host == null)
+            if (host is null)
             {
                 return _context.GetService(serviceType);
             }
@@ -66,7 +66,7 @@ namespace System.ComponentModel.Design
                 return buffer;
             }
 
-            Debug.Fail("No conversion from " + value == null ? "null" : value.GetType().FullName + " to byte[]");
+            Debug.Fail("No conversion from " + value is null ? "null" : value.GetType().FullName + " to byte[]");
             return null;
         }
 
@@ -92,17 +92,13 @@ namespace System.ComponentModel.Design
             }
             else
             {
-                Debug.Fail("No conversion from byte[] to " + value == null ? "null" : value.GetType().FullName);
+                Debug.Fail("No conversion from byte[] to " + value is null ? "null" : value.GetType().FullName);
             }
         }
 
-        /// <summary>
-        ///  Edits the given object value using the editor style provided by GetEditorStyle.
-        ///  A service provider is provided so that any required editing services can be obtained.
-        /// </summary>
         public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
         {
-            if (provider == null)
+            if (provider is null)
             {
                 return value;
             }
@@ -110,12 +106,12 @@ namespace System.ComponentModel.Design
             _context = context;
 
             IWindowsFormsEditorService edSvc = (IWindowsFormsEditorService)provider.GetService(typeof(IWindowsFormsEditorService));
-            if (edSvc == null)
+            if (edSvc is null)
             {
                 return value;
             }
 
-            if (_binaryUI == null)
+            if (_binaryUI is null)
             {
                 // child modal dialog -launching in System Aware mode
                 _binaryUI = DpiHelper.CreateInstanceInSystemAwareContext(() => new BinaryUI(this));
@@ -198,7 +194,7 @@ namespace System.ComponentModel.Design
                     }
                     else
                     {
-                        _byteViewer.SetBytes(new byte[0]);
+                        _byteViewer.SetBytes(Array.Empty<byte>());
                         _byteViewer.Enabled = false;
                     }
                 }
@@ -290,17 +286,17 @@ namespace System.ComponentModel.Design
                 _overarchingTableLayoutPanel.SuspendLayout();
                 SuspendLayout();
 
-                // 
+                //
                 // byteViewer
-                // 
+                //
                 resources.ApplyResources(_byteViewer, "byteViewer");
                 _byteViewer.SetDisplayMode(DisplayMode.Auto);
                 _byteViewer.Name = "byteViewer";
                 _byteViewer.Margin = Padding.Empty;
                 _byteViewer.Dock = DockStyle.Fill;
-                // 
+                //
                 // buttonOK
-                // 
+                //
                 resources.ApplyResources(_buttonOK, "buttonOK");
                 _buttonOK.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                 _buttonOK.DialogResult = DialogResult.OK;
@@ -309,9 +305,9 @@ namespace System.ComponentModel.Design
                 _buttonOK.Name = "buttonOK";
                 _buttonOK.Padding = new Padding(10, 0, 10, 0);
                 _buttonOK.Click += new EventHandler(ButtonOK_click);
-                // 
+                //
                 // buttonSave
-                // 
+                //
                 resources.ApplyResources(_buttonSave, "buttonSave");
                 _buttonSave.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                 _buttonSave.Margin = new Padding(3, 0, 0, 0);
@@ -319,9 +315,9 @@ namespace System.ComponentModel.Design
                 _buttonSave.Name = "buttonSave";
                 _buttonSave.Padding = new Padding(10, 0, 10, 0);
                 _buttonSave.Click += new EventHandler(ButtonSave_click);
-                // 
+                //
                 // groupBoxMode
-                // 
+                //
                 resources.ApplyResources(_groupBoxMode, "groupBoxMode");
                 _groupBoxMode.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                 _groupBoxMode.Controls.Add(_radioButtonsTableLayoutPanel);
@@ -329,9 +325,9 @@ namespace System.ComponentModel.Design
                 _groupBoxMode.Name = "groupBoxMode";
                 _groupBoxMode.Padding = new Padding(0);
                 _groupBoxMode.TabStop = false;
-                // 
+                //
                 // radioButtonsTableLayoutPanel
-                // 
+                //
                 resources.ApplyResources(_radioButtonsTableLayoutPanel, "radioButtonsTableLayoutPanel");
                 _radioButtonsTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
                 _radioButtonsTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
@@ -344,38 +340,38 @@ namespace System.ComponentModel.Design
                 _radioButtonsTableLayoutPanel.Margin = new Padding(9);
                 _radioButtonsTableLayoutPanel.Name = "radioButtonsTableLayoutPanel";
                 _radioButtonsTableLayoutPanel.RowStyles.Add(new RowStyle());
-                // 
+                //
                 // radioUnicode
-                // 
+                //
                 resources.ApplyResources(_radioUnicode, "radioUnicode");
                 _radioUnicode.Margin = new Padding(3, 0, 0, 0);
                 _radioUnicode.Name = "radioUnicode";
                 _radioUnicode.CheckedChanged += new EventHandler(RadioUnicode_checkedChanged);
-                // 
+                //
                 // radioAuto
-                // 
+                //
                 resources.ApplyResources(_radioAuto, "radioAuto");
                 _radioAuto.Checked = true;
                 _radioAuto.Margin = new Padding(0, 0, 3, 0);
                 _radioAuto.Name = "radioAuto";
                 _radioAuto.CheckedChanged += new EventHandler(RadioAuto_checkedChanged);
-                // 
+                //
                 // radioAnsi
-                // 
+                //
                 resources.ApplyResources(_radioAnsi, "radioAnsi");
                 _radioAnsi.Margin = new Padding(3, 0, 3, 0);
                 _radioAnsi.Name = "radioAnsi";
                 _radioAnsi.CheckedChanged += new EventHandler(RadioAnsi_checkedChanged);
-                // 
+                //
                 // radioHex
-                // 
+                //
                 resources.ApplyResources(_radioHex, "radioHex");
                 _radioHex.Margin = new Padding(3, 0, 3, 0);
                 _radioHex.Name = "radioHex";
                 _radioHex.CheckedChanged += new EventHandler(RadioHex_checkedChanged);
-                // 
+                //
                 // okSaveTableLayoutPanel
-                // 
+                //
                 resources.ApplyResources(_okSaveTableLayoutPanel, "okSaveTableLayoutPanel");
                 _okSaveTableLayoutPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                 _okSaveTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
@@ -385,9 +381,9 @@ namespace System.ComponentModel.Design
                 _okSaveTableLayoutPanel.Margin = new Padding(0, 9, 0, 0);
                 _okSaveTableLayoutPanel.Name = "okSaveTableLayoutPanel";
                 _okSaveTableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
-                // 
+                //
                 // overarchingTableLayoutPanel
-                // 
+                //
                 resources.ApplyResources(_overarchingTableLayoutPanel, "overarchingTableLayoutPanel");
                 _overarchingTableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
                 _overarchingTableLayoutPanel.Controls.Add(_byteViewer, 0, 0);
@@ -398,9 +394,9 @@ namespace System.ComponentModel.Design
                 _overarchingTableLayoutPanel.RowStyles.Add(new RowStyle());
                 _overarchingTableLayoutPanel.RowStyles.Add(new RowStyle());
 
-                // 
+                //
                 // BinaryUI
-                // 
+                //
                 AcceptButton = _buttonOK;
                 resources.ApplyResources(this, "$this");
                 AutoScaleMode = AutoScaleMode.Font;
@@ -426,7 +422,6 @@ namespace System.ComponentModel.Design
                 _overarchingTableLayoutPanel.ResumeLayout(false);
                 _overarchingTableLayoutPanel.PerformLayout();
                 ResumeLayout(false);
-
             }
         }
     }

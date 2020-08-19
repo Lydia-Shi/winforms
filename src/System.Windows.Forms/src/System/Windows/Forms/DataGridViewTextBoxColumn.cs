@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -12,23 +14,18 @@ namespace System.Windows.Forms
     [ToolboxBitmap(typeof(DataGridViewTextBoxColumn), "DataGridViewTextBoxColumn")]
     public class DataGridViewTextBoxColumn : DataGridViewColumn
     {
-        private const int DATAGRIDVIEWTEXTBOXCOLUMN_maxInputLength = 32767;
+        private const int ColumnMaxInputLength = 32767;
 
         public DataGridViewTextBoxColumn() : base(new DataGridViewTextBoxCell())
         {
             SortMode = DataGridViewColumnSortMode.Automatic;
         }
 
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override DataGridViewCell CellTemplate
         {
-            get
-            {
-                return base.CellTemplate;
-            }
+            get => base.CellTemplate;
             set
             {
                 if (value != null && !(value is DataGridViewTextBoxCell))
@@ -39,16 +36,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(DATAGRIDVIEWTEXTBOXCOLUMN_maxInputLength),
-            SRCategory(nameof(SR.CatBehavior)),
-            SRDescription(nameof(SR.DataGridView_TextBoxColumnMaxInputLengthDescr))
-        ]
+        [DefaultValue(ColumnMaxInputLength)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.DataGridView_TextBoxColumnMaxInputLengthDescr))]
         public int MaxInputLength
         {
             get
             {
-                if (TextBoxCellTemplate == null)
+                if (TextBoxCellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -76,19 +71,11 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(DataGridViewColumnSortMode.Automatic)
-        ]
+        [DefaultValue(DataGridViewColumnSortMode.Automatic)]
         public new DataGridViewColumnSortMode SortMode
         {
-            get
-            {
-                return base.SortMode;
-            }
-            set
-            {
-                base.SortMode = value;
-            }
+            get => base.SortMode;
+            set => base.SortMode = value;
         }
 
         private DataGridViewTextBoxCell TextBoxCellTemplate

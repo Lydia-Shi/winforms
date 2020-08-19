@@ -12,7 +12,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class ListViewGroupConverterTests
+    // NB: doesn't require thread affinity
+    public class ListViewGroupConverterTests : IClassFixture<ThreadExceptionFixture>
     {
         public static TheoryData<Type, bool> CanConvertFromData =>
             CommonTestHelper.GetConvertFromTheoryData();

@@ -36,15 +36,15 @@ namespace System.Windows.Forms.Design
         private static int TEMPLATE_HOTREGION_WIDTH = TEMPLATE_HOTREGION_WIDTH_ORIGINAL;
         private static int MINITOOLSTRIP_TEXTBOX_WIDTH = MINITOOLSTRIP_TEXTBOX_WIDTH_ORIGINAL;
 
-        private static bool s_isScalingInitialized = false;
+        private static bool s_isScalingInitialized;
         internal const string CenterLabelName = "centerLabel";
 
         // Component for this InSitu Editor... (this is a ToolStripItem) that wants to go into InSitu
         private readonly IComponent _component;
         // Current Designer for the comopenent that in InSitu mode
-        private IDesigner _designer = null;
+        private IDesigner _designer;
         //Get DesignerHost.
-        private readonly IDesignerHost _designerHost = null;
+        private readonly IDesignerHost _designerHost;
         // Menu Commands to override
         private readonly MenuCommand[] _commands;
         // MenuCommands to Add
@@ -59,17 +59,17 @@ namespace System.Windows.Forms.Design
         private ToolStripControlHost _centerTextBox;
 
         //reqd as rtb does accept Enter..
-        internal bool ignoreFirstKeyUp = false;
+        internal bool ignoreFirstKeyUp;
 
         // This is the Bounding Rectangle for the ToolStripTemplateNode. This is set by the itemDesigner in terms of the "AdornerWindow" bounds.  The ToolStripEditorManager uses this Bounds to actually activate the  editor on the AdornerWindow.
         private Rectangle _boundingRect;
         // Keeps track of Insitu Mode.
-        private bool _inSituMode = false;
+        private bool _inSituMode;
         // Tells whether the editorNode is listening to Menu commands.
-        private bool _active = false;
+        private bool _active;
 
         // Need to keep a track of Last Selection to uncheck it. This is the Checked property on ToolStripItems on the Menu. We check this cached in value to the current Selection on the addItemButton and if different then uncheck the Checked for this lastSelection.. Check for the currentSelection and finally save the currentSelection as the lastSelection for future check.
-        private ItemTypeToolStripMenuItem _lastSelection = null;
+        private ItemTypeToolStripMenuItem _lastSelection;
 
         // This is the renderer used to Draw the Strips.....
         private MiniToolStripRenderer _renderer;
@@ -83,25 +83,25 @@ namespace System.Windows.Forms.Design
         //Cached BehaviorService
         private BehaviorService _behaviorService;
         //ControlHost for selection on mouseclicks
-        private DesignerToolStripControlHost _controlHost = null;
+        private DesignerToolStripControlHost _controlHost;
         // On DropDowns the component passed in is the parent (ownerItem) and hence we need the  reference for actual item
-        private ToolStripItem _activeItem = null;
+        private ToolStripItem _activeItem;
 
         private EventHandler _onActivated;
         private EventHandler _onClosed;
         private EventHandler _onDeactivated;
-        private MenuCommand _oldUndoCommand = null;
-        private MenuCommand _oldRedoCommand = null;
+        private MenuCommand _oldUndoCommand;
+        private MenuCommand _oldRedoCommand;
         // The DropDown for the TemplateNode
         private NewItemsContextMenuStrip _contextMenu;
         // the Hot Region within the templateNode ... this is used for the menustrips
         private Rectangle _hotRegion;
 
-        private bool _imeModeSet = false;
+        private bool _imeModeSet;
         //DesignSurface to hook up to the Flushed event
-        private DesignSurface _designSurface = null;
+        private DesignSurface _designSurface;
         // Is system context menu displayed for the insitu text box?
-        private bool _isSystemContextMenuDisplayed = false;
+        private bool _isSystemContextMenuDisplayed;
         // delay population of custom menu items until ready to open the drop down
         private bool _isPopulated;
 
@@ -137,8 +137,8 @@ namespace System.Windows.Forms.Design
             }
 
             SetupNewEditNode(this, text, image, component);
-            _commands = new MenuCommand[] { };
-            _addCommands = new MenuCommand[] { };
+            _commands = Array.Empty<MenuCommand>();
+            _addCommands = Array.Empty<MenuCommand>();
         }
 
         /// <summary>
@@ -340,7 +340,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_toolStripKeyBoardService == null)
+                if (_toolStripKeyBoardService is null)
                 {
                     _toolStripKeyBoardService = (ToolStripKeyboardHandlingService)_component.Site.GetService(typeof(ToolStripKeyboardHandlingService));
                 }
@@ -355,7 +355,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_selectionService == null)
+                if (_selectionService is null)
                 {
                     _selectionService = (ISelectionService)_component.Site.GetService(typeof(ISelectionService));
                 }
@@ -367,7 +367,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_behaviorService == null)
+                if (_behaviorService is null)
                 {
                     _behaviorService = (BehaviorService)_component.Site.GetService(typeof(BehaviorService));
                 }
@@ -501,7 +501,6 @@ namespace System.Windows.Forms.Design
                     }
                     _contextMenu = null;
                     ShowDropDownMenu();
-
                 }
                 else
                 {
@@ -515,7 +514,7 @@ namespace System.Windows.Forms.Design
                             KeyboardService.ActiveTemplateNode.Commit(false, false);
                         }
                         // cause a selectionChange...
-                        if (SelectionService.PrimarySelection == null)
+                        if (SelectionService.PrimarySelection is null)
                         {
                             SelectionService.SetSelectedComponents(new object[] { _component }, SelectionTypes.Replace);
                         }
@@ -889,9 +888,9 @@ namespace System.Windows.Forms.Design
                     if (_designerHost != null)
                     {
                         baseComponent = (Control)_designerHost.RootComponent;
-                        NativeMethods.SendMessage(baseComponent.Handle, WindowMessages.WM_SETREDRAW, 0, 0);
+                        User32.SendMessageW(baseComponent.Handle, User32.WM.SETREDRAW, IntPtr.Zero, IntPtr.Zero);
                         tb.Focus();
-                        NativeMethods.SendMessage(baseComponent.Handle, WindowMessages.WM_SETREDRAW, 1, 0);
+                        User32.SendMessageW(baseComponent.Handle, User32.WM.SETREDRAW, (IntPtr)1, IntPtr.Zero);
                     }
                 }
                 finally
@@ -973,9 +972,9 @@ namespace System.Windows.Forms.Design
                 if (_designerHost != null)
                 {
                     Control baseComponent = (Control)_designerHost.RootComponent;
-                    NativeMethods.SendMessage(baseComponent.Handle, WindowMessages.WM_SETREDRAW, 0, 0);
+                    User32.SendMessageW(baseComponent.Handle, User32.WM.SETREDRAW, IntPtr.Zero, IntPtr.Zero);
                     designerFrame.Focus();
-                    NativeMethods.SendMessage(baseComponent.Handle, WindowMessages.WM_SETREDRAW, 1, 0);
+                    User32.SendMessageW(baseComponent.Handle, User32.WM.SETREDRAW, (IntPtr)1, IntPtr.Zero);
                 }
             }
         }
@@ -1009,7 +1008,7 @@ namespace System.Windows.Forms.Design
 
         private void OnContextMenuClosing(object sender, ToolStripDropDownClosingEventArgs e)
         {
-            if (_addItemButton == null)
+            if (_addItemButton is null)
             {
                 _miniToolStrip.RaiseStateChangeEvent();
             }
@@ -1051,7 +1050,6 @@ namespace System.Windows.Forms.Design
             }
             switch (e.KeyCode)
             {
-
                 case Keys.Up:
                     Commit(false, true);
                     if (KeyboardService != null)
@@ -1280,7 +1278,7 @@ namespace System.Windows.Forms.Design
                     Rectangle translatedBounds = new Rectangle(loc, _miniToolStrip.Size);
                     _miniToolStrip.RaiseStateChangeEvent();
 
-                    if (_contextMenu == null)
+                    if (_contextMenu is null)
                     {
                         _isPopulated = true;
                         _contextMenu = ToolStripDesignerUtils.GetNewItemDropDown(_component, null, new EventHandler(AddNewItemClick), false, _component.Site, true);
@@ -1535,9 +1533,9 @@ namespace System.Windows.Forms.Design
             /// </summary>
             protected override void WndProc(ref Message m)
             {
-                switch (m.Msg)
+                switch ((User32.WM)m.Msg)
                 {
-                    case WindowMessages.WM_KILLFOCUS:
+                    case User32.WM.KILLFOCUS:
                         base.WndProc(ref m);
                         IntPtr focussedWindow = (IntPtr)m.WParam;
                         if (!IsParentWindow(focussedWindow))
@@ -1549,7 +1547,7 @@ namespace System.Windows.Forms.Design
                     // 1.Slowly click on a menu strip item twice to make it editable, while the item's dropdown menu is visible
                     // 2.Select the text of the item and right click on it
                     // 3.Left click 'Copy' or 'Cut' in the context menu IDE crashed because left click in step3 invoked glyph  behavior, which commited and destroyed the insitu edit box and thus  the 'copy' or 'cut' action has no text to work with.  Thus need to block glyph behaviors while the context menu is displayed.
-                    case WindowMessages.WM_CONTEXTMENU:
+                    case User32.WM.CONTEXTMENU:
                         owner.IsSystemContextMenuDisplayed = true;
                         base.WndProc(ref m);
                         owner.IsSystemContextMenuDisplayed = false;
@@ -1638,7 +1636,6 @@ namespace System.Windows.Forms.Design
                 ToolStripItem item = GetSelectedItem();
                 if (item is ToolStripControlHost)
                 {
-
                     CommitAndSelectNext(forward);
                     return true;
                 }
@@ -1696,10 +1693,10 @@ namespace System.Windows.Forms.Design
 
             protected override void WndProc(ref Message m)
             {
-                switch (m.Msg)
+                switch ((User32.WM)m.Msg)
                 {
-                    case WindowMessages.WM_GETOBJECT:
-                        if (owner._addItemButton == null)
+                    case User32.WM.GETOBJECT:
+                        if (owner._addItemButton is null)
                         {
                             // only adding patterns to _miniToolStrip associated with MenuStrip or ContextMenu
                             // m.Result = AutomationInteropProvider.ReturnRawElementProvider(Handle, m.WParam, m.LParam, (IRawElementProviderSimple)(new TransparentToolStripUiaProvider(this)));

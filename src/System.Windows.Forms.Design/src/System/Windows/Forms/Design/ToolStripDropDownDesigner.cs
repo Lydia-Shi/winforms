@@ -24,25 +24,25 @@ namespace System.Windows.Forms.Design
         private ToolStripDropDown dropDown;
         private bool selected;
         private ControlBodyGlyph dummyToolStripGlyph;
-        private uint _editingCollection = 0; // non-zero if the collection editor is up for this ToolStrip or a child of it.
-        FormDocumentDesigner parentFormDesigner = null;
-        internal ToolStripMenuItem currentParent = null;
-        private INestedContainer nestedContainer = null; //NestedContainer for our DesignTime MenuItem.
-        private UndoEngine undoEngine = null;
+        private uint _editingCollection; // non-zero if the collection editor is up for this ToolStrip or a child of it.
+        FormDocumentDesigner parentFormDesigner;
+        internal ToolStripMenuItem currentParent;
+        private INestedContainer nestedContainer; //NestedContainer for our DesignTime MenuItem.
+        private UndoEngine undoEngine;
 
         /// <summary>
         ///  ShadowProperty.
         /// </summary>
         private bool AutoClose
         {
-            get => (bool)ShadowProperties["AutoClose"];
-            set => ShadowProperties["AutoClose"] = value;
+            get => (bool)ShadowProperties[nameof(AutoClose)];
+            set => ShadowProperties[nameof(AutoClose)] = value;
         }
 
         private bool AllowDrop
         {
-            get => (bool)ShadowProperties["AllowDrop"];
-            set => ShadowProperties["AllowDrop"] = value;
+            get => (bool)ShadowProperties[nameof(AllowDrop)];
+            set => ShadowProperties[nameof(AllowDrop)] = value;
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace System.Windows.Forms.Design
                 {
                     if (Component is IPersistComponentSettings persistableComponent && host != null)
                     {
-                        if (persistableComponent.SettingsKey == null)
+                        if (persistableComponent.SettingsKey is null)
                         {
                             IComponent rootComponent = host.RootComponent;
                             if (rootComponent != null && rootComponent != persistableComponent)
@@ -287,7 +287,7 @@ namespace System.Windows.Forms.Design
         // private helper function to Hide the ContextMenu structure.
         private void HideMenu()
         {
-            if (menuItem == null)
+            if (menuItem is null)
             {
                 return;
             }
@@ -349,14 +349,14 @@ namespace System.Windows.Forms.Design
             host = (IDesignerHost)GetService(typeof(IDesignerHost));
             //Add the EditService so that the ToolStrip can do its own Tab and Keyboard Handling
             ToolStripKeyboardHandlingService keyboardHandlingService = (ToolStripKeyboardHandlingService)GetService(typeof(ToolStripKeyboardHandlingService));
-            if (keyboardHandlingService == null)
+            if (keyboardHandlingService is null)
             {
                 keyboardHandlingService = new ToolStripKeyboardHandlingService(component.Site);
             }
 
             //Add the InsituEditService so that the ToolStrip can do its own Insitu Editing
             ISupportInSituService inSituService = (ISupportInSituService)GetService(typeof(ISupportInSituService));
-            if (inSituService == null)
+            if (inSituService is null)
             {
                 inSituService = new ToolStripInSituService(Component.Site);
             }
@@ -411,7 +411,7 @@ namespace System.Windows.Forms.Design
             // init the verb.
             new EditorServiceContext(this, TypeDescriptor.GetProperties(Component)["Items"], SR.ToolStripItemCollectionEditorVerb);
             // use the UndoEngine.Undone to Show the DropDown Again..
-            if (undoEngine == null)
+            if (undoEngine is null)
             {
                 undoEngine = GetService(typeof(UndoEngine)) as UndoEngine;
                 if (undoEngine != null)
@@ -425,14 +425,14 @@ namespace System.Windows.Forms.Design
         private bool IsContextMenuStripItemSelected(ISelectionService selectionService)
         {
             bool showDesignMenu = false;
-            if (menuItem == null)
+            if (menuItem is null)
             {
                 return showDesignMenu;
             }
 
             ToolStripDropDown topmost = null;
             IComponent comp = (IComponent)selectionService.PrimarySelection;
-            if (comp == null && dropDown.Visible)
+            if (comp is null && dropDown.Visible)
             {
                 ToolStripKeyboardHandlingService keyboardHandlingService = (ToolStripKeyboardHandlingService)GetService(typeof(ToolStripKeyboardHandlingService));
                 if (keyboardHandlingService != null)
@@ -510,7 +510,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         private void OnSelectionChanged(object sender, EventArgs e)
         {
-            if (Component == null || menuItem == null)
+            if (Component is null || menuItem is null)
             {
                 return;
             }
@@ -577,41 +577,41 @@ namespace System.Windows.Forms.Design
             }
         }
 
-        // <summary>
-        // Resets the ToolStripDropDown AutoClose to be the default padding
-        // <summary/>
+        /// <summary>
+        /// Resets the ToolStripDropDown AutoClose to be the default padding
+        /// </summary>
         private void ResetAutoClose()
         {
-            ShadowProperties["AutoClose"] = true;
+            ShadowProperties[nameof(AutoClose)] = true;
         }
 
-        // <summary>
-        // Restores the ToolStripDropDown AutoClose to be the value set in the property grid.
-        // <summary/>
+        /// <summary>
+        /// Restores the ToolStripDropDown AutoClose to be the value set in the property grid.
+        /// </summary>
         private void RestoreAutoClose()
         {
-            dropDown.AutoClose = (bool)ShadowProperties["AutoClose"];
+            dropDown.AutoClose = (bool)ShadowProperties[nameof(AutoClose)];
         }
 
-        // <summary>
-        // Resets the ToolStripDropDown AllowDrop to be the default padding
-        // <summary/>
+        /// <summary>
+        /// Resets the ToolStripDropDown AllowDrop to be the default padding
+        /// </summary>
         private void ResetAllowDrop()
         {
-            ShadowProperties["AllowDrop"] = false;
+            ShadowProperties[nameof(AllowDrop)] = false;
         }
 
-        // <summary>
-        // Restores the ToolStripDropDown AllowDrop to be the value set in the property grid.
-        // <summary/>
+        /// <summary>
+        /// Restores the ToolStripDropDown AllowDrop to be the value set in the property grid.
+        /// </summary>
         private void RestoreAllowDrop()
         {
-            dropDown.AutoClose = (bool)ShadowProperties["AllowDrop"];
+            dropDown.AutoClose = (bool)ShadowProperties[nameof(AllowDrop)];
         }
 
-        // <summary>
-        // Resets the ToolStripDropDown RightToLeft to be the default RightToLeft
-        // <summary/>
+        /// <summary>
+        /// Resets the ToolStripDropDown RightToLeft to be the default RightToLeft
+        /// </summary>
         private void ResetRightToLeft()
         {
             RightToLeft = RightToLeft.No;
@@ -638,7 +638,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public void ShowMenu(ToolStripItem selectedItem)
         {
-            if (menuItem == null)
+            if (menuItem is null)
             {
                 return;
             }
@@ -694,7 +694,7 @@ namespace System.Windows.Forms.Design
                     }
                 }
 
-                if (dummyToolStripGlyph == null)
+                if (dummyToolStripGlyph is null)
                 {
                     Point loc = behaviorService.ControlToAdornerWindow(designMenu);
                     Rectangle r = designMenu.Bounds;
@@ -721,19 +721,19 @@ namespace System.Windows.Forms.Design
         // Should the designer serialize the settings?
         private bool ShouldSerializeSettingsKey() => (Component is IPersistComponentSettings persistableComponent && persistableComponent.SaveSettings && SettingsKey != null);
 
-        // <summary>
-        // Since we're shadowing ToolStripDropDown AutoClose, we get called here to determine whether or not to serialize
-        // <summary/>
-        private bool ShouldSerializeAutoClose() => (!(bool)ShadowProperties["AutoClose"]);
+        /// <summary>
+        /// Since we're shadowing ToolStripDropDown AutoClose, we get called here to determine whether or not to serialize
+        /// </summary>
+        private bool ShouldSerializeAutoClose() => (!(bool)ShadowProperties[nameof(AutoClose)]);
 
-        // <summary>
-        // Since we're shadowing ToolStripDropDown AllowDrop, we get called here to determine whether or not to serialize
-        // <summary/>
+        /// <summary>
+        /// Since we're shadowing ToolStripDropDown AllowDrop, we get called here to determine whether or not to serialize
+        /// </summary>
         private bool ShouldSerializeAllowDrop() => AllowDrop;
 
-        // <summary>
-        // Since we're shadowing ToolStripDropDown RightToLeft, we get called here to determine whether or not to serialize
-        // <summary/>
+        /// <summary>
+        /// Since we're shadowing ToolStripDropDown RightToLeft, we get called here to determine whether or not to serialize
+        /// </summary>
         private bool ShouldSerializeRightToLeft() => RightToLeft != RightToLeft.No;
 
         /// <summary>

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
@@ -20,9 +22,9 @@ namespace System.Windows.Forms
             // In .NET 2.0 we now aggressively tear down the parking window
             //   when the last control has been removed off of it.
 
-            private const int WM_CHECKDESTROY = Interop.WindowMessages.WM_USER + 0x01;
+            private const int WM_CHECKDESTROY = (int)User32.WM.USER + 0x01;
 
-            private int _childCount = 0;
+            private int _childCount;
 
             public ParkingWindow()
             {
@@ -76,14 +78,14 @@ namespace System.Windows.Forms
                 // messagepump is gone and then decide to clean them up.  We should clean
                 // up the parkingwindow in this case and a postmessage won't do it.
 
-                uint id = User32.GetWindowThreadProcessId(this, out _);
+                uint id = User32.GetWindowThreadProcessId(HandleInternal, out _);
                 ThreadContext context = ThreadContext.FromId(id);
 
                 // We only do this if the ThreadContext tells us that we are currently
                 // handling a window message.
-                if (context == null || !ReferenceEquals(context, ThreadContext.FromCurrent()))
+                if (context is null || !ReferenceEquals(context, ThreadContext.FromCurrent()))
                 {
-                    UnsafeNativeMethods.PostMessage(new HandleRef(this, HandleInternal), WM_CHECKDESTROY, IntPtr.Zero, IntPtr.Zero);
+                    User32.PostMessageW(HandleInternal, (User32.WM)WM_CHECKDESTROY);
                 }
                 else
                 {
@@ -147,16 +149,16 @@ namespace System.Windows.Forms
 
             protected override void WndProc(ref Message m)
             {
-                if (m.Msg == Interop.WindowMessages.WM_SHOWWINDOW)
+                if (m.Msg == (int)User32.WM.SHOWWINDOW)
                     return;
 
                 base.WndProc(ref m);
                 switch (m.Msg)
                 {
-                    case Interop.WindowMessages.WM_PARENTNOTIFY:
-                        if (NativeMethods.Util.LOWORD(unchecked((int)(long)m.WParam)) == Interop.WindowMessages.WM_DESTROY)
+                    case (int)User32.WM.PARENTNOTIFY:
+                        if (PARAM.LOWORD(m.WParam) == (int)User32.WM.DESTROY)
                         {
-                            UnsafeNativeMethods.PostMessage(new HandleRef(this, Handle), WM_CHECKDESTROY, IntPtr.Zero, IntPtr.Zero);
+                            User32.PostMessageW(this, (User32.WM)WM_CHECKDESTROY);
                         }
 
                         break;

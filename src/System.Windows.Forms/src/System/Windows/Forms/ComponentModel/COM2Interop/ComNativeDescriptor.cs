@@ -2,12 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using static Interop;
+using static Interop.Ole32;
 
 namespace System.Windows.Forms.ComponentModel.Com2Interop
 {
@@ -16,7 +19,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
     /// </summary>
     internal class ComNativeDescriptor : TypeDescriptionProvider
     {
-        private static ComNativeDescriptor handler = null;
+        private static ComNativeDescriptor handler;
 
         private readonly AttributeCollection staticAttrs = new AttributeCollection(new Attribute[] { BrowsableAttribute.Yes, DesignTimeVisibleAttribute.No });
 
@@ -35,14 +38,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         ///  intervals, we run through the properies list to see if we should
         ///  delete any.
         /// </summary>
-        private int clearCount = 0;
+        private int clearCount;
         private const int CLEAR_INTERVAL = 25;
 
         internal static ComNativeDescriptor Instance
         {
             get
             {
-                if (handler == null)
+                if (handler is null)
                 {
                     handler = new ComNativeDescriptor();
                 }
@@ -74,48 +77,31 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             return new ComTypeDescriptor(this, instance);
         }
 
-        internal string GetClassName(object component)
+        internal unsafe string GetClassName(object component)
         {
             string name = null;
 
             // does IVsPerPropretyBrowsing supply us a name?
-            if (component is NativeMethods.IVsPerPropertyBrowsing)
+            if (component is VSSDK.IVsPerPropertyBrowsing)
             {
-                int hr = ((NativeMethods.IVsPerPropertyBrowsing)component).GetClassName(ref name);
-                if (NativeMethods.Succeeded(hr) && name != null)
+                HRESULT hr = ((VSSDK.IVsPerPropertyBrowsing)component).GetClassName(ref name);
+                if (hr.Succeeded() && name != null)
                 {
                     return name;
                 }
                 // otherwise fall through...
             }
 
-            UnsafeNativeMethods.ITypeInfo pTypeInfo = Com2TypeInfoProcessor.FindTypeInfo(component, true);
+            Oleaut32.ITypeInfo pTypeInfo = Com2TypeInfoProcessor.FindTypeInfo(component, true);
 
-            if (pTypeInfo == null)
+            if (pTypeInfo is null)
             {
-                //Debug.Fail("The current component failed to return an ITypeInfo");
-                return "";
+                return string.Empty;
             }
 
-            if (pTypeInfo != null)
-            {
-                string desc = null;
-                try
-                {
-                    pTypeInfo.GetDocumentation(Ole32.DispatchID.MEMBERID_NIL, ref name, ref desc, null, null);
-
-                    // strip the leading underscores
-                    while (name != null && name.Length > 0 && name[0] == '_')
-                    {
-                        name = name.Substring(1);
-                    }
-                    return name;
-                }
-                catch
-                {
-                }
-            }
-            return "";
+            using var nameBstr = new BSTR();
+            pTypeInfo.GetDocumentation(DispatchID.MEMBERID_NIL, &nameBstr, null, null, null);
+            return nameBstr.String.TrimStart('_').ToString();
         }
 
         internal TypeConverter GetConverter(object component)
@@ -130,13 +116,13 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
         internal string GetName(object component)
         {
-            if (!(component is UnsafeNativeMethods.IDispatch))
+            if (!(component is Oleaut32.IDispatch))
             {
                 return "";
             }
 
-            Ole32.DispatchID dispid = Com2TypeInfoProcessor.GetNameDispId((UnsafeNativeMethods.IDispatch)component);
-            if (dispid != Ole32.DispatchID.UNKNOWN)
+            DispatchID dispid = Com2TypeInfoProcessor.GetNameDispId((Oleaut32.IDispatch)component);
+            if (dispid != DispatchID.UNKNOWN)
             {
                 bool success = false;
                 object value = GetPropertyValue(component, dispid, ref success);
@@ -152,19 +138,18 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
         internal unsafe object GetPropertyValue(object component, string propertyName, ref bool succeeded)
         {
-            if (!(component is UnsafeNativeMethods.IDispatch))
+            if (!(component is Oleaut32.IDispatch iDispatch))
             {
                 return null;
             }
 
-            UnsafeNativeMethods.IDispatch iDispatch = (UnsafeNativeMethods.IDispatch)component;
             string[] names = new string[] { propertyName };
-            Ole32.DispatchID dispid = Ole32.DispatchID.UNKNOWN;
+            DispatchID dispid = DispatchID.UNKNOWN;
             Guid g = Guid.Empty;
             try
             {
                 HRESULT hr = iDispatch.GetIDsOfNames(&g, names, 1, Kernel32.GetThreadLocale(), &dispid);
-                if (dispid == Ole32.DispatchID.UNKNOWN || !hr.Succeeded())
+                if (dispid == DispatchID.UNKNOWN || !hr.Succeeded())
                 {
                     return null;
                 }
@@ -177,9 +162,9 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             }
         }
 
-        internal object GetPropertyValue(object component, Ole32.DispatchID dispid, ref bool succeeded)
+        internal object GetPropertyValue(object component, DispatchID dispid, ref bool succeeded)
         {
-            if (!(component is UnsafeNativeMethods.IDispatch))
+            if (!(component is Oleaut32.IDispatch))
             {
                 return null;
             }
@@ -196,26 +181,25 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             }
         }
 
-        internal unsafe HRESULT GetPropertyValue(object component, Ole32.DispatchID dispid, object[] retval)
+        internal unsafe HRESULT GetPropertyValue(object component, DispatchID dispid, object[] retval)
         {
-            if (!(component is UnsafeNativeMethods.IDispatch))
+            if (!(component is Oleaut32.IDispatch iDispatch))
             {
                 return HRESULT.E_NOINTERFACE;
             }
 
-            UnsafeNativeMethods.IDispatch iDispatch = (UnsafeNativeMethods.IDispatch)component;
             try
             {
                 Guid g = Guid.Empty;
-                var pExcepInfo = new Ole32.EXCEPINFO();
-                var dispParams = new Ole32.DISPPARAMS();
+                var pExcepInfo = new Oleaut32.EXCEPINFO();
+                var dispParams = new Oleaut32.DISPPARAMS();
                 try
                 {
                     HRESULT hr = iDispatch.Invoke(
                         dispid,
                         &g,
                         Kernel32.GetThreadLocale(),
-                        NativeMethods.DISPATCH_PROPERTYGET,
+                        Oleaut32.DISPATCH.PROPERTYGET,
                         &dispParams,
                         retval,
                         &pExcepInfo,
@@ -243,14 +227,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         ///  Checks if the given dispid matches the dispid that the Object would like to specify
         ///  as its identification proeprty (Name, ID, etc).
         /// </summary>
-        internal bool IsNameDispId(object obj, Ole32.DispatchID dispid)
+        internal bool IsNameDispId(object obj, DispatchID dispid)
         {
-            if (obj == null || !obj.GetType().IsCOMObject)
+            if (obj is null || !obj.GetType().IsCOMObject)
             {
                 return false;
             }
 
-            return dispid == Com2TypeInfoProcessor.GetNameDispId((UnsafeNativeMethods.IDispatch)obj);
+            return dispid == Com2TypeInfoProcessor.GetNameDispId((Oleaut32.IDispatch)obj);
         }
 
         /// <summary>
@@ -261,7 +245,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             // walk the list every so many calls
             if ((++clearCount % CLEAR_INTERVAL) == 0)
             {
-
                 lock (nativeProps)
                 {
                     clearCount = 0;
@@ -274,12 +257,11 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                     //
                     foreach (DictionaryEntry de in nativeProps)
                     {
-
                         entry = de.Value as Com2Properties;
 
                         if (entry != null && entry.TooOld)
                         {
-                            if (disposeList == null)
+                            if (disposeList is null)
                             {
                                 disposeList = new List<object>(3);
                             }
@@ -325,7 +307,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
             // if we dont' have one, create one and set it up
             //
-            if (propsInfo == null || !propsInfo.CheckValid())
+            if (propsInfo is null || !propsInfo.CheckValid())
             {
                 propsInfo = Com2TypeInfoProcessor.GetProperties(component);
                 if (propsInfo != null)
@@ -345,9 +327,9 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             ArrayList attrs = new ArrayList();
 
-            if (component is NativeMethods.IManagedPerPropertyBrowsing)
+            if (component is VSSDK.IVSMDPerPropertyBrowsing)
             {
-                object[] temp = Com2IManagedPerPropertyBrowsingHandler.GetComponentAttributes((NativeMethods.IManagedPerPropertyBrowsing)component, Ole32.DispatchID.MEMBERID_NIL);
+                object[] temp = Com2IManagedPerPropertyBrowsingHandler.GetComponentAttributes((VSSDK.IVSMDPerPropertyBrowsing)component, DispatchID.MEMBERID_NIL);
                 for (int i = 0; i < temp.Length; ++i)
                 {
                     attrs.Add(temp[i]);
@@ -360,7 +342,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 attrs.Add(a);
             }
 
-            if (attrs == null || attrs.Count == 0)
+            if (attrs is null || attrs.Count == 0)
             {
                 return staticAttrs;
             }
@@ -409,7 +391,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             Com2Properties propsInfo = GetPropsInfo(component);
 
-            if (propsInfo == null)
+            if (propsInfo is null)
             {
                 return PropertyDescriptorCollection.Empty;
             }
@@ -417,10 +399,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             try
             {
                 propsInfo.AlwaysValid = true;
-                PropertyDescriptor[] props = propsInfo.Properties;
-
-                //Debug.Assert(propDescList.Count > 0, "Didn't add any properties! (propInfos=0)");
-                return new PropertyDescriptorCollection(props);
+                return new PropertyDescriptorCollection(propsInfo.Properties);
             }
             finally
             {
@@ -439,20 +418,17 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
                 lock (nativeProps)
                 {
-
                     // find the key
                     object key = propsInfo.TargetObject;
 
-                    if (key == null && nativeProps.ContainsValue(propsInfo))
+                    if (key is null && nativeProps.ContainsValue(propsInfo))
                     {
-
                         // need to find it - the target object has probably been cleaned out
                         // of the Com2Properties object already, so we run through the
                         // hashtable looking for the value, so we know what key to remove.
                         //
                         foreach (DictionaryEntry de in nativeProps)
                         {
-
                             if (de.Value == propsInfo)
                             {
                                 key = de.Key;
@@ -460,7 +436,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                             }
                         }
 
-                        if (key == null)
+                        if (key is null)
                         {
                             Debug.Fail("Failed to find Com2 properties key on dispose.");
                             return;

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -15,50 +17,50 @@ namespace System.Windows.Forms
     [DefaultEvent(nameof(ButtonClick))]
     public class ToolStripSplitButton : ToolStripDropDownItem
     {
-        private ToolStripItem defaultItem = null;
-        private ToolStripSplitButtonButton splitButtonButton = null;
-        private Rectangle dropDownButtonBounds = Rectangle.Empty;
-        private ToolStripSplitButtonButtonLayout splitButtonButtonLayout = null;
-        private int dropDownButtonWidth = 0;
-        private int splitterWidth = 1;
-        private Rectangle splitterBounds = Rectangle.Empty;
-        private byte openMouseId = 0;
-        private long lastClickTime = 0;
+        private ToolStripItem _defaultItem;
+        private ToolStripSplitButtonButton _splitButtonButton;
+        private Rectangle _dropDownButtonBounds = Rectangle.Empty;
+        private ToolStripSplitButtonButtonLayout _splitButtonButtonLayout;
+        private int _dropDownButtonWidth;
+        private int _splitterWidth = 1;
+        private Rectangle _splitterBounds = Rectangle.Empty;
+        private byte _openMouseId;
+        private long _lastClickTime;
 
-        private const int DEFAULT_DROPDOWN_WIDTH = 11;
+        private const int DefaultDropDownWidth = 11;
 
-        private static readonly object EventDefaultItemChanged = new object();
-        private static readonly object EventButtonClick = new object();
-        private static readonly object EventButtonDoubleClick = new object();
-        private static readonly object EventDropDownOpened = new object();
-        private static readonly object EventDropDownClosed = new object();
+        private static readonly object s_eventDefaultItemChanged = new object();
+        private static readonly object s_eventButtonClick = new object();
+        private static readonly object s_eventButtonDoubleClick = new object();
 
-        private static bool isScalingInitialized = false;
-        private static int scaledDropDownButtonWidth = DEFAULT_DROPDOWN_WIDTH;
+        private static bool s_isScalingInitialized;
+        private static int s_scaledDropDownButtonWidth = DefaultDropDownWidth;
 
-        /// <summary>
-        ///  Summary of ToolStripSplitButton.
-        /// </summary>
         public ToolStripSplitButton()
         {
             Initialize(); // all additional work should be done in Initialize
         }
+
         public ToolStripSplitButton(string text) : base(text, null, (EventHandler)null)
         {
             Initialize();
         }
+
         public ToolStripSplitButton(Image image) : base(null, image, (EventHandler)null)
         {
             Initialize();
         }
+
         public ToolStripSplitButton(string text, Image image) : base(text, image, (EventHandler)null)
         {
             Initialize();
         }
+
         public ToolStripSplitButton(string text, Image image, EventHandler onClick) : base(text, image, onClick)
         {
             Initialize();
         }
+
         public ToolStripSplitButton(string text, Image image, EventHandler onClick, string name) : base(text, image, onClick, name)
         {
             Initialize();
@@ -71,19 +73,10 @@ namespace System.Windows.Forms
         [DefaultValue(true)]
         public new bool AutoToolTip
         {
-            get
-            {
-                return base.AutoToolTip;
-            }
-            set
-            {
-                base.AutoToolTip = value;
-            }
+            get => base.AutoToolTip;
+            set => base.AutoToolTip = value;
         }
 
-        /// <summary>
-        ///  Summary of ToolStripSplitButton.
-        /// </summary>
         [Browsable(false)]
         public Rectangle ButtonBounds
         {
@@ -95,22 +88,15 @@ namespace System.Windows.Forms
             }
         }
 
-        /// <summary>
-        ///  Summary of ButtonPressed.
-        /// </summary>
         [Browsable(false)]
         public bool ButtonPressed
         {
             get
             {
                 return SplitButtonButton.Pressed;
-
             }
         }
 
-        /// <summary>
-        ///  Summary of ButtonPressed.
-        /// </summary>
         [Browsable(false)]
         public bool ButtonSelected
         {
@@ -123,26 +109,22 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Occurs when the button portion of a split button is clicked.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAction)),
-        SRDescription(nameof(SR.ToolStripSplitButtonOnButtonClickDescr))
-        ]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.ToolStripSplitButtonOnButtonClickDescr))]
         public event EventHandler ButtonClick
         {
-            add => Events.AddHandler(EventButtonClick, value);
-            remove => Events.RemoveHandler(EventButtonClick, value);
+            add => Events.AddHandler(s_eventButtonClick, value);
+            remove => Events.RemoveHandler(s_eventButtonClick, value);
         }
         /// <summary>
         ///  Occurs when the utton portion of a split button  is double clicked.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAction)),
-        SRDescription(nameof(SR.ToolStripSplitButtonOnButtonDoubleClickDescr))
-        ]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.ToolStripSplitButtonOnButtonDoubleClickDescr))]
         public event EventHandler ButtonDoubleClick
         {
-            add => Events.AddHandler(EventButtonDoubleClick, value);
-            remove => Events.RemoveHandler(EventButtonDoubleClick, value);
+            add => Events.AddHandler(s_eventButtonDoubleClick, value);
+            remove => Events.RemoveHandler(s_eventButtonDoubleClick, value);
         }
 
         protected override bool DefaultAutoToolTip
@@ -153,22 +135,20 @@ namespace System.Windows.Forms
             }
         }
 
-        /// <summary>
-        ///  Summary of DefaultItem.
-        /// </summary>
-        [DefaultValue(null), Browsable(false)]
+        [DefaultValue(null)]
+        [Browsable(false)]
         public ToolStripItem DefaultItem
         {
             get
             {
-                return defaultItem;
+                return _defaultItem;
             }
             set
             {
-                if (defaultItem != value)
+                if (_defaultItem != value)
                 {
                     OnDefaultItemChanged(EventArgs.Empty);
-                    defaultItem = value;
+                    _defaultItem = value;
                 }
             }
         }
@@ -176,14 +156,12 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Occurs when the default item has changed
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAction)),
-        SRDescription(nameof(SR.ToolStripSplitButtonOnDefaultItemChangedDescr))
-        ]
+        [SRCategory(nameof(SR.CatAction))]
+        [SRDescription(nameof(SR.ToolStripSplitButtonOnDefaultItemChangedDescr))]
         public event EventHandler DefaultItemChanged
         {
-            add => Events.AddHandler(EventDefaultItemChanged, value);
-            remove => Events.RemoveHandler(EventDefaultItemChanged, value);
+            add => Events.AddHandler(s_eventDefaultItemChanged, value);
+            remove => Events.RemoveHandler(s_eventDefaultItemChanged, value);
         }
 
         /// <summary>
@@ -195,7 +173,6 @@ namespace System.Windows.Forms
             {
                 return DropDown.Visible != true;
             }
-
         }
 
         internal override Rectangle DropDownButtonArea
@@ -211,13 +188,10 @@ namespace System.Windows.Forms
         {
             get
             {
-                return dropDownButtonBounds;
+                return _dropDownButtonBounds;
             }
-
         }
-        /// <summary>
-        ///  Summary of DropDownButtonBounds.
-        /// </summary>
+
         [Browsable(false)]
         public bool DropDownButtonPressed
         {
@@ -227,9 +201,7 @@ namespace System.Windows.Forms
                 return DropDown.Visible;
             }
         }
-        /// <summary>
-        ///  Summary of DropDownButtonSelected.
-        /// </summary>
+
         [Browsable(false)]
         public bool DropDownButtonSelected
         {
@@ -238,18 +210,14 @@ namespace System.Windows.Forms
                 return Selected;
             }
         }
-        /// <summary>
-        ///  Summary of DropDownButtonWidth.
-        /// </summary>
-        [
-        SRCategory(nameof(SR.CatLayout)),
-        SRDescription(nameof(SR.ToolStripSplitButtonDropDownButtonWidthDescr))
-        ]
+
+        [SRCategory(nameof(SR.CatLayout))]
+        [SRDescription(nameof(SR.ToolStripSplitButtonDropDownButtonWidthDescr))]
         public int DropDownButtonWidth
         {
             get
             {
-                return dropDownButtonWidth;
+                return _dropDownButtonWidth;
             }
             set
             {
@@ -259,11 +227,11 @@ namespace System.Windows.Forms
                     throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidLowBoundArgumentEx, nameof(DropDownButtonWidth), value, 0));
                 }
 
-                if (dropDownButtonWidth != value)
+                if (_dropDownButtonWidth != value)
                 {
-                    dropDownButtonWidth = value;
+                    _dropDownButtonWidth = value;
                     InvalidateSplitButtonLayout();
-                    InvalidateItemLayout(PropertyNames.DropDownButtonWidth, true);
+                    InvalidateItemLayout(PropertyNames.DropDownButtonWidth);
                 }
             }
         }
@@ -276,16 +244,16 @@ namespace System.Windows.Forms
             get
             {
                 // lets start off with a size roughly equivalent to a combobox dropdown
-                if (!isScalingInitialized)
+                if (!s_isScalingInitialized)
                 {
                     if (DpiHelper.IsScalingRequired)
                     {
-                        scaledDropDownButtonWidth = DpiHelper.LogicalToDeviceUnitsX(DEFAULT_DROPDOWN_WIDTH);
+                        s_scaledDropDownButtonWidth = DpiHelper.LogicalToDeviceUnitsX(DefaultDropDownWidth);
                     }
-                    isScalingInitialized = true;
+                    s_isScalingInitialized = true;
                 }
 
-                return scaledDropDownButtonWidth;
+                return s_scaledDropDownButtonWidth;
             }
         }
 
@@ -296,24 +264,22 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (splitButtonButton == null)
+                if (_splitButtonButton is null)
                 {
-                    splitButtonButton = new ToolStripSplitButtonButton(this);
+                    _splitButtonButton = new ToolStripSplitButtonButton(this);
                 }
-                splitButtonButton.Image = Image;
-                splitButtonButton.Text = Text;
-                splitButtonButton.BackColor = BackColor;
-                splitButtonButton.ForeColor = ForeColor;
-                splitButtonButton.Font = Font;
-                splitButtonButton.ImageAlign = ImageAlign;
-                splitButtonButton.TextAlign = TextAlign;
-                splitButtonButton.TextImageRelation = TextImageRelation;
-                return splitButtonButton;
+                _splitButtonButton.Image = Image;
+                _splitButtonButton.Text = Text;
+                _splitButtonButton.BackColor = BackColor;
+                _splitButtonButton.ForeColor = ForeColor;
+                _splitButtonButton.Font = Font;
+                _splitButtonButton.ImageAlign = ImageAlign;
+                _splitButtonButton.TextAlign = TextAlign;
+                _splitButtonButton.TextImageRelation = TextImageRelation;
+                return _splitButtonButton;
             }
         }
-        /// <summary>
-        ///  Summary of SplitButtonButtonLayout.
-        /// </summary>	
+
         internal ToolStripItemInternalLayout SplitButtonButtonLayout
         {
             get
@@ -322,38 +288,36 @@ namespace System.Windows.Forms
                 // internal layouts (button, dropdown button) in sync.
 
                 if (InternalLayout != null /*if layout is invalid - calls CreateInternalLayout - which resets splitButtonButtonLayout to null*/
-                    && splitButtonButtonLayout == null)
+                    && _splitButtonButtonLayout is null)
                 {
-                    splitButtonButtonLayout = new ToolStripSplitButtonButtonLayout(this);
+                    _splitButtonButtonLayout = new ToolStripSplitButtonButtonLayout(this);
                 }
-                return splitButtonButtonLayout;
+                return _splitButtonButtonLayout;
             }
         }
 
         /// <summary>
         ///  the width of the separator between the default and drop down button
         /// </summary>
-        [
-        SRDescription(nameof(SR.ToolStripSplitButtonSplitterWidthDescr)),
-        SRCategory(nameof(SR.CatLayout)),
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Advanced)
-        ]
+        [SRDescription(nameof(SR.ToolStripSplitButtonSplitterWidthDescr))]
+        [SRCategory(nameof(SR.CatLayout))]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Advanced)]
         internal int SplitterWidth
         {
             get
             {
-                return splitterWidth;
+                return _splitterWidth;
             }
             set
             {
                 if (value < 0)
                 {
-                    splitterWidth = 0;
+                    _splitterWidth = 0;
                 }
                 else
                 {
-                    splitterWidth = value;
+                    _splitterWidth = value;
                 }
                 InvalidateSplitButtonLayout();
             }
@@ -367,12 +331,10 @@ namespace System.Windows.Forms
         {
             get
             {
-                return splitterBounds;
+                return _splitterBounds;
             }
         }
-        /// <summary>
-        ///  Summary of CalculateLayout.
-        /// </summary>	
+
         private void CalculateLayout()
         {
             // Figure out where the DropDown image goes.
@@ -388,25 +350,23 @@ namespace System.Windows.Forms
             splitButtonButtonBounds = new Rectangle(Point.Empty, new Size(splitButtonButtonWidth, splitButtonButtonHeight));
 
             // grow the selected item by one since we're overlapping the borders.
-            splitButtonButtonBounds.Width -= splitterWidth;
+            splitButtonButtonBounds.Width -= _splitterWidth;
 
             if (RightToLeft == RightToLeft.No)
             {
                 // the dropdown button goes on the right
-                dropDownButtonBounds.Offset(splitButtonButtonBounds.Right + splitterWidth, 0);
-                splitterBounds = new Rectangle(splitButtonButtonBounds.Right, splitButtonButtonBounds.Top, splitterWidth, splitButtonButtonBounds.Height);
+                dropDownButtonBounds.Offset(splitButtonButtonBounds.Right + _splitterWidth, 0);
+                _splitterBounds = new Rectangle(splitButtonButtonBounds.Right, splitButtonButtonBounds.Top, _splitterWidth, splitButtonButtonBounds.Height);
             }
             else
             {
                 // the split button goes on the right.
-                splitButtonButtonBounds.Offset(DropDownButtonWidth + splitterWidth, 0);
-                splitterBounds = new Rectangle(dropDownButtonBounds.Right, dropDownButtonBounds.Top, splitterWidth, dropDownButtonBounds.Height);
-
+                splitButtonButtonBounds.Offset(DropDownButtonWidth + _splitterWidth, 0);
+                _splitterBounds = new Rectangle(dropDownButtonBounds.Right, dropDownButtonBounds.Top, _splitterWidth, dropDownButtonBounds.Height);
             }
 
             SplitButtonButton.SetBounds(splitButtonButtonBounds);
             SetDropDownButtonBounds(dropDownButtonBounds);
-
         }
 
         protected override AccessibleObject CreateAccessibilityInstance()
@@ -420,12 +380,11 @@ namespace System.Windows.Forms
             return new ToolStripDropDownMenu(this, /*isAutoGenerated=*/true);
         }
 
-        internal override ToolStripItemInternalLayout CreateInternalLayout()
+        private protected override ToolStripItemInternalLayout CreateInternalLayout()
         {
             // whenever the master layout is invalidated - invalidate the splitbuttonbutton layout.
-            splitButtonButtonLayout = null;
+            _splitButtonButtonLayout = null;
             return new ToolStripItemInternalLayout(this);
-
         }
 
         public override Size GetPreferredSize(Size constrainingSize)
@@ -435,18 +394,15 @@ namespace System.Windows.Forms
             return preferredSize;
         }
 
-        /// <summary>
-        ///  Summary of InvalidateSplitButtonLayout.
-        /// </summary>	
         private void InvalidateSplitButtonLayout()
         {
-            splitButtonButtonLayout = null;
+            _splitButtonButtonLayout = null;
             CalculateLayout();
         }
 
         private void Initialize()
         {
-            dropDownButtonWidth = DefaultDropDownButtonWidth;
+            _dropDownButtonWidth = DefaultDropDownButtonWidth;
             SupportsSpaceKey = true;
         }
 
@@ -475,7 +431,7 @@ namespace System.Windows.Forms
         protected virtual void OnButtonClick(EventArgs e)
         {
             DefaultItem?.FireEvent(ToolStripItemEventType.Click);
-            ((EventHandler)Events[EventButtonClick])?.Invoke(this, e);
+            ((EventHandler)Events[s_eventButtonClick])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -485,7 +441,7 @@ namespace System.Windows.Forms
         public virtual void OnButtonDoubleClick(EventArgs e)
         {
             DefaultItem?.FireEvent(ToolStripItemEventType.DoubleClick);
-            ((EventHandler)Events[EventButtonDoubleClick])?.Invoke(this, e);
+            ((EventHandler)Events[s_eventButtonDoubleClick])?.Invoke(this, e);
         }
 
         /// <summary>
@@ -496,28 +452,23 @@ namespace System.Windows.Forms
             InvalidateSplitButtonLayout();
             if (CanRaiseEvents)
             {
-                if (Events[EventDefaultItemChanged] is EventHandler eh)
+                if (Events[s_eventDefaultItemChanged] is EventHandler eh)
                 {
                     eh(this, e);
                 }
             }
-
         }
 
-        /// <summary>
-        ///  Summary of OnMouseDown.
-        /// </summary>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (DropDownButtonBounds.Contains(e.Location))
             {
                 if (e.Button == MouseButtons.Left)
                 {
-
                     if (!DropDown.Visible)
                     {
                         Debug.Assert(ParentInternal != null, "Parent is null here, not going to get accurate ID");
-                        openMouseId = (ParentInternal == null) ? (byte)0 : ParentInternal.GetMouseId();
+                        _openMouseId = (ParentInternal is null) ? (byte)0 : ParentInternal.GetMouseId();
                         ShowDropDown(/*mousePress = */true);
                     }
                 }
@@ -526,12 +477,8 @@ namespace System.Windows.Forms
             {
                 SplitButtonButton.Push(true);
             }
-
         }
 
-        /// <summary>
-        ///  Summary of OnMouseUp.
-        /// </summary>
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (!Enabled)
@@ -548,10 +495,10 @@ namespace System.Windows.Forms
                     if (DropDown.Visible)
                     {
                         Debug.Assert(ParentInternal != null, "Parent is null here, not going to get accurate ID");
-                        byte closeMouseId = (ParentInternal == null) ? (byte)0 : ParentInternal.GetMouseId();
-                        if (closeMouseId != openMouseId)
+                        byte closeMouseId = (ParentInternal is null) ? (byte)0 : ParentInternal.GetMouseId();
+                        if (closeMouseId != _openMouseId)
                         {
-                            openMouseId = 0;  // reset the mouse id, we should never get this value from toolstrip.
+                            _openMouseId = 0;  // reset the mouse id, we should never get this value from toolstrip.
                             ToolStripManager.ModalMenuFilter.CloseActiveDropDown(DropDown, ToolStripDropDownCloseReason.AppClicked);
                             Select();
                         }
@@ -565,8 +512,8 @@ namespace System.Windows.Forms
                 if (DoubleClickEnabled)
                 {
                     long newTime = DateTime.Now.Ticks;
-                    long deltaTicks = newTime - lastClickTime;
-                    lastClickTime = newTime;
+                    long deltaTicks = newTime - _lastClickTime;
+                    _lastClickTime = newTime;
                     // use >= for cases where the succession of click events is so fast it's not picked up by
                     // DateTime resolution.
                     Debug.Assert(deltaTicks >= 0, "why are deltaticks less than zero? thats some mighty fast clicking");
@@ -580,34 +527,27 @@ namespace System.Windows.Forms
                 {
                     OnButtonDoubleClick(EventArgs.Empty);
                     // If we actually fired DoubleClick - reset the lastClickTime.
-                    lastClickTime = 0;
+                    _lastClickTime = 0;
                 }
                 else
                 {
                     OnButtonClick(EventArgs.Empty);
                 }
             }
-
         }
         protected override void OnMouseLeave(EventArgs e)
         {
-            openMouseId = 0;  // reset the mouse id, we should never get this value from toolstrip.
+            _openMouseId = 0;  // reset the mouse id, we should never get this value from toolstrip.
             SplitButtonButton.Push(false);
             base.OnMouseLeave(e);
         }
 
-        /// <summary>
-        ///  Summary of OnRightToLeftChanged.
-        /// </summary>
         protected override void OnRightToLeftChanged(EventArgs e)
         {
             base.OnRightToLeftChanged(e);
             InvalidateSplitButtonLayout();
         }
-        /// <summary>
-        ///  Summary of OnPaint.
-        /// </summary>
-        /// <param name=e></param>
+
         protected override void OnPaint(PaintEventArgs e)
         {
             ToolStripRenderer renderer = Renderer;
@@ -648,12 +588,9 @@ namespace System.Windows.Forms
             DropDownButtonWidth = DefaultDropDownButtonWidth;
         }
 
-        /// <summary>
-        ///  Summary of SetDropDownBounds.
-        /// </summary>
         private void SetDropDownButtonBounds(Rectangle rect)
         {
-            dropDownButtonBounds = rect;
+            _dropDownButtonBounds = rect;
         }
         /// <summary>
         ///  Determines if the <see cref='ToolStripItem.Size'/> property needs to be persisted.
@@ -674,18 +611,18 @@ namespace System.Windows.Forms
         /// </summary>
         private class ToolStripSplitButtonButton : ToolStripButton
         {
-            private readonly ToolStripSplitButton owner = null;
+            private readonly ToolStripSplitButton _owner;
 
             public ToolStripSplitButtonButton(ToolStripSplitButton owner)
             {
-                this.owner = owner;
+                this._owner = owner;
             }
 
             public override bool Enabled
             {
                 get
                 {
-                    return owner.Enabled;
+                    return _owner.Enabled;
                 }
                 set
                 {
@@ -697,7 +634,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    return owner.DisplayStyle;
+                    return _owner.DisplayStyle;
                 }
                 set
                 {
@@ -709,7 +646,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    return owner.Padding;
+                    return _owner.Padding;
                 }
                 set
                 {
@@ -721,18 +658,17 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    return owner.TextDirection;
+                    return _owner.TextDirection;
                 }
             }
 
             public override Image Image
             {
-
                 get
                 {
-                    if ((owner.DisplayStyle & ToolStripItemDisplayStyle.Image) == ToolStripItemDisplayStyle.Image)
+                    if ((_owner.DisplayStyle & ToolStripItemDisplayStyle.Image) == ToolStripItemDisplayStyle.Image)
                     {
-                        return owner.Image;
+                        return _owner.Image;
                     }
                     else
                     {
@@ -749,10 +685,9 @@ namespace System.Windows.Forms
             {
                 get
                 {
-
-                    if (owner != null)
+                    if (_owner != null)
                     {
-                        return owner.Selected;
+                        return _owner.Selected;
                     }
                     return base.Selected;
                 }
@@ -762,9 +697,9 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if ((owner.DisplayStyle & ToolStripItemDisplayStyle.Text) == ToolStripItemDisplayStyle.Text)
+                    if ((_owner.DisplayStyle & ToolStripItemDisplayStyle.Text) == ToolStripItemDisplayStyle.Text)
                     {
-                        return owner.Text;
+                        return _owner.Text;
                     }
                     else
                     {
@@ -776,7 +711,6 @@ namespace System.Windows.Forms
                     // do nothing
                 }
             }
-
         }
 
         /// <summary>
@@ -786,23 +720,23 @@ namespace System.Windows.Forms
         /// </summary>
         private class ToolStripSplitButtonButtonLayout : ToolStripItemInternalLayout
         {
-            readonly ToolStripSplitButton owner;
+            readonly ToolStripSplitButton _owner;
 
             public ToolStripSplitButtonButtonLayout(ToolStripSplitButton owner) : base(owner.SplitButtonButton)
             {
-                this.owner = owner;
+                this._owner = owner;
             }
 
             protected override ToolStripItem Owner
             {
-                get { return owner; }
+                get { return _owner; }
             }
 
             protected override ToolStrip ParentInternal
             {
                 get
                 {
-                    return owner.ParentInternal;
+                    return _owner.ParentInternal;
                 }
             }
             public override Rectangle ImageRectangle
@@ -811,7 +745,7 @@ namespace System.Windows.Forms
                 {
                     Rectangle imageRect = base.ImageRectangle;
                     // translate to ToolStripItem coordinates
-                    imageRect.Offset(owner.SplitButtonButton.Bounds.Location);
+                    imageRect.Offset(_owner.SplitButtonButton.Bounds.Location);
                     return imageRect;
                 }
             }
@@ -822,7 +756,7 @@ namespace System.Windows.Forms
                 {
                     Rectangle textRect = base.TextRectangle;
                     // translate to ToolStripItem coordinates
-                    textRect.Offset(owner.SplitButtonButton.Bounds.Location);
+                    textRect.Offset(_owner.SplitButtonButton.Bounds.Location);
                     return textRect;
                 }
             }
@@ -830,27 +764,27 @@ namespace System.Windows.Forms
 
         public class ToolStripSplitButtonAccessibleObject : ToolStripItemAccessibleObject
         {
-            private readonly ToolStripSplitButton owner;
+            private readonly ToolStripSplitButton _owner;
 
             public ToolStripSplitButtonAccessibleObject(ToolStripSplitButton item) : base(item)
             {
-                owner = item;
+                _owner = item;
             }
 
             public override void DoDefaultAction()
             {
-                owner.PerformButtonClick();
+                _owner.PerformButtonClick();
             }
         }
 
         internal class ToolStripSplitButtonExAccessibleObject : ToolStripSplitButtonAccessibleObject
         {
-            private readonly ToolStripSplitButton ownerItem;
+            private readonly ToolStripSplitButton _ownerItem;
 
             public ToolStripSplitButtonExAccessibleObject(ToolStripSplitButton item)
                 : base(item)
             {
-                ownerItem = item;
+                _ownerItem = item;
             }
 
             internal override object GetPropertyValue(UiaCore.UIA propertyID)
@@ -867,7 +801,7 @@ namespace System.Windows.Forms
 
             internal override bool IsIAccessibleExSupported()
             {
-                if (ownerItem != null)
+                if (_ownerItem != null)
                 {
                     return true;
                 }
@@ -879,7 +813,7 @@ namespace System.Windows.Forms
 
             internal override bool IsPatternSupported(UiaCore.UIA patternId)
             {
-                if (patternId == UiaCore.UIA.ExpandCollapsePatternId && ownerItem.HasDropDownItems)
+                if (patternId == UiaCore.UIA.ExpandCollapsePatternId && _ownerItem.HasDropDownItems)
                 {
                     return true;
                 }
@@ -896,9 +830,9 @@ namespace System.Windows.Forms
 
             internal override void Collapse()
             {
-                if (ownerItem != null && ownerItem.DropDown != null && ownerItem.DropDown.Visible)
+                if (_ownerItem != null && _ownerItem.DropDown != null && _ownerItem.DropDown.Visible)
                 {
-                    ownerItem.DropDown.Close();
+                    _ownerItem.DropDown.Close();
                 }
             }
 
@@ -906,7 +840,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    return ownerItem.DropDown.Visible ? UiaCore.ExpandCollapseState.Expanded : UiaCore.ExpandCollapseState.Collapsed;
+                    return _ownerItem.DropDown.Visible ? UiaCore.ExpandCollapseState.Expanded : UiaCore.ExpandCollapseState.Collapsed;
                 }
             }
 
@@ -915,9 +849,9 @@ namespace System.Windows.Forms
                 switch (direction)
                 {
                     case UiaCore.NavigateDirection.FirstChild:
-                        return DropDownItemsCount > 0 ? ownerItem.DropDown.Items[0].AccessibilityObject : null;
+                        return DropDownItemsCount > 0 ? _ownerItem.DropDown.Items[0].AccessibilityObject : null;
                     case UiaCore.NavigateDirection.LastChild:
-                        return DropDownItemsCount > 0 ? ownerItem.DropDown.Items[ownerItem.DropDown.Items.Count - 1].AccessibilityObject : null;
+                        return DropDownItemsCount > 0 ? _ownerItem.DropDown.Items[_ownerItem.DropDown.Items.Count - 1].AccessibilityObject : null;
                 }
                 return base.FragmentNavigate(direction);
             }
@@ -934,19 +868,17 @@ namespace System.Windows.Forms
                         return 0;
                     }
 
-                    return ownerItem.DropDownItems.Count;
+                    return _ownerItem.DropDownItems.Count;
                 }
             }
         }
 
         internal class ToolStripSplitButtonUiaProvider : ToolStripDropDownItemAccessibleObject
         {
-            private readonly ToolStripSplitButton _owner;
             private readonly ToolStripSplitButtonExAccessibleObject _accessibleObject;
 
             public ToolStripSplitButtonUiaProvider(ToolStripSplitButton owner) : base(owner)
             {
-                _owner = owner;
                 _accessibleObject = new ToolStripSplitButtonExAccessibleObject(owner);
             }
 
@@ -992,5 +924,3 @@ namespace System.Windows.Forms
         }
     }
 }
-
-

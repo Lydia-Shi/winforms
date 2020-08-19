@@ -16,23 +16,23 @@ namespace System.Windows.Forms
         ///  This inherits from the base ListBoxExAccessibleObject and ListBoxAccessibleObject
         ///  to have all base functionality.
         /// </summary>
-        [ComVisible(true)]
         internal class ListBoxItemAccessibleObject : AccessibleObject
         {
             private readonly ItemArray.Entry _itemEntry;
             private readonly ListBoxAccessibleObject _owningAccessibleObject;
             private readonly ListBox _owningListBox;
-            private readonly IAccessible _systemIAccessible;
+            private readonly IAccessible? _systemIAccessible;
 
-            public ListBoxItemAccessibleObject(ListBox owningListBox, object itemEntry, ListBoxAccessibleObject owningAccessibleObject)
+            public ListBoxItemAccessibleObject(ListBox owningListBox, ItemArray.Entry itemEntry, ListBoxAccessibleObject owningAccessibleObject)
             {
-                _owningListBox = owningListBox;
-                _itemEntry = (ItemArray.Entry)itemEntry;
-                _owningAccessibleObject = owningAccessibleObject;
+                _owningListBox = owningListBox ?? throw new ArgumentNullException(nameof(owningListBox));
+                _itemEntry = itemEntry ?? throw new ArgumentNullException(nameof(itemEntry));
+                _owningAccessibleObject = owningAccessibleObject ?? throw new ArgumentNullException(nameof(owningAccessibleObject));
                 _systemIAccessible = owningAccessibleObject.GetSystemIAccessibleInternal();
             }
 
-            private int CurrentIndex => Array.IndexOf(_owningListBox.Items.InnerArray.Entries as Array, _itemEntry);
+            private int CurrentIndex
+                => Array.IndexOf((Array)_owningListBox.Items.InnerArray.Entries, _itemEntry);
 
             internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot => _owningAccessibleObject;
 
@@ -44,15 +44,21 @@ namespace System.Windows.Forms
                 }
             }
 
-            internal override UiaCore.IRawElementProviderSimple ItemSelectionContainer => _owningAccessibleObject;
+            internal override UiaCore.IRawElementProviderSimple ItemSelectionContainer
+                => _owningAccessibleObject;
 
             /// <summary>
             ///  Gets the runtime ID.
             /// </summary>
-            internal override int[] RuntimeId
+            internal override int[]? RuntimeId
             {
                 get
                 {
+                    if (_owningAccessibleObject.RuntimeId is null)
+                    {
+                        return base.RuntimeId;
+                    }
+
                     var runtimeId = new int[4];
 
                     runtimeId[0] = _owningAccessibleObject.RuntimeId[0];
@@ -95,32 +101,40 @@ namespace System.Windows.Forms
             /// <summary>
             ///  Gets the ListBox item default action.
             /// </summary>
-            public override string DefaultAction => _systemIAccessible.accDefaultAction[GetChildId()];
+            public override string? DefaultAction
+                => _systemIAccessible?.accDefaultAction[GetChildId()];
 
             /// <summary>
             ///  Gets the help text.
             /// </summary>
-            public override string Help => _systemIAccessible.accHelp[GetChildId()];
+            public override string? Help
+                => _systemIAccessible?.accHelp[GetChildId()];
 
             /// <summary>
             ///  Gets or sets the accessible name.
             /// </summary>
-            public override string Name
+            public override string? Name
             {
                 get
                 {
                     return _itemEntry.item.ToString();
                 }
-                set
-                {
-                    base.Name = value;
-                }
+                set => base.Name = value;
             }
 
             /// <summary>
             ///  Gets the accessible role.
             /// </summary>
-            public override AccessibleRole Role => (AccessibleRole)_systemIAccessible.get_accRole(GetChildId());
+            public override AccessibleRole Role
+            {
+                get
+                {
+                    var accRole = _systemIAccessible?.get_accRole(GetChildId());
+                    return accRole != null
+                        ? (AccessibleRole)accRole
+                        : AccessibleRole.None;
+                }
+            }
 
             /// <summary>
             ///  Gets the accessible state.
@@ -136,7 +150,13 @@ namespace System.Windows.Forms
                         return state |= AccessibleStates.Selected | AccessibleStates.Focused;
                     }
 
-                    return state |= (AccessibleStates)(_systemIAccessible.get_accState(GetChildId()));
+                    var systemIAccessibleState = _systemIAccessible?.get_accState(GetChildId());
+                    if (systemIAccessibleState != null)
+                    {
+                        return state |= (AccessibleStates)systemIAccessibleState;
+                    }
+
+                    return state;
                 }
             }
 
@@ -150,7 +170,7 @@ namespace System.Windows.Forms
                 SetFocus();
             }
 
-            internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
+            internal override UiaCore.IRawElementProviderFragment? FragmentNavigate(UiaCore.NavigateDirection direction)
             {
                 int firstItemIndex = 0;
                 int lastItemIndex = _owningListBox.Items.Count - 1;
@@ -182,42 +202,25 @@ namespace System.Windows.Forms
                 return CurrentIndex + 1; // Index is zero-based, Child ID is 1-based.
             }
 
-            internal override object GetPropertyValue(UiaCore.UIA propertyID)
-            {
-                switch (propertyID)
-                {
-                    case UiaCore.UIA.RuntimeIdPropertyId:
-                        return RuntimeId;
-                    case UiaCore.UIA.BoundingRectanglePropertyId:
-                        return Bounds;
-                    case UiaCore.UIA.ControlTypePropertyId:
-                        return UiaCore.UIA.ListItemControlTypeId;
-                    case UiaCore.UIA.NamePropertyId:
-                        return Name;
-                    case UiaCore.UIA.AccessKeyPropertyId:
-                        return string.Empty;
-                    case UiaCore.UIA.HasKeyboardFocusPropertyId:
-                        return _owningListBox.Focused && _owningListBox.FocusedIndex == CurrentIndex;
-                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
-                        return (State & AccessibleStates.Focusable) == AccessibleStates.Focusable;
-                    case UiaCore.UIA.IsEnabledPropertyId:
-                        return _owningListBox.Enabled;
-                    case UiaCore.UIA.HelpTextPropertyId:
-                        return Help ?? string.Empty;
-                    case UiaCore.UIA.IsPasswordPropertyId:
-                        return false;
-                    case UiaCore.UIA.NativeWindowHandlePropertyId:
-                        return _owningListBox.Handle;
-                    case UiaCore.UIA.IsOffscreenPropertyId:
-                        return (State & AccessibleStates.Offscreen) == AccessibleStates.Offscreen;
-                    case UiaCore.UIA.IsSelectionItemPatternAvailablePropertyId:
-                        return IsPatternSupported(UiaCore.UIA.SelectionItemPatternId);
-                    case UiaCore.UIA.IsScrollItemPatternAvailablePropertyId:
-                        return IsPatternSupported(UiaCore.UIA.ScrollItemPatternId);
-                    default:
-                        return base.GetPropertyValue(propertyID);
-                }
-            }
+            internal override object? GetPropertyValue(UiaCore.UIA propertyID)
+                 => propertyID switch
+                 {
+                     UiaCore.UIA.RuntimeIdPropertyId => RuntimeId,
+                     UiaCore.UIA.BoundingRectanglePropertyId => Bounds,
+                     UiaCore.UIA.ControlTypePropertyId => UiaCore.UIA.ListItemControlTypeId,
+                     UiaCore.UIA.NamePropertyId => Name,
+                     UiaCore.UIA.AccessKeyPropertyId => string.Empty,
+                     UiaCore.UIA.HasKeyboardFocusPropertyId => _owningListBox.Focused && _owningListBox.FocusedIndex == CurrentIndex,
+                     UiaCore.UIA.IsKeyboardFocusablePropertyId => (State & AccessibleStates.Focusable) == AccessibleStates.Focusable,
+                     UiaCore.UIA.IsEnabledPropertyId => _owningListBox.Enabled,
+                     UiaCore.UIA.HelpTextPropertyId => Help ?? string.Empty,
+                     UiaCore.UIA.IsPasswordPropertyId => false,
+                     UiaCore.UIA.NativeWindowHandlePropertyId => _owningListBox.IsHandleCreated ? _owningListBox.Handle : IntPtr.Zero,
+                     UiaCore.UIA.IsOffscreenPropertyId => (State & AccessibleStates.Offscreen) == AccessibleStates.Offscreen,
+                     UiaCore.UIA.IsSelectionItemPatternAvailablePropertyId => IsPatternSupported(UiaCore.UIA.SelectionItemPatternId),
+                     UiaCore.UIA.IsScrollItemPatternAvailablePropertyId => IsPatternSupported(UiaCore.UIA.ScrollItemPatternId),
+                     _ => base.GetPropertyValue(propertyID)
+                 };
 
             /// <summary>
             ///  Indicates whether specified pattern is supported.
@@ -247,15 +250,14 @@ namespace System.Windows.Forms
 
                 if (_owningListBox.SelectedIndex == -1) //no item selected
                 {
-                    _owningListBox.SendMessage(NativeMethods.LB_SETCARETINDEX, currentIndex, 0);
+                    User32.SendMessageW(_owningListBox, (User32.WM)User32.LB.SETCARETINDEX, (IntPtr)currentIndex);
                     return;
                 }
 
-                int firstVisibleIndex = _owningListBox.SendMessage(NativeMethods.LB_GETTOPINDEX, 0, 0).ToInt32();
-
+                int firstVisibleIndex = (int)(long)User32.SendMessageW(_owningListBox, (User32.WM)User32.LB.GETTOPINDEX);
                 if (currentIndex < firstVisibleIndex)
                 {
-                    _owningListBox.SendMessage(NativeMethods.LB_SETTOPINDEX, currentIndex, 0);
+                    User32.SendMessageW(_owningListBox, (User32.WM)User32.LB.SETTOPINDEX, (IntPtr)currentIndex);
                     return;
                 }
 
@@ -266,7 +268,7 @@ namespace System.Windows.Forms
 
                 for (int i = firstVisibleIndex; i < itemsCount; i++)
                 {
-                    int itemHeight = _owningListBox.SendMessage(NativeMethods.LB_GETITEMHEIGHT, i, 0).ToInt32();
+                    int itemHeight = (int)(long)User32.SendMessageW(_owningListBox, (User32.WM)User32.LB.GETITEMHEIGHT, (IntPtr)i);
 
                     if ((itemsHeightSum += itemHeight) <= listBoxHeight)
                     {
@@ -278,7 +280,7 @@ namespace System.Windows.Forms
 
                     if (currentIndex > lastVisibleIndex)
                     {
-                        _owningListBox.SendMessage(NativeMethods.LB_SETTOPINDEX, currentIndex - visibleItemsCount + 1, 0);
+                        User32.SendMessageW(_owningListBox, (User32.WM)User32.LB.SETTOPINDEX, (IntPtr)(currentIndex - visibleItemsCount + 1));
                     }
 
                     break;
@@ -304,7 +306,7 @@ namespace System.Windows.Forms
             {
                 try
                 {
-                    _systemIAccessible.accSelect((int)flags, GetChildId());
+                    _systemIAccessible?.accSelect((int)flags, GetChildId());
                 }
                 catch (ArgumentException)
                 {

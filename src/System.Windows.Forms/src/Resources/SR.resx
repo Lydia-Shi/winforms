@@ -115,9 +115,6 @@
   <data name="ApplyCaption" xml:space="preserve">
     <value>&amp;Apply</value>
   </data>
-  <data name="ArraysNotSameSize" xml:space="preserve">
-    <value>Arrays '{0}' and '{1}' must be the same size.</value>
-  </data>
   <data name="AutoCompleteFailure" xml:space="preserve">
     <value>autoComplete cannot be initialized with given custom source.</value>
   </data>
@@ -438,12 +435,6 @@
   </data>
   <data name="CannotChangePrintedDocument" xml:space="preserve">
     <value>You cannot alter the document or add to it once you have printed it.</value>
-  </data>
-  <data name="CannotConvertDoubleToDate" xml:space="preserve">
-    <value>Double cannot be converted to a date.</value>
-  </data>
-  <data name="CannotConvertIntToFloat" xml:space="preserve">
-    <value>Integer cannot be converted to a float.</value>
   </data>
   <data name="CantNestMessageLoops" xml:space="preserve">
     <value>Starting a second message loop on a single thread is not a valid operation. Use Form.ShowDialog instead.</value>
@@ -3347,6 +3338,9 @@ Stack trace where the illegal operation occurred was:
   <data name="ImageListCreateFailed" xml:space="preserve">
     <value>Creation of the ImageList handle did not succeed.</value>
   </data>
+  <data name="ImageListDuplicateFailed" xml:space="preserve">
+    <value>Duplication of the ImageList handle did not succeed.</value>
+  </data>
   <data name="ImageListEntryType" xml:space="preserve">
     <value>Image added to an ImageList must either derive from Image or be an Icon.</value>
   </data>
@@ -4511,9 +4505,9 @@ Stack trace where the illegal operation occurred was:
   <data name="PrintPreviewControlZoomNegative" xml:space="preserve">
     <value>Zoom must be 0 or greater. Negative values are not permitted.</value>
   </data>
-   <data name="PrintPreviewDialog_PrintPreview" xml:space="preserve">
+  <data name="PrintPreviewDialog_PrintPreview" xml:space="preserve">
     <value>Print preview</value>
-   </data>
+  </data>
   <data name="PrintPreviewDocumentDescr" xml:space="preserve">
     <value>PrintDocument to be previewed.</value>
   </data>
@@ -4703,6 +4697,9 @@ Stack trace where the illegal operation occurred was:
   <data name="ProfessionalColorsToolStripPanelGradientEndDescr" xml:space="preserve">
     <value>End color of the gradient used in the ToolStripPanel.</value>
   </data>
+  <data name="ProgressBarDefaultAccessibleName" xml:space="preserve">
+    <value>ProgressBar</value>
+  </data>
   <data name="ProgressBarIncrementMarqueeException" xml:space="preserve">
     <value>Increment should not be called if the style is Marquee.</value>
   </data>
@@ -4864,9 +4861,6 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="PropertyGridPropertyValueChangedDescr" xml:space="preserve">
     <value>Occurs when a property value changes.</value>
-  </data>
-  <data name="PropertyGridRemotedObject" xml:space="preserve">
-    <value>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</value>
   </data>
   <data name="PropertyGridRemoveStaticTabs" xml:space="preserve">
     <value>Static tabs cannot be removed from the PropertyGrid.</value>
@@ -5285,57 +5279,6 @@ Stack trace where the illegal operation occurred was:
   <data name="SplitterSplitterMovingDescr" xml:space="preserve">
     <value>Occurs when the splitter is being moved.</value>
   </data>
-  <data name="StatusBarAddFailed" xml:space="preserve">
-    <value>Adding the panel to the native status bar control has not succeeded.</value>
-  </data>
-  <data name="StatusBarBadStatusBarPanel" xml:space="preserve">
-    <value>Parameter must be of type StatusBarPanel.</value>
-  </data>
-  <data name="StatusBarDrawItem" xml:space="preserve">
-    <value>Occurs whenever a panel in the StatusBar needs to be painted.</value>
-  </data>
-  <data name="StatusBarOnPanelClickDescr" xml:space="preserve">
-    <value>Occurs when a panel within the status bar is clicked.</value>
-  </data>
-  <data name="StatusBarPanelAlignmentDescr" xml:space="preserve">
-    <value>The alignment of the panel's text.</value>
-  </data>
-  <data name="StatusBarPanelAutoSizeDescr" xml:space="preserve">
-    <value>Determines how a panel will resize when the parent changes size.</value>
-  </data>
-  <data name="StatusBarPanelBorderStyleDescr" xml:space="preserve">
-    <value>Determines what type of border a panel has.</value>
-  </data>
-  <data name="StatusBarPanelIconDescr" xml:space="preserve">
-    <value>Determines what icon is displayed in the panel.</value>
-  </data>
-  <data name="StatusBarPanelMinWidthDescr" xml:space="preserve">
-    <value>The minimum width of the panel.</value>
-  </data>
-  <data name="StatusBarPanelNameDescr" xml:space="preserve">
-    <value>The name of the panel.</value>
-  </data>
-  <data name="StatusBarPanelsDescr" xml:space="preserve">
-    <value>The panels in the status bar.</value>
-  </data>
-  <data name="StatusBarPanelStyleDescr" xml:space="preserve">
-    <value>The style of the panel.</value>
-  </data>
-  <data name="StatusBarPanelTextDescr" xml:space="preserve">
-    <value>The text displayed in the panel.</value>
-  </data>
-  <data name="StatusBarPanelToolTipTextDescr" xml:space="preserve">
-    <value>The panel's ToolTip text.</value>
-  </data>
-  <data name="StatusBarPanelWidthDescr" xml:space="preserve">
-    <value>The width of the panel.</value>
-  </data>
-  <data name="StatusBarShowPanelsDescr" xml:space="preserve">
-    <value>Determines if a status bar displays panels, or if it displays a single line of text.</value>
-  </data>
-  <data name="StatusBarSizingGripDescr" xml:space="preserve">
-    <value>Determines whether a status bar has a sizing grip.</value>
-  </data>
   <data name="StatusStripPanelBorderSidesDescr" xml:space="preserve">
     <value>Specifies the sides of the panel that should display borders.</value>
   </data>
@@ -5383,6 +5326,9 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="TabBaseTabCountDescr" xml:space="preserve">
     <value>The number of tabs in the tab strip.</value>
+  </data>
+  <data name="TabControlBadControl" xml:space="preserve">
+    <value>Parameter must be of type TabPage.</value>
   </data>
   <data name="TabControlDeselectedEventDescr" xml:space="preserve">
     <value>Occurs after a tab page is deselected as the topmost tab page.</value>
@@ -5440,6 +5386,9 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="TableLayoutPanelSpanDesc" xml:space="preserve">
     <value>TableLayoutPanel cannot expand to contain the control, because the panel's GrowStyle property is set to 'FixedSize'.</value>
+  </data>
+  <data name="TableLayoutSettingsConverterNoName" xml:space="preserve">
+    <value>Cannot convert TableLayoutSettings to string: could not find a 'Name' string property on a control.</value>
   </data>
   <data name="TableLayoutSettingSettingsIsNotSupported" xml:space="preserve">
     <value>Directly setting TableLayoutSettings is not supported.  Use individual properties instead.</value>
@@ -6482,9 +6431,6 @@ Stack trace where the illegal operation occurred was:
   <data name="WebBrowserFileDownloadDescr" xml:space="preserve">
     <value>Occurs when a file download occurs.</value>
   </data>
-  <data name="WebBrowserInIENotSupported" xml:space="preserve">
-    <value>Adding a WebBrowser control in Internet Explorer is not supported.</value>
-  </data>
   <data name="WebBrowserIsOfflineDescr" xml:space="preserve">
     <value>Determines whether the Web browser control operates in offline mode.</value>
   </data>
@@ -6584,9 +6530,6 @@ Stack trace where the illegal operation occurred was:
   <data name="DateTimePickerLocalizedControlType" xml:space="preserve">
     <value>date and time picker</value>
   </data>
-  <data name="SpinnerAccessibleName" xml:space="preserve">
-    <value>Spinner</value>
-  </data>
   <data name="LiveRegionAutomationLiveSettingDescr" xml:space="preserve">
     <value>The politeness level that a client should use to notify the user of changes to this live region.</value>
   </data>
@@ -6643,5 +6586,140 @@ Stack trace where the illegal operation occurred was:
   </data>
   <data name="TreeNodeCircularReference" xml:space="preserve">
     <value>A circular reference has been made. A TreeNode cannot be added as a descendant of itself.</value>
+  </data>
+  <data name="DefaultNumericUpDownAccessibleName" xml:space="preserve">
+    <value>NumericUpDown</value>
+  </data>
+  <data name="DefaultUpDownButtonsAccessibleName" xml:space="preserve">
+    <value>UpDown</value>
+  </data>
+  <data name="Win32SetParentFailed" xml:space="preserve">
+    <value>Failed to set Win32 parent window of the Control.</value>
+  </data>
+  <data name="ErrorProviderDefaultAccessibleName" xml:space="preserve">
+    <value>Error provider</value>
+  </data>
+  <data name="PropertyGridEntryValuesListDefaultAccessibleName" xml:space="preserve">
+    <value>Available values</value>
+  </data>
+  <data name="TaskDialogButtonTextMustNotBeNull" xml:space="preserve">
+    <value>The text of a custom button must not be null or an empty string.</value>
+  </data>
+  <data name="TaskDialogCannotNavigateClosedDialog" xml:space="preserve">
+    <value>Cannot navigate the dialog when it has already closed.</value>
+  </data>
+  <data name="TaskDialogCannotNavigateWithinNavigationEventHandler" xml:space="preserve">
+    <value>Cannot navigate the dialog from an event handler that is called from within navigation.</value>
+  </data>
+  <data name="TaskDialogCannotNavigateWithinRadioButtonCheckedChanged" xml:space="preserve">
+    <value>Cannot navigate the dialog from within the {0} event of one of the radio buttons of the current task dialog.</value>
+  </data>
+  <data name="TaskDialogCannotNavigateWithoutDialog" xml:space="preserve">
+    <value>Cannot navigate from a page not bound to a dialog.</value>
+  </data>
+  <data name="TaskDialogCannotRemoveProgressBarWhileDialogIsShown" xml:space="preserve">
+    <value>Cannot remove the progress bar while the task dialog is shown.</value>
+  </data>
+  <data name="TaskDialogCannotSetPropertyOfBoundPage" xml:space="preserve">
+    <value>Cannot set this property or call this method while the page is bound to a task dialog.</value>
+  </data>
+  <data name="TaskDialogCannotSetPropertyOfShownDialog" xml:space="preserve">
+    <value>Cannot set this property while the task dialog is shown.</value>
+  </data>
+  <data name="TaskDialogCannotSetRadioButtonCheckedWithinCheckedChangedEvent" xml:space="preserve">
+    <value>Cannot set the {0} property from within the {1} event of one of the radio buttons of the current task dialog.</value>
+  </data>
+  <data name="TaskDialogCannotUncheckRadioButtonWhileBound" xml:space="preserve">
+    <value>Cannot uncheck a radio button while it is bound to a task dialog.</value>
+  </data>
+  <data name="TaskDialogCannotUpdateAfterNavigation" xml:space="preserve">
+    <value>Cannot manipulate the task dialog immediately after navigating it. Please wait for the {0} event of the next page to occur.</value>
+  </data>
+  <data name="TaskDialogCannotUpdateIconType" xml:space="preserve">
+    <value>Cannot update the icon from a handle icon type to a non-handle icon type, and vice versa.</value>
+  </data>
+  <data name="TaskDialogCanUpdateStateOnlyWhenShown" xml:space="preserve">
+    <value>Can only update the state of a task dialog while it is shown.</value>
+  </data>
+  <data name="HScrollBarDefaultAccessibleName" xml:space="preserve">
+    <value>Horizontal</value>
+  </data>
+  <data name="VScrollBarDefaultAccessibleName" xml:space="preserve">
+    <value>Vertical</value>
+  </data>
+  <data name="TaskDialogCollectionAlreadyBound" xml:space="preserve">
+    <value>One of the collections of this {0} is already bound to a {1} instance.</value>
+  </data>
+  <data name="TaskDialogControlAlreadyAddedToCollection" xml:space="preserve">
+    <value>This control has already been added to the collection.</value>
+  </data>
+  <data name="TaskDialogControlAlreadyBound" xml:space="preserve">
+    <value>One of the controls of this {0} is already bound to a {1} instance.</value>
+  </data>
+  <data name="TaskDialogControlIsPartOfOtherCollection" xml:space="preserve">
+    <value>This control is already part of a different collection.</value>
+  </data>
+  <data name="TaskDialogControlNotBound" xml:space="preserve">
+    <value>This control is not currently bound to a task dialog.</value>
+  </data>
+  <data name="TaskDialogControlNotCreated" xml:space="preserve">
+    <value>The control has not been created.</value>
+  </data>
+  <data name="TaskDialogInstanceAlreadyShown" xml:space="preserve">
+    <value>This {0} instance is already being shown.</value>
+  </data>
+  <data name="TaskDialogNavigationNotCompleted" xml:space="preserve">
+    <value>Navigation of the task dialog did not complete yet. Please wait for the {0} event to occur.</value>
+  </data>
+  <data name="TaskDialogVisualStylesNotEnabled" xml:space="preserve">
+    <value>Visual styles are not enabled. Please call {0} before showing the task dialog.</value>
+  </data>
+  <data name="TaskDialogDefaultButtonMustExistInCollection" xml:space="preserve">
+    <value>The default button must exist in the buttons collection.</value>
+  </data>
+  <data name="TaskDialogOnlySingleRadioButtonCanBeChecked" xml:space="preserve">
+    <value>Only a single radio button can be set as checked.</value>
+  </data>
+  <data name="TaskDialogPageIsAlreadyBound" xml:space="preserve">
+    <value>This {0} instance is already bound to a {1} instance.</value>
+  </data>
+  <data name="TaskDialogRadioButtonTextMustNotBeNull" xml:space="preserve">
+    <value>The text of a radio button must not be null or an empty string.</value>
+  </data>
+  <data name="TaskDialogTooManyButtonsAdded" xml:space="preserve">
+    <value>Too many custom buttons or radio buttons have been added.</value>
+  </data>
+  <data name="TaskDialogCannotSetTextForStandardButton" xml:space="preserve">
+    <value>Cannot set the text for a standard button.</value>
+  </data>
+  <data name="TaskDialogCannotShowCustomButtonsAndCommandLinks" xml:space="preserve">
+    <value>Cannot show both custom buttons and command links at the same time.</value>
+  </data>
+  <data name="WindowSubclassHandlerWndProcIsNotExceptedOne" xml:space="preserve">
+    <value>The current window procedure is not the expected one.</value>
+  </data>
+  <data name="ListViewGroupCollapsedStateChangedDescr" xml:space="preserve">
+    <value>Event raised when the CollapsedState property of a ListViewGroup changes.</value>
+  </data>
+  <data name="ListViewGroupTaskLinkClickDescr" xml:space="preserve">
+    <value>Event raised when the TaskLink property of a ListViewGroup is clicked.</value>
+  </data>
+  <data name="InputLanguageCultureNotFound" xml:space="preserve">
+    <value>Could not find an InputLanguage for culture '{0}'.</value>
+  </data>
+  <data name="ListViewGroupImageListDescr" xml:space="preserve">
+    <value>The ImageList control used by the ListView for ListViewGroup images in all views.</value>
+  </data>
+  <data name="ConstructorArgumentInvalidValueType" xml:space="preserve">
+    <value>Argument '{0}' cannot be converted to type '{1}'.</value>
+  </data>
+  <data name="TextFormatFlagsModifyStringNotAllowed" xml:space="preserve">
+    <value>TextFormatFlags.ModifyString is not allowed.</value>
+  </data>
+  <data name="AccessibleActionDoubleClick" xml:space="preserve">
+    <value>Double Click</value>
+  </data>
+  <data name="InvalidHdcType" xml:space="preserve">
+    <value>Invalid HDC type: {0}</value>
   </data>
 </root>

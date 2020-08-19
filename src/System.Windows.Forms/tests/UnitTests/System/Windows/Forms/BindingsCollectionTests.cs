@@ -9,7 +9,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class BindingsCollectionTests
+    // NB: doesn't require thread affinity
+    public class BindingsCollectionTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void Ctor_Default()

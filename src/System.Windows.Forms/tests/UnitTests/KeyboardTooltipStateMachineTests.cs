@@ -7,9 +7,9 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class KeyboardTooltipStateMachineTests
+    public class KeyboardTooltipStateMachineTests : IClassFixture<ThreadExceptionFixture>
     {
-        [Fact]
+        [WinFormsFact]
         public void HookToolTip()
         {
             using (ToolTip toolTip = new ToolTip())

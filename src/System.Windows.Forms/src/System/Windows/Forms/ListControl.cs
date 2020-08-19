@@ -2,18 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Diagnostics;
-using System.Drawing.Design;
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing.Design;
 using System.Globalization;
-using System.Runtime.InteropServices;
 
 namespace System.Windows.Forms
 {
-    [ComVisible(true)]
-    [ClassInterface(ClassInterfaceType.AutoDispatch)]
-    [LookupBindingProperties(nameof(ListControl.DataSource), nameof(ListControl.DisplayMember), nameof(ListControl.ValueMember), nameof(ListControl.SelectedValue))]
+    [LookupBindingProperties(nameof(DataSource), nameof(DisplayMember), nameof(ValueMember), nameof(SelectedValue))]
     public abstract class ListControl : Control
     {
         private static readonly object s_dataSourceChangedEvent = new object();
@@ -31,14 +30,14 @@ namespace System.Windows.Forms
         private BindingMemberInfo _valueMember;
 
         private string _formatString = string.Empty;
-        private IFormatProvider _formatInfo = null;
-        private bool _formattingEnabled = false;
-        private TypeConverter _displayMemberConverter = null;
-        private static TypeConverter _stringTypeConverter = null;
+        private IFormatProvider _formatInfo;
+        private bool _formattingEnabled;
+        private TypeConverter _displayMemberConverter;
+        private static TypeConverter _stringTypeConverter;
 
         private bool _isDataSourceInitialized;
         private bool _isDataSourceInitEventHooked;
-        private bool _inSetDataConnection = false;
+        private bool _inSetDataConnection;
 
         /// <summary>
         ///  The ListSource to consume as this ListBox's source of data.
@@ -80,7 +79,7 @@ namespace System.Windows.Forms
                     // the ListControl should also eat the exception - this is the RTM behavior and doing anything else is a breaking change
                     DisplayMember = string.Empty;
                 }
-                if (value == null)
+                if (value is null)
                 {
                     DisplayMember = string.Empty;
                 }
@@ -138,7 +137,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (_displayMemberConverter == null)
+                if (_displayMemberConverter is null)
                 {
                     PropertyDescriptorCollection props = DataManager?.GetItemProperties();
                     if (props != null)
@@ -207,7 +206,7 @@ namespace System.Windows.Forms
             get => _formatString;
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -295,7 +294,7 @@ namespace System.Windows.Forms
             get => _valueMember.BindingMember;
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -461,11 +460,11 @@ namespace System.Windows.Forms
 
         private protected int FindStringInternal(string str, IList items, int startIndex, bool exact, bool ignoreCase)
         {
-            if (str == null)
+            if (str is null)
             {
                 return -1;
             }
-            if (items == null || items.Count == 0)
+            if (items is null || items.Count == 0)
             {
                 return -1;
             }
@@ -506,13 +505,13 @@ namespace System.Windows.Forms
         {
             if (!_formattingEnabled)
             {
-                if (item == null)
+                if (item is null)
                 {
                     return string.Empty;
                 }
 
                 item = FilterItemOnProperty(item, _displayMember.BindingField);
-                if (item == null)
+                if (item is null)
                 {
                     return string.Empty;
                 }
@@ -531,7 +530,7 @@ namespace System.Windows.Forms
             }
 
             // Try Formatter.FormatObject
-            if (_stringTypeConverter == null)
+            if (_stringTypeConverter is null)
             {
                 _stringTypeConverter = TypeDescriptor.GetConverter(typeof(string));
             }
@@ -539,7 +538,7 @@ namespace System.Windows.Forms
             {
                 return (string)Formatter.FormatObject(filteredItem, typeof(string), DisplayMemberConverter, _stringTypeConverter, _formatString, _formatInfo, null, DBNull.Value);
             }
-            catch (Exception exception) when (!ClientUtils.IsSecurityOrCriticalException(exception))
+            catch (Exception exception) when (!ClientUtils.IsCriticalException(exception))
             {
                 // if we did not do any work then return the old ItemText
                 return Convert.ToString(item, CultureInfo.CurrentCulture);
@@ -665,7 +664,7 @@ namespace System.Windows.Forms
                 {
                     _inSetDataConnection = true;
                     IList currentList = DataManager?.List;
-                    bool currentManagerIsNull = DataManager == null;
+                    bool currentManagerIsNull = DataManager is null;
 
                     UnwireDataSource();
 

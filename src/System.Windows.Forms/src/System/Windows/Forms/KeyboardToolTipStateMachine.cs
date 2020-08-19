@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -17,10 +19,10 @@ namespace System.Windows.Forms
     /// </summary>
     /// <remarks>
     ///  The control should be focused with keyboard for an amount of time specified with TTDT_INITIAL flag to make
-    ///  the keyboard ToolTip appear. <see cref="https://docs.microsoft.com/windows/win32/controls/ttm-getdelaytime">
+    ///  the keyboard ToolTip appear. <see href="https://docs.microsoft.com/windows/win32/controls/ttm-getdelaytime">TTM_GETDELAYTIME message (Microsoft Docs)</see>
     ///
     ///  Once visible, the keyboard ToolTip will be demonstrated for an amount of time specified with TTDT_AUTOPOP
-    ///  flag. The ToolTip will disappear afterwards. If the keyboard ToolTip is visible and the focus moves from 
+    ///  flag. The ToolTip will disappear afterwards. If the keyboard ToolTip is visible and the focus moves from
     ///  one ToolTip-enabled control to another, the keyboard ToolTip will be shown after a time interval specified
     ///  with TTDT_RESHOW flag has passed.
     /// </remarks>
@@ -30,7 +32,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (s_instance == null)
+                if (s_instance is null)
                 {
                     s_instance = new KeyboardToolTipStateMachine();
                 }
@@ -111,7 +113,7 @@ namespace System.Windows.Forms
             if (IsToolTracked(sender) && sender.ShowsOwnToolTip())
             {
                 Transit(SmEvent.LeftTool, sender);
-                if (_currentTool == null)
+                if (_currentTool is null)
                 {
                     _lastFocusedTool.SetTarget(null);
                 }
@@ -236,7 +238,7 @@ namespace System.Windows.Forms
             try
             {
                 ToolTip toolTip = _toolToTip[source];
-                if ((_currentTool == null || _currentTool.CanShowToolTipsNow()) && toolTip != null)
+                if ((_currentTool is null || _currentTool.CanShowToolTipsNow()) && toolTip != null)
                 {
                     _currentState = Transition(source, toolTip, @event);
                 }
@@ -282,7 +284,7 @@ namespace System.Windows.Forms
 
         private void Reset(ToolTip toolTipToReset)
         {
-            if (toolTipToReset == null || (_currentTool != null && _toolToTip[_currentTool] == toolTipToReset))
+            if (toolTipToReset is null || (_currentTool != null && _toolToTip[_currentTool] == toolTipToReset))
             {
                 FullFsmReset();
             }

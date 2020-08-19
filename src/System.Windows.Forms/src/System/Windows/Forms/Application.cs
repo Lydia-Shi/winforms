@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
@@ -12,14 +14,14 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms.VisualStyles;
 using Microsoft.Win32;
-using Directory = System.IO.Directory;
 using static Interop;
+using Directory = System.IO.Directory;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Provides <see langword='static'/> methods and properties to manage an application, such as methods to run and quit an application,
-    ///  to process Windows messages, and properties to get information about an application. 
+    ///  to process Windows messages, and properties to get information about an application.
     ///  This class cannot be inherited.
     /// </summary>
     public sealed partial class Application
@@ -36,26 +38,21 @@ namespace System.Windows.Forms
         private static string s_productName;
         private static string s_productVersion;
         private static string s_safeTopLevelCaptionSuffix;
-        private static bool s_comCtlSupportsVisualStylesInitialized = false;
-        private static bool s_comCtlSupportsVisualStyles = false;
-        private static FormCollection s_forms = null;
+        private static bool s_comCtlSupportsVisualStylesInitialized;
+        private static bool s_comCtlSupportsVisualStyles;
+        private static FormCollection s_forms;
         private static readonly object s_internalSyncObject = new object();
-        private static bool s_useWaitCursor = false;
+        private static bool s_useWaitCursor;
 
-        private static bool s_useEverettThreadAffinity = false;
-        private static bool s_checkedThreadAffinity = false;
+        private static bool s_useEverettThreadAffinity;
+        private static bool s_checkedThreadAffinity;
         private const string EverettThreadAffinityValue = "EnableSystemEventsThreadAffinityCompatibility";
-
-        /// <summary>
-        ///  In case Application.exit gets called recursively
-        /// </summary>
-        private static bool s_exiting;
 
         /// <summary>
         ///  Events the user can hook into
         /// </summary>
-        private static readonly object EVENT_APPLICATIONEXIT = new object();
-        private static readonly object EVENT_THREADEXIT = new object();
+        private static readonly object s_eventApplicationExit = new object();
+        private static readonly object s_eventThreadExit = new object();
 
         // Constant string used in Application.Restart()
         private const string IEEXEC = "ieexec.exe";
@@ -63,6 +60,9 @@ namespace System.Windows.Forms
         // Defines a new callback delegate type
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public delegate bool MessageLoopCallback();
+
+        // Used to avoid recursive exit
+        private static bool s_exiting;
 
         /// <summary>
         ///  This class is static, there is no need to ever create it.
@@ -197,7 +197,7 @@ namespace System.Windows.Forms
             {
                 lock (s_internalSyncObject)
                 {
-                    if (s_companyName == null)
+                    if (s_companyName is null)
                     {
                         // Custom attribute
                         Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -211,7 +211,7 @@ namespace System.Windows.Forms
                         }
 
                         // Win32 version
-                        if (s_companyName == null || s_companyName.Length == 0)
+                        if (s_companyName is null || s_companyName.Length == 0)
                         {
                             s_companyName = GetAppFileVersionInfo().CompanyName;
                             if (s_companyName != null)
@@ -222,7 +222,7 @@ namespace System.Windows.Forms
 
                         // fake it with a namespace
                         // won't work with MC++ see GetAppMainType.
-                        if (s_companyName == null || s_companyName.Length == 0)
+                        if (s_companyName is null || s_companyName.Length == 0)
                         {
                             Type t = GetAppMainType();
 
@@ -284,28 +284,10 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (s_executablePath == null)
+                if (s_executablePath is null)
                 {
-                    Assembly asm = Assembly.GetEntryAssembly();
-                    if (asm == null)
-                    {
-                        StringBuilder sb = UnsafeNativeMethods.GetModuleFileNameLongPath(NativeMethods.NullHandleRef);
-                        s_executablePath = Path.GetFullPath(sb.ToString());
-                    }
-                    else
-                    {
-                        string cb = asm.CodeBase;
-                        Uri codeBase = new Uri(cb);
-                        if (codeBase.IsFile)
-                        {
-                            s_executablePath = codeBase.LocalPath + Uri.UnescapeDataString(codeBase.Fragment);
-                            ;
-                        }
-                        else
-                        {
-                            s_executablePath = codeBase.ToString();
-                        }
-                    }
+                    StringBuilder sb = UnsafeNativeMethods.GetModuleFileNameLongPath(NativeMethods.NullHandleRef);
+                    s_executablePath = Path.GetFullPath(sb.ToString());
                 }
 
                 return s_executablePath;
@@ -358,7 +340,7 @@ namespace System.Windows.Forms
             {
                 lock (s_internalSyncObject)
                 {
-                    if (s_productName == null)
+                    if (s_productName is null)
                     {
                         // Custom attribute
                         Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -372,7 +354,7 @@ namespace System.Windows.Forms
                         }
 
                         // Win32 version info
-                        if (s_productName == null || s_productName.Length == 0)
+                        if (s_productName is null || s_productName.Length == 0)
                         {
                             s_productName = GetAppFileVersionInfo().ProductName;
                             if (s_productName != null)
@@ -383,7 +365,7 @@ namespace System.Windows.Forms
 
                         // fake it with namespace
                         // won't work with MC++ see GetAppMainType.
-                        if (s_productName == null || s_productName.Length == 0)
+                        if (s_productName is null || s_productName.Length == 0)
                         {
                             Type t = GetAppMainType();
 
@@ -426,7 +408,7 @@ namespace System.Windows.Forms
             {
                 lock (s_internalSyncObject)
                 {
-                    if (s_productVersion == null)
+                    if (s_productVersion is null)
                     {
                         // Custom attribute
                         Assembly entryAssembly = Assembly.GetEntryAssembly();
@@ -440,7 +422,7 @@ namespace System.Windows.Forms
                         }
 
                         // Win32 version info
-                        if (s_productVersion == null || s_productVersion.Length == 0)
+                        if (s_productVersion is null || s_productVersion.Length == 0)
                         {
                             s_productVersion = GetAppFileVersionInfo().ProductVersion;
                             if (s_productVersion != null)
@@ -450,7 +432,7 @@ namespace System.Windows.Forms
                         }
 
                         // fake it
-                        if (s_productVersion == null || s_productVersion.Length == 0)
+                        if (s_productVersion is null || s_productVersion.Length == 0)
                         {
                             s_productVersion = "1.0.0.0";
                         }
@@ -482,7 +464,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (s_safeTopLevelCaptionSuffix == null)
+                if (s_safeTopLevelCaptionSuffix is null)
                 {
                     s_safeTopLevelCaptionSuffix = SR.SafeTopLevelCaptionFormat; // 0 - original, 1 - zone, 2 - site
                 }
@@ -490,7 +472,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -506,7 +488,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (s_startupPath == null)
+                if (s_startupPath is null)
                 {
                     // StringBuilder sb = UnsafeNativeMethods.GetModuleFileNameLongPath(NativeMethods.NullHandleRef);
                     // startupPath = Path.GetDirectoryName(sb.ToString());
@@ -567,7 +549,7 @@ namespace System.Windows.Forms
         ///  The visual styles can be enabled by calling <see cref="EnableVisualStyles"/>.
         ///  The visual styles will not be enabled if the OS does not support them, or theming is disabled at the OS level.
         /// </remarks>
-        public static bool UseVisualStyles { get; private set; } = false;
+        public static bool UseVisualStyles { get; private set; }
 
         /// <remarks>
         ///  Don't never ever change this name, since the window class and partner teams
@@ -605,10 +587,7 @@ namespace System.Windows.Forms
 
                     // 248887 we need to send a WM_THEMECHANGED to the top level windows of this application.
                     // We do it this way to ensure that we get all top level windows -- whether we created them or not.
-                    SafeNativeMethods.EnumThreadWindowsCallback callback = new SafeNativeMethods.EnumThreadWindowsCallback(Application.SendThemeChanged);
-                    SafeNativeMethods.EnumWindows(callback, IntPtr.Zero);
-
-                    GC.KeepAlive(callback);
+                    User32.EnumWindows(SendThemeChanged);
                 }
             }
         }
@@ -616,20 +595,20 @@ namespace System.Windows.Forms
         /// <summary>
         ///  This helper broadcasts out a WM_THEMECHANGED to appropriate top level windows of this app.
         /// </summary>
-        private unsafe static bool SendThemeChanged(IntPtr handle, IntPtr extraParameter)
+        private unsafe static BOOL SendThemeChanged(IntPtr handle)
         {
             uint thisPID = Kernel32.GetCurrentProcessId();
             User32.GetWindowThreadProcessId(handle, out uint processId);
             if (processId == thisPID && User32.IsWindowVisible(handle).IsTrue())
             {
-                SendThemeChangedRecursive(handle, IntPtr.Zero);
+                SendThemeChangedRecursive(handle);
                 User32.RedrawWindow(
                     handle,
                     null,
                     IntPtr.Zero,
                     User32.RDW.INVALIDATE | User32.RDW.FRAME | User32.RDW.ERASE | User32.RDW.ALLCHILDREN);
             }
-            return true;
+            return BOOL.TRUE;
         }
 
         /// <summary>
@@ -637,17 +616,15 @@ namespace System.Windows.Forms
         ///  It is assumed at this point that the handle belongs to the current process
         ///  and has a visible top level window.
         /// </summary>
-        private static bool SendThemeChangedRecursive(IntPtr handle, IntPtr lparam)
+        private static BOOL SendThemeChangedRecursive(IntPtr handle)
         {
             // First send to all children...
-            UnsafeNativeMethods.EnumChildWindows(new HandleRef(null, handle),
-                new NativeMethods.EnumChildrenCallback(Application.SendThemeChangedRecursive),
-                NativeMethods.NullHandleRef);
+            User32.EnumChildWindows(handle, Application.SendThemeChangedRecursive);
 
             // Then do myself.
-            UnsafeNativeMethods.SendMessage(new HandleRef(null, handle), Interop.WindowMessages.WM_THEMECHANGED, 0, 0);
+            User32.SendMessageW(handle, User32.WM.THEMECHANGED);
 
-            return true;
+            return BOOL.TRUE;
         }
 
         /// <summary>
@@ -655,8 +632,8 @@ namespace System.Windows.Forms
         /// </summary>
         public static event EventHandler ApplicationExit
         {
-            add => AddEventHandler(EVENT_APPLICATIONEXIT, value);
-            remove => RemoveEventHandler(EVENT_APPLICATIONEXIT, value);
+            add => AddEventHandler(s_eventApplicationExit, value);
+            remove => RemoveEventHandler(s_eventApplicationExit, value);
         }
 
         private static void AddEventHandler(object key, Delegate value)
@@ -816,8 +793,8 @@ namespace System.Windows.Forms
         /// </summary>
         public static event EventHandler ThreadExit
         {
-            add => AddEventHandler(EVENT_THREADEXIT, value);
-            remove => RemoveEventHandler(EVENT_THREADEXIT, value);
+            add => AddEventHandler(s_eventThreadExit, value);
+            remove => RemoveEventHandler(s_eventThreadExit, value);
         }
 
         /// <summary>
@@ -831,13 +808,13 @@ namespace System.Windows.Forms
         ///  Processes all Windows messages currently in the message queue.
         /// </summary>
         public static void DoEvents()
-            => ThreadContext.FromCurrent().RunMessageLoop(Interop.Mso.msoloop.DoEvents, null);
+            => ThreadContext.FromCurrent().RunMessageLoop(Mso.msoloop.DoEvents, null);
 
         internal static void DoEventsModal()
-            => ThreadContext.FromCurrent().RunMessageLoop(Interop.Mso.msoloop.DoEventsModal, null);
+            => ThreadContext.FromCurrent().RunMessageLoop(Mso.msoloop.DoEventsModal, null);
 
         /// <summary>
-        ///  Enables visual styles for all subsequent <see cref="Application.Run"/> and <see cref="CreateHandle"/> calls.
+        ///  Enables visual styles for all subsequent <see cref="Run()"/> and <see cref="Control.CreateHandle"/> calls.
         ///  Uses the default theming manifest file shipped with the redist.
         /// </summary>
         public static void EnableVisualStyles()
@@ -849,6 +826,8 @@ namespace System.Windows.Forms
                 // CSC embeds DLL manifests as resource ID 2
                 UseVisualStyles = ThemingScope.CreateActivationContext(assemblyLoc, nativeResourceManifestID: 2);
                 Debug.Assert(UseVisualStyles, "Enable Visual Styles failed");
+
+                s_comCtlSupportsVisualStylesInitialized = false;
             }
         }
 
@@ -860,36 +839,28 @@ namespace System.Windows.Forms
             => ThreadContext.FromCurrent().EndModalMessageLoop(null);
 
         /// <summary>
-        ///  Overload of Exit that does not care about e.Cancel.
+        ///  Overload of <see cref="Exit(CancelEventArgs)"/> that does not care about e.Cancel.
         /// </summary>
         public static void Exit() => Exit(null);
 
         /// <summary>
-        ///  Informs all message pumps that they are to terminate and
-        ///  then closes all application windows after the messages have been processed.
-        ///  e.Cancel indicates whether any of the open forms cancelled the exit call.
+        ///  Informs all message pumps that they are to terminate and then closes all
+        ///  application windows after the messages have been processed. e.Cancel indicates
+        ///  whether any of the open forms cancelled the exit call.
         /// </summary>
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public static void Exit(CancelEventArgs e)
         {
-            bool cancelExit = ExitInternal();
-            if (e != null)
-            {
-                e.Cancel = cancelExit;
-            }
-        }
-
-        /// <summary>
-        ///  Private version of Exit which does not do any security checks.
-        /// </summary>
-        private static bool ExitInternal()
-        {
-            bool cancelExit = false;
             lock (s_internalSyncObject)
             {
                 if (s_exiting)
                 {
-                    return false;
+                    // Recursive call to Exit
+                    if (e != null)
+                    {
+                        e.Cancel = false;
+                    }
+                    return;
                 }
                 s_exiting = true;
 
@@ -898,25 +869,30 @@ namespace System.Windows.Forms
                     // Raise the FormClosing and FormClosed events for each open form
                     if (s_forms != null)
                     {
-                        foreach (Form f in OpenForms)
+                        foreach (Form f in s_forms)
                         {
                             if (f.RaiseFormClosingOnAppExit())
                             {
-                                cancelExit = true;
-                                break; // quit the loop as soon as one form refuses to close
+                                // A form refused to close
+                                if (e != null)
+                                {
+                                    e.Cancel = true;
+                                }
+                                return;
                             }
+                        }
+
+                        while (s_forms.Count > 0)
+                        {
+                            // OnFormClosed removes the form from the FormCollection
+                            s_forms[0].RaiseFormClosedOnAppExit();
                         }
                     }
-                    if (!cancelExit)
+
+                    ThreadContext.ExitApplication();
+                    if (e != null)
                     {
-                        if (s_forms != null)
-                        {
-                            while (OpenForms.Count > 0)
-                            {
-                                OpenForms[0].RaiseFormClosedOnAppExit(); // OnFormClosed removes the form from the FormCollection
-                            }
-                        }
-                        ThreadContext.ExitApplication();
+                        e.Cancel = false;
                     }
                 }
                 finally
@@ -924,12 +900,10 @@ namespace System.Windows.Forms
                     s_exiting = false;
                 }
             }
-            return cancelExit;
         }
 
         /// <summary>
-        ///  Exits the message loop on the
-        ///  current thread and closes all windows on the thread.
+        ///  Exits the message loop on the current thread and closes all windows on the thread.
         /// </summary>
         public static void ExitThread()
         {
@@ -964,7 +938,7 @@ namespace System.Windows.Forms
         {
             lock (s_internalSyncObject)
             {
-                if (s_appFileVersion == null)
+                if (s_appFileVersion is null)
                 {
                     Type t = GetAppMainType();
                     if (t != null)
@@ -988,7 +962,7 @@ namespace System.Windows.Forms
         {
             lock (s_internalSyncObject)
             {
-                if (s_mainType == null)
+                if (s_mainType is null)
                 {
                     Assembly exe = Assembly.GetEntryAssembly();
 
@@ -1043,7 +1017,7 @@ namespace System.Windows.Forms
         {
             if (s_eventHandlers != null)
             {
-                Delegate exit = s_eventHandlers[EVENT_APPLICATIONEXIT];
+                Delegate exit = s_eventHandlers[s_eventApplicationExit];
                 if (exit != null)
                 {
                     ((EventHandler)exit)(null, EventArgs.Empty);
@@ -1058,7 +1032,7 @@ namespace System.Windows.Forms
         {
             if (s_eventHandlers != null)
             {
-                Delegate exit = s_eventHandlers[EVENT_THREADEXIT];
+                Delegate exit = s_eventHandlers[s_eventThreadExit];
                 if (exit != null)
                 {
                     ((EventHandler)exit)(null, EventArgs.Empty);
@@ -1066,14 +1040,16 @@ namespace System.Windows.Forms
             }
         }
 
+        internal static void ParkHandle(HandleRef handle) => ParkHandle(handle, User32.UNSPECIFIED_DPI_AWARENESS_CONTEXT);
+
         /// <summary>
         ///  "Parks" the given HWND to a temporary HWND.  This allows WS_CHILD windows to
         ///  be parked.
         /// </summary>
-        internal static void ParkHandle(HandleRef handle, DpiAwarenessContext dpiAwarenessContext = DpiAwarenessContext.DPI_AWARENESS_CONTEXT_UNSPECIFIED)
+        internal static void ParkHandle(HandleRef handle, IntPtr dpiAwarenessContext)
         {
-            Debug.Assert(UnsafeNativeMethods.IsWindow(handle), "Handle being parked is not a valid window handle");
-            Debug.Assert(((int)UnsafeNativeMethods.GetWindowLong(handle, NativeMethods.GWL_STYLE) & (int)User32.WS.CHILD) != 0, "Only WS_CHILD windows should be parked.");
+            Debug.Assert(User32.IsWindow(handle).IsTrue(), "Handle being parked is not a valid window handle");
+            Debug.Assert(((int)User32.GetWindowLong(handle, User32.GWL.STYLE) & (int)User32.WS.CHILD) != 0, "Only WS_CHILD windows should be parked.");
 
             ThreadContext cxt = GetContextForHandle(handle);
             if (cxt != null)
@@ -1082,12 +1058,14 @@ namespace System.Windows.Forms
             }
         }
 
+        internal static void ParkHandle(CreateParams cp) => ParkHandle(cp, User32.UNSPECIFIED_DPI_AWARENESS_CONTEXT);
+
         /// <summary>
         ///  Park control handle on a parkingwindow that has matching DpiAwareness.
         /// </summary>
         /// <param name="cp"> create params for control handle</param>
-        /// <param name="dpiContext"> dpi awareness</param>
-        internal static void ParkHandle(CreateParams cp, DpiAwarenessContext dpiAwarenessContext = DpiAwarenessContext.DPI_AWARENESS_CONTEXT_UNSPECIFIED)
+        /// <param name="dpiAwarenessContext"> dpi awareness</param>
+        internal static void ParkHandle(CreateParams cp, IntPtr dpiAwarenessContext)
         {
             ThreadContext cxt = ThreadContext.FromCurrent();
             if (cxt != null)
@@ -1112,7 +1090,7 @@ namespace System.Windows.Forms
         ///  "Unparks" the given HWND to a temporary HWND.  This allows WS_CHILD windows to
         ///  be parked.
         /// </summary>
-        internal static void UnparkHandle(HandleRef handle, DpiAwarenessContext context)
+        internal static void UnparkHandle(HandleRef handle, IntPtr context)
         {
             ThreadContext cxt = GetContextForHandle(handle);
             if (cxt != null)
@@ -1139,7 +1117,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void Restart()
         {
-            if (Assembly.GetEntryAssembly() == null)
+            if (Assembly.GetEntryAssembly() is null)
             {
                 throw new NotSupportedException(SR.RestartNotSupported);
             }
@@ -1156,7 +1134,7 @@ namespace System.Windows.Forms
                 {
                     // HRef exe case
                     hrefExeCase = true;
-                    ExitInternal();
+                    Exit();
                     if (AppDomain.CurrentDomain.GetData("APP_LAUNCH_URL") is string launchUrl)
                     {
                         Process.Start(process.MainModule.FileName, launchUrl);
@@ -1182,13 +1160,13 @@ namespace System.Windows.Forms
                     sb.Append(arguments[arguments.Length - 1]);
                     sb.Append('"');
                 }
-                ProcessStartInfo currentStartInfo = Process.GetCurrentProcess().StartInfo;
+                ProcessStartInfo currentStartInfo = new ProcessStartInfo();
                 currentStartInfo.FileName = ExecutablePath;
                 if (sb.Length > 0)
                 {
                     currentStartInfo.Arguments = sb.ToString();
                 }
-                ExitInternal();
+                Exit();
                 Process.Start(currentStartInfo);
             }
         }

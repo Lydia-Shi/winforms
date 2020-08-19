@@ -6,7 +6,6 @@ using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 
 namespace System.Windows.Forms.Design.Behavior
@@ -29,7 +28,7 @@ namespace System.Windows.Forms.Design.Behavior
         private object prevPrimarySelection; //used to check if the primary selection changed
         private Rectangle[] curSelectionBounds;
         private int curCompIndex;
-        private DesignerActionUI designerActionUI = null; // the "container" for all things related to the designer action (smartags) UI
+        private DesignerActionUI designerActionUI; // the "container" for all things related to the designer action (smartags) UI
         private bool selectionChanging; //we dont want the OnSelectionChanged to be recursively called.
 
         /// <summary>
@@ -45,7 +44,7 @@ namespace System.Windows.Forms.Design.Behavior
             selSvc = (ISelectionService)serviceProvider.GetService(typeof(ISelectionService));
             designerHost = (IDesignerHost)serviceProvider.GetService(typeof(IDesignerHost));
 
-            if (designerHost == null || selSvc == null)
+            if (designerHost is null || selSvc is null)
             {
                 Debug.Fail("SelectionManager - Host or SelSvc is null, can't continue");
             }
@@ -171,7 +170,6 @@ namespace System.Windows.Forms.Design.Behavior
             {
                 curCompIndex++;
             }
-
         }
 
         /// <summary>
@@ -295,7 +293,7 @@ namespace System.Windows.Forms.Design.Behavior
         }
 
         /// <summary>
-        ///  When a component is removed - we remove the key & value from our hashtable.
+        ///  When a component is removed - we remove the key and value from our hashtable.
         /// </summary>
         private void OnComponentRemoved(object source, ComponentEventArgs ce)
         {

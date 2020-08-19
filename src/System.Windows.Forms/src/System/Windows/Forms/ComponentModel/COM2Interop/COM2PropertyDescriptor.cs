@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -11,6 +13,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using static Interop;
+using static Interop.Ole32;
 
 namespace System.Windows.Forms.ComponentModel.Com2Interop
 {
@@ -42,7 +45,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         ///  The dispid. This is also in a DispIDAttiribute, but we
         ///  need it a lot.
         /// </summary>
-        private readonly Ole32.DispatchID dispid;
+        private readonly DispatchID dispid;
 
         private TypeConverter converter;
         private object editor;
@@ -62,11 +65,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         ///  Keeps track of which data members need to be refreshed.
         /// </summary>
         private int refreshState;
-
-        /// <summary>
-        ///  Should we bother asking if refresh is needed?
-        /// </summary>
-        private readonly bool queryRefresh = false;
 
         /// <summary>
         ///  Our properties manager
@@ -123,19 +121,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         /// <summary>
         ///  Our map of native types that we can map to managed types for editors
         /// </summary>
-        private static readonly IDictionary oleConverters;
-
-        static Com2PropertyDescriptor()
+        private static readonly IDictionary oleConverters = new SortedList
         {
-            oleConverters = new SortedList
-            {
-                [GUID_COLOR] = typeof(Com2ColorConverter),
-                [typeof(Ole32.IFontDisp).GUID] = typeof(Com2FontConverter),
-                [typeof(Ole32.IFont).GUID] = typeof(Com2FontConverter),
-                [typeof(Ole32.IPictureDisp).GUID] = typeof(Com2PictureConverter),
-                [typeof(Ole32.IPicture).GUID] = typeof(Com2PictureConverter)
-            };
-        }
+            [GUID_COLOR] = typeof(Com2ColorConverter),
+            [typeof(IFontDisp).GUID] = typeof(Com2FontConverter),
+            [typeof(IFont).GUID] = typeof(Com2FontConverter),
+            [typeof(IPictureDisp).GUID] = typeof(Com2PictureConverter),
+            [typeof(IPicture).GUID] = typeof(Com2PictureConverter)
+        };
 
         /// <summary>
         ///  Should we convert our type?
@@ -145,7 +138,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         /// <summary>
         ///  Ctor.
         /// </summary>
-        public Com2PropertyDescriptor(Ole32.DispatchID dispid, string name, Attribute[] attrs, bool readOnly, Type propType, object typeData, bool hrHidden)
+        public Com2PropertyDescriptor(DispatchID dispid, string name, Attribute[] attrs, bool readOnly, Type propType, object typeData, bool hrHidden)
             : base(name, attrs)
         {
             baseReadOnly = readOnly;
@@ -191,7 +184,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 }
             }
 
-            if (canShow && (propType == typeof(object) || (valueConverter == null && propType == typeof(UnsafeNativeMethods.IDispatch))))
+            if (canShow && (propType == typeof(object) || (valueConverter is null && propType == typeof(Oleaut32.IDispatch))))
             {
                 typeHide = true;
             }
@@ -201,12 +194,11 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             get
             {
-
                 if (GetNeedsRefresh(Com2PropertyDescriptorRefresh.BaseAttributes))
                 {
                     SetNeedsRefresh(Com2PropertyDescriptorRefresh.BaseAttributes, false);
 
-                    int baseCount = baseAttrs == null ? 0 : baseAttrs.Length;
+                    int baseCount = baseAttrs is null ? 0 : baseAttrs.Length;
 
                     ArrayList attrList = new ArrayList();
 
@@ -260,7 +252,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 // if we are forcing a hide
                 if (typeHide && canShow)
                 {
-                    if (newAttributes == null)
+                    if (newAttributes is null)
                     {
                         newAttributes = new ArrayList(AttributeArray);
                     }
@@ -278,7 +270,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                         if (hr.Succeeded())
                         {
                             // make it browsable
-                            if (newAttributes == null)
+                            if (newAttributes is null)
                             {
                                 newAttributes = new ArrayList(AttributeArray);
                             }
@@ -291,7 +283,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 inAttrQuery = true;
                 try
                 {
-
                     // demand get any extended attributes
                     ArrayList attrList = new ArrayList();
 
@@ -299,7 +290,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
                     Attribute ma;
 
-                    if (attrList.Count != 0 && newAttributes == null)
+                    if (attrList.Count != 0 && newAttributes is null)
                     {
                         newAttributes = new ArrayList(AttributeArray);
                     }
@@ -330,7 +321,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
                 return base.Attributes;
             }
-
         }
 
         /// <summary>
@@ -342,13 +332,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             get
             {
                 bool currentRefresh = !GetNeedsRefresh(Com2PropertyDescriptorRefresh.Attributes);
-                if (queryRefresh)
-                {
-                    GetRefreshStateEvent rse = new GetRefreshStateEvent(Com2ShouldRefreshTypes.Attributes, !currentRefresh);
-                    OnShouldRefresh(rse);
-                    currentRefresh = !rse.Value;
-                    SetNeedsRefresh(Com2PropertyDescriptorRefresh.Attributes, rse.Value);
-                }
+
                 return currentRefresh;
             }
         }
@@ -367,13 +351,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         /// <summary>
         ///  Retrieves the type of the component this PropertyDescriptor is bound to.
         /// </summary>
-        public override Type ComponentType
-        {
-            get
-            {
-                return typeof(UnsafeNativeMethods.IDispatch);
-            }
-        }
+        public override Type ComponentType => typeof(Oleaut32.IDispatch);
 
         /// <summary>
         ///  Retrieves the type converter for this property.
@@ -427,7 +405,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         /// <summary>
         ///  Retrieves the DISPID for this item
         /// </summary>
-        public Ole32.DispatchID DISPID
+        public DispatchID DISPID
         {
             get
             {
@@ -462,14 +440,8 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             get
             {
-                bool currentRefresh = !(displayName == null || GetNeedsRefresh(Com2PropertyDescriptorRefresh.DisplayName));
-                if (queryRefresh)
-                {
-                    GetRefreshStateEvent rse = new GetRefreshStateEvent(Com2ShouldRefreshTypes.DisplayName, !currentRefresh);
-                    OnShouldRefresh(rse);
-                    SetNeedsRefresh(Com2PropertyDescriptorRefresh.DisplayName, rse.Value);
-                    currentRefresh = !rse.Value;
-                }
+                bool currentRefresh = !(displayName is null || GetNeedsRefresh(Com2PropertyDescriptorRefresh.DisplayName));
+
                 return currentRefresh;
             }
         }
@@ -478,7 +450,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             get
             {
-                if (events == null)
+                if (events is null)
                 {
                     events = new EventHandlerList();
                 }
@@ -559,13 +531,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
                 bool currentRefresh = !GetNeedsRefresh(Com2PropertyDescriptorRefresh.ReadOnly);
 
-                if (queryRefresh)
-                {
-                    GetRefreshStateEvent rse = new GetRefreshStateEvent(Com2ShouldRefreshTypes.ReadOnly, !currentRefresh);
-                    OnShouldRefresh(rse);
-                    SetNeedsRefresh(Com2PropertyDescriptorRefresh.ReadOnly, rse.Value);
-                    currentRefresh = !rse.Value;
-                }
                 return currentRefresh;
             }
         }
@@ -590,14 +555,8 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             get
             {
-                bool currentRefresh = !(converter == null || GetNeedsRefresh(Com2PropertyDescriptorRefresh.TypeConverter));
-                if (queryRefresh)
-                {
-                    GetRefreshStateEvent rse = new GetRefreshStateEvent(Com2ShouldRefreshTypes.TypeConverter, !currentRefresh);
-                    OnShouldRefresh(rse);
-                    SetNeedsRefresh(Com2PropertyDescriptorRefresh.TypeConverter, rse.Value);
-                    currentRefresh = !rse.Value;
-                }
+                bool currentRefresh = !(converter is null || GetNeedsRefresh(Com2PropertyDescriptorRefresh.TypeConverter));
+
                 return currentRefresh;
             }
         }
@@ -606,15 +565,8 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             get
             {
-                bool currentRefresh = !(editor == null || GetNeedsRefresh(Com2PropertyDescriptorRefresh.TypeEditor));
+                bool currentRefresh = !(editor is null || GetNeedsRefresh(Com2PropertyDescriptorRefresh.TypeEditor));
 
-                if (queryRefresh)
-                {
-                    GetRefreshStateEvent rse = new GetRefreshStateEvent(Com2ShouldRefreshTypes.TypeEditor, !currentRefresh);
-                    OnShouldRefresh(rse);
-                    SetNeedsRefresh(Com2PropertyDescriptorRefresh.TypeEditor, rse.Value);
-                    currentRefresh = !rse.Value;
-                }
                 return currentRefresh;
             }
         }
@@ -708,7 +660,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         /// </summary>
         private Com2DataTypeToManagedDataTypeConverter CreateOleTypeConverter(Type t)
         {
-            if (t == null)
+            if (t is null)
             {
                 return null;
             }
@@ -737,7 +689,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
         private TypeConverter GetBaseTypeConverter()
         {
-            if (PropertyType == null)
+            if (PropertyType is null)
             {
                 return new TypeConverter();
             }
@@ -770,12 +722,12 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             }
 
             // if we didn't get one from the attribute, ask the type descriptor
-            if (localConverter == null)
+            if (localConverter is null)
             {
                 // we don't want to create the value editor for the IDispatch props because
                 // that will create the reference editor.  We don't want that guy!
                 //
-                if (!typeof(UnsafeNativeMethods.IDispatch).IsAssignableFrom(PropertyType))
+                if (!typeof(Oleaut32.IDispatch).IsAssignableFrom(PropertyType))
                 {
                     localConverter = base.Converter;
                 }
@@ -785,7 +737,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 }
             }
 
-            if (localConverter == null)
+            if (localConverter is null)
             {
                 localConverter = new TypeConverter();
             }
@@ -794,7 +746,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
         private object GetBaseTypeEditor(Type editorBaseType)
         {
-            if (PropertyType == null)
+            if (PropertyType is null)
             {
                 return null;
             }
@@ -829,7 +781,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                     }
                 }
             }
-            if (localEditor == null)
+            if (localEditor is null)
             {
                 localEditor = base.GetEditor(editorBaseType);
             }
@@ -859,7 +811,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 return editor;
             }
 
-            if (PropertyType == null)
+            if (PropertyType is null)
             {
                 return null;
             }
@@ -881,7 +833,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 editor = base.GetEditor(editorBaseType);
             }
             return editor;
-
         }
 
         /// <summary>
@@ -891,7 +842,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         /// </summary>
         public unsafe object GetNativeValue(object component)
         {
-            if (component == null)
+            if (component is null)
             {
                 return null;
             }
@@ -901,22 +852,22 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 component = ((ICustomTypeDescriptor)component).GetPropertyOwner(this);
             }
 
-            if (component == null || !Marshal.IsComObject(component) || !(component is UnsafeNativeMethods.IDispatch))
+            if (component is null || !Marshal.IsComObject(component) || !(component is Oleaut32.IDispatch))
             {
                 return null;
             }
 
-            UnsafeNativeMethods.IDispatch pDisp = (UnsafeNativeMethods.IDispatch)component;
+            Oleaut32.IDispatch pDisp = (Oleaut32.IDispatch)component;
             object[] pVarResult = new object[1];
-            var pExcepInfo = new Ole32.EXCEPINFO();
-            var dispParams = new Ole32.DISPPARAMS();
+            var pExcepInfo = new Oleaut32.EXCEPINFO();
+            var dispParams = new Oleaut32.DISPPARAMS();
             Guid g = Guid.Empty;
 
             HRESULT hr = pDisp.Invoke(
                 dispid,
                 &g,
                 Kernel32.GetThreadLocale(),
-                NativeMethods.DISPATCH_PROPERTYGET,
+                Oleaut32.DISPATCH.PROPERTYGET,
                 &dispParams,
                 pVarResult,
                 &pExcepInfo,
@@ -927,7 +878,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 case HRESULT.S_OK:
                 case HRESULT.S_FALSE:
 
-                    if (pVarResult[0] == null || Convert.IsDBNull(pVarResult[0]))
+                    if (pVarResult[0] is null || Convert.IsDBNull(pVarResult[0]))
                     {
                         lastValue = null;
                     }
@@ -994,12 +945,12 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             TypeConverter localConverter = typeConverter;
             object localEditor = typeEditor;
 
-            if (localConverter == null)
+            if (localConverter is null)
             {
                 localConverter = GetBaseTypeConverter();
             }
 
-            if (localEditor == null)
+            if (localEditor is null)
             {
                 localEditor = GetBaseTypeEditor(editorBaseType);
             }
@@ -1034,12 +985,12 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 
             // just in case one of the handlers removed our editor...
             //
-            if (localConverter == null)
+            if (localConverter is null)
             {
                 localConverter = GetBaseTypeConverter();
             }
 
-            if (localEditor == null)
+            if (localEditor is null)
             {
                 localEditor = GetBaseTypeEditor(editorBaseType);
             }
@@ -1270,7 +1221,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 owner = ((ICustomTypeDescriptor)owner).GetPropertyOwner(this);
             }
 
-            if (owner == null || !Marshal.IsComObject(owner) || !(owner is UnsafeNativeMethods.IDispatch))
+            if (owner is null || !Marshal.IsComObject(owner) || !(owner is Oleaut32.IDispatch))
             {
                 return;
             }
@@ -1286,109 +1237,91 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                 }
             }
 
-            UnsafeNativeMethods.IDispatch pDisp = (UnsafeNativeMethods.IDispatch)owner;
+            Oleaut32.IDispatch pDisp = (Oleaut32.IDispatch)owner;
 
-            var excepInfo = new Ole32.EXCEPINFO();
-            var dispParams = new Ole32.DISPPARAMS();
-            dispParams.cArgs = 1;
-            dispParams.cNamedArgs = 1;
-            Ole32.DispatchID[] namedArgs = new Ole32.DispatchID[] { Ole32.DispatchID.PROPERTYPUT };
-            GCHandle gcHandle = GCHandle.Alloc(namedArgs, GCHandleType.Pinned);
-
-            try
+            var excepInfo = new Oleaut32.EXCEPINFO();
+            Ole32.DispatchID namedArg = Ole32.DispatchID.PROPERTYPUT;
+            var dispParams = new Oleaut32.DISPPARAMS
             {
-                dispParams.rgdispidNamedArgs = Marshal.UnsafeAddrOfPinnedArrayElement(namedArgs, 0);
-                const int SizeOfVariant = 16;
-                Debug.Assert(SizeOfVariant == Marshal.SizeOf<Ole32.VARIANT>());
-                IntPtr mem = Marshal.AllocCoTaskMem(SizeOfVariant);
-                Oleaut32.VariantInit(mem);
-                Marshal.GetNativeVariantForObject(value, mem);
-                dispParams.rgvarg = mem;
-                try
+                cArgs = 1,
+                cNamedArgs = 1,
+                rgdispidNamedArgs = &namedArg
+            };
+
+            using var variant = new Oleaut32.VARIANT();
+            Marshal.GetNativeVariantForObject(value, (IntPtr)(&variant));
+            dispParams.rgvarg = &variant;
+            Guid g = Guid.Empty;
+            HRESULT hr = pDisp.Invoke(
+                dispid,
+                &g,
+                Kernel32.GetThreadLocale(),
+                Oleaut32.DISPATCH.PROPERTYPUT,
+                &dispParams,
+                null,
+                &excepInfo,
+                null);
+
+            string errorInfo = null;
+            if (hr == HRESULT.DISP_E_EXCEPTION && excepInfo.scode != 0)
+            {
+                hr = excepInfo.scode;
+                if (excepInfo.bstrDescription != IntPtr.Zero)
                 {
-                    Guid g = Guid.Empty;
-                    IntPtr pArgError = IntPtr.Zero;
-                    HRESULT hr = pDisp.Invoke(
-                        dispid,
-                        &g,
-                        Kernel32.GetThreadLocale(),
-                        NativeMethods.DISPATCH_PROPERTYPUT,
-                        &dispParams,
-                        null,
-                        &excepInfo,
-                        &pArgError);
-
-                    string errorInfo = null;
-                    if (hr == HRESULT.DISP_E_EXCEPTION && excepInfo.scode != 0)
-                    {
-                        hr = excepInfo.scode;
-                        if (excepInfo.bstrDescription != IntPtr.Zero)
-                        {
-                            errorInfo = Marshal.PtrToStringBSTR(excepInfo.bstrDescription);
-                        }
-                    }
-
-                    switch (hr)
-                    {
-                        case HRESULT.E_ABORT:
-                        case HRESULT.OLE_E_PROMPTSAVECANCELLED:
-                            // cancelled checkout, etc.
-                            return;
-                        case HRESULT.S_OK:
-                        case HRESULT.S_FALSE:
-                            OnValueChanged(component, EventArgs.Empty);
-                            lastValue = value;
-                            return;
-                        default:
-                            if (pDisp is Oleaut32.ISupportErrorInfo iSupportErrorInfo)
-                            {
-                                g = typeof(UnsafeNativeMethods.IDispatch).GUID;
-                                if (iSupportErrorInfo.InterfaceSupportsErrorInfo(&g) == HRESULT.S_OK)
-                                {
-                                    Oleaut32.IErrorInfo pErrorInfo = null;
-                                    Oleaut32.GetErrorInfo(0, ref pErrorInfo);
-
-                                    string info = null;
-                                    if (pErrorInfo != null && pErrorInfo.GetDescription(ref info).Succeeded())
-                                    {
-                                        errorInfo = info;
-                                    }
-                                }
-                            }
-                            else if (errorInfo == null)
-                            {
-                                StringBuilder strMessage = new StringBuilder(256);
-
-                                uint result = Kernel32.FormatMessage(
-                                    Kernel32.FormatMessageOptions.FROM_SYSTEM | Kernel32.FormatMessageOptions.IGNORE_INSERTS,
-                                    IntPtr.Zero,
-                                    (uint)hr,
-                                    (uint)CultureInfo.CurrentCulture.LCID,
-                                    strMessage,
-                                    255,
-                                    IntPtr.Zero);
-
-                                if (result == 0)
-                                {
-                                    errorInfo = string.Format(CultureInfo.CurrentCulture, string.Format(SR.DispInvokeFailed, "SetValue", hr));
-                                }
-                                else
-                                {
-                                    errorInfo = TrimNewline(strMessage);
-                                }
-                            }
-                            throw new ExternalException(errorInfo, (int)hr);
-                    }
-                }
-                finally
-                {
-                    Oleaut32.VariantClear(mem);
-                    Marshal.FreeCoTaskMem(mem);
+                    errorInfo = Marshal.PtrToStringBSTR(excepInfo.bstrDescription);
                 }
             }
-            finally
+
+            switch (hr)
             {
-                gcHandle.Free();
+                case HRESULT.E_ABORT:
+                case HRESULT.OLE_E_PROMPTSAVECANCELLED:
+                    // cancelled checkout, etc.
+                    return;
+                case HRESULT.S_OK:
+                case HRESULT.S_FALSE:
+                    OnValueChanged(component, EventArgs.Empty);
+                    lastValue = value;
+                    return;
+                default:
+                    if (pDisp is Oleaut32.ISupportErrorInfo iSupportErrorInfo)
+                    {
+                        g = typeof(Oleaut32.IDispatch).GUID;
+                        if (iSupportErrorInfo.InterfaceSupportsErrorInfo(&g) == HRESULT.S_OK)
+                        {
+                            Oleaut32.IErrorInfo pErrorInfo = null;
+                            Oleaut32.GetErrorInfo(0, ref pErrorInfo);
+
+                            string info = null;
+                            if (pErrorInfo != null && pErrorInfo.GetDescription(ref info).Succeeded())
+                            {
+                                errorInfo = info;
+                            }
+                        }
+                    }
+                    else if (errorInfo is null)
+                    {
+                        StringBuilder strMessage = new StringBuilder(256);
+
+                        uint result = Kernel32.FormatMessageW(
+                            Kernel32.FormatMessageOptions.FROM_SYSTEM | Kernel32.FormatMessageOptions.IGNORE_INSERTS,
+                            IntPtr.Zero,
+                            (uint)hr,
+                            Kernel32.GetThreadLocale().RawValue,
+                            strMessage,
+                            255,
+                            IntPtr.Zero);
+
+                        if (result == 0)
+                        {
+                            errorInfo = string.Format(CultureInfo.CurrentCulture, string.Format(SR.DispInvokeFailed, "SetValue", hr));
+                        }
+                        else
+                        {
+                            errorInfo = TrimNewline(strMessage);
+                        }
+                    }
+                    throw new ExternalException(errorInfo, (int)hr);
             }
         }
 
@@ -1454,7 +1387,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                         if (!pd.PropertyType.IsEnum)
                         {
                             Com2EnumConverter baseConverter = (Com2EnumConverter)GetWrappedConverter(typeof(Com2EnumConverter));
-                            if (baseConverter == null)
+                            if (baseConverter is null)
                             {
                                 return pd.GetDisplayValue((string)baseConversion);
                             }
@@ -1514,7 +1447,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         public GetAttributesEvent(ArrayList attrList)
         {
             this.attrList = attrList;
-
         }
 
         public void Add(Attribute attribute)
@@ -1634,5 +1566,4 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             }
         }
     }
-
 }

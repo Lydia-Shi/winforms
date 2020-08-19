@@ -115,7 +115,7 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public Point ControlToAdornerWindow(Control c)
         {
-            if (c.Parent == null)
+            if (c.Parent is null)
             {
                 return Point.Empty;
             }
@@ -154,12 +154,11 @@ namespace System.Windows.Forms.Design
             get => _dropDownCollection;
             set
             {
-                if (_dropDownCollection == null)
+                if (_dropDownCollection is null)
                 {
                     _dropDownCollection = new ArrayList();
                 }
             }
-
         }
 
         /// <summary>
@@ -196,7 +195,7 @@ namespace System.Windows.Forms.Design
                 {
                     CreateParams cp = base.CreateParams;
                     cp.Style &= ~(int)(User32.WS.CLIPCHILDREN | User32.WS.CLIPSIBLINGS);
-                    cp.ExStyle |= NativeMethods.WS_EX_TRANSPARENT;
+                    cp.ExStyle |= (int)User32.WS_EX.TRANSPARENT;
                     return cp;
                 }
             }
@@ -228,19 +227,18 @@ namespace System.Windows.Forms.Design
                     {
                         _designerFrame = null;
                     }
-
                 }
                 base.Dispose(disposing);
             }
 
             /// <summary>
-            ///  Returns true if the DesignerFrame is created & not being disposed.
+            ///  Returns true if the DesignerFrame is created and not being disposed.
             /// </summary>
             private bool DesignerFrameValid
             {
                 get
                 {
-                    if (_designerFrame == null || _designerFrame.IsDisposed || !_designerFrame.IsHandleCreated)
+                    if (_designerFrame is null || _designerFrame.IsDisposed || !_designerFrame.IsHandleCreated)
                     {
                         return false;
                     }
@@ -289,10 +287,10 @@ namespace System.Windows.Forms.Design
             /// </summary>
             protected override void WndProc(ref Message m)
             {
-                switch (m.Msg)
+                switch ((User32.WM)m.Msg)
                 {
-                    case WindowMessages.WM_NCHITTEST:
-                        m.Result = (IntPtr)(NativeMethods.HTTRANSPARENT);
+                    case User32.WM.NCHITTEST:
+                        m.Result = (IntPtr)User32.HT.TRANSPARENT;
                         break;
                     default:
                         base.WndProc(ref m);

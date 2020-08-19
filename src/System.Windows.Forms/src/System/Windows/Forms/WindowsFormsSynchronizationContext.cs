@@ -2,9 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Threading;
-using System.Diagnostics;
+#nullable disable
+
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Threading;
 
 namespace System.Windows.Forms
 {
@@ -29,12 +31,7 @@ namespace System.Windows.Forms
         public WindowsFormsSynchronizationContext()
         {
             DestinationThread = Thread.CurrentThread;   //store the current thread to ensure its still alive during an invoke.
-            Application.ThreadContext context = Application.ThreadContext.FromCurrent();
-            Debug.Assert(context != null);
-            if (context != null)
-            {
-                controlToSendTo = context.MarshalingControl;
-            }
+            controlToSendTo = Application.ThreadContext.FromCurrent().MarshalingControl;
             Debug.Assert(controlToSendTo.IsHandleCreated, "Marshaling control should have created its handle in its ctor.");
         }
 
@@ -80,27 +77,17 @@ namespace System.Windows.Forms
         public override void Send(SendOrPostCallback d, object state)
         {
             Thread destinationThread = DestinationThread;
-            if (destinationThread == null || !destinationThread.IsAlive)
+            if (destinationThread is null || !destinationThread.IsAlive)
             {
                 throw new InvalidAsynchronousStateException(SR.ThreadNoLongerValid);
             }
 
-            Debug.Assert(controlToSendTo != null, "Should always have the marshaling control by this point");
-
-            if (controlToSendTo != null)
-            {
-                controlToSendTo.Invoke(d, new object[] { state });
-            }
+            controlToSendTo?.Invoke(d, new object[] { state });
         }
 
         public override void Post(SendOrPostCallback d, object state)
         {
-            Debug.Assert(controlToSendTo != null, "Should always have the marshaling control by this point");
-
-            if (controlToSendTo != null)
-            {
-                controlToSendTo.BeginInvoke(d, new object[] { state });
-            }
+            controlToSendTo?.BeginInvoke(d, new object[] { state });
         }
 
         public override SynchronizationContext CreateCopy()
@@ -134,7 +121,7 @@ namespace System.Windows.Forms
                 return;
             }
 
-            if (SynchronizationContext.Current == null)
+            if (SynchronizationContext.Current is null)
             {
                 previousSyncContext = null;
             }
@@ -149,7 +136,7 @@ namespace System.Windows.Forms
             {
                 SynchronizationContext currentContext = AsyncOperationManager.SynchronizationContext;
                 //Make sure we either have no sync context or that we have one of type SynchronizationContext
-                if (currentContext == null || currentContext.GetType() == typeof(SynchronizationContext))
+                if (currentContext is null || currentContext.GetType() == typeof(SynchronizationContext))
                 {
                     previousSyncContext = currentContext;
 
@@ -175,7 +162,7 @@ namespace System.Windows.Forms
                 {
                     try
                     {
-                        if (previousSyncContext == null)
+                        if (previousSyncContext is null)
                         {
                             AsyncOperationManager.SynchronizationContext = new SynchronizationContext();
                         }

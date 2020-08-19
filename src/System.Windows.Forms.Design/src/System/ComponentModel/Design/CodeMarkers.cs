@@ -75,7 +75,10 @@ namespace System.ComponentModel.Design
 
         // should CodeMarker events be fired to the test or product CodeMarker DLL
         private readonly RegistryView _registryView = RegistryView.Default;
-        private readonly string _regroot = null;
+#pragma warning disable CS0649
+        private readonly string _regroot;
+#pragma warning restore CS0649
+
         private bool? _shouldUseTestDll;
 
         // This guid should match vscommon\testtools\PerfWatson2\Responsiveness\Listener\Microsoft.Performance.ResponseTime\ContextProviders\ScenarioContextProvider\ScenarioContextProvider.cs
@@ -93,7 +96,7 @@ namespace System.ComponentModel.Design
                         // this code can either be used in an InitPerf (loads CodeMarker DLL) or AttachPerf context (CodeMarker DLL already loaded)
                         // in the InitPerf context we have a regroot and should check for the test DLL registration
                         // in the AttachPerf context we should see which module is already loaded
-                        if (_regroot == null)
+                        if (_regroot is null)
                         {
                             _shouldUseTestDll = Kernel32.GetModuleHandleW(ProductDllName) == IntPtr.Zero;
                         }
@@ -169,7 +172,7 @@ namespace System.ComponentModel.Design
 
             // Check the arguments only after checking whether code markers are enabled
             // This allows the calling code to pass null value and avoid calculation of data if nothing is to be logged
-            if (aBuff == null)
+            if (aBuff is null)
             {
                 throw new ArgumentNullException(nameof(aBuff));
             }
@@ -230,7 +233,7 @@ namespace System.ComponentModel.Design
 
             // Check the arguments only after checking whether code markers are enabled
             // This allows the calling code to pass null value and avoid calculation of data if nothing is to be logged
-            if (stringData == null)
+            if (stringData is null)
             {
                 throw new ArgumentNullException(nameof(stringData));
             }
@@ -319,7 +322,7 @@ namespace System.ComponentModel.Design
         /// <returns>Whether CodeMarkers are enabled in the registry</returns>
         private static bool UsePrivateCodeMarkers(string regRoot, RegistryView registryView)
         {
-            if (regRoot == null)
+            if (regRoot is null)
             {
                 throw new ArgumentNullException(nameof(regRoot));
             }
@@ -339,134 +342,8 @@ namespace System.ComponentModel.Design
 
             return false;
         }
-
-#if Codemarkers_IncludeAppEnum
-        /// <summary>
-        ///  Check the registry and, if appropriate, loads and initializes the code markers dll.
-        ///  InitPerformanceDll may be called more than once, but only the first successful call will do anything.
-        ///  Subsequent calls will be ignored.
-        ///  For 32-bit processes on a 64-bit machine, the 32-bit (Wow6432Node) registry will be used.
-        ///  For 64-bit processes, the 64-bit registry will be used. If you need to use the Wow6432Node in this case
-        ///  then use the overload of InitPerformanceDll that takes a RegistryView parameter.
-        /// </summary>
-        /// <param name="iApp">The application ID value that distinguishes these code marker events from other applications.</param>
-        /// <param name="strRegRoot">The registry root of the application. The default value of the "Performance" subkey under this
-        ///  root will be checked to determine if CodeMarkers should be enabled.</param>
-        /// <returns>true if CodeMarkers were initialized successfully, or if InitPerformanceDll has already been called
-        ///  successfully once.
-        ///  false indicates that either CodeMarkers are not enabled in the registry, or that the CodeMarkers transport
-        ///  DLL failed to load.</returns>
-        public bool InitPerformanceDll(int iApp, string strRegRoot)
-        {
-            return InitPerformanceDll(iApp, strRegRoot, RegistryView.Default);
-        }
-
-        /// <summary>
-        ///  Check the registry and, if appropriate, loads and initializes the code markers dll.
-        ///  InitPerformanceDll may be called more than once, but only the first successful call will do anything.
-        ///  Subsequent calls will be ignored.
-        /// </summary>
-        /// <param name="iApp">The application ID value that distinguishes these code marker events from other applications.</param>
-        /// <param name="strRegRoot">The registry root of the application. The default value of the "Performance" subkey under this
-        ///  root will be checked to determine if CodeMarkers should be enabled.</param>
-        /// <param name="registryView">Specify RegistryView.Registry32 to use the 32-bit registry even if the calling application
-        ///  is 64-bit</param>
-        /// <returns>true if CodeMarkers were initialized successfully, or if InitPerformanceDll has already been called
-        ///  successfully once.
-        ///  false indicates that either CodeMarkers are not enabled in the registry, or that the CodeMarkers transport
-        ///  DLL failed to load.</returns>
-        public bool InitPerformanceDll(int iApp, string strRegRoot, RegistryView registryView)
-        {
-            // Prevent multiple initializations.
-            if (IsEnabled)
-            {
-                return true;
-            }
-
-            if (strRegRoot == null)
-            {
-                throw new ArgumentNullException(nameof(strRegRoot));
-            }
-
-            this.regroot = strRegRoot;
-            this.registryView = registryView;
-
-            try
-            {
-                if (this.ShouldUseTestDll)
-                {
-                    NativeMethods.TestDllInitPerf(iApp);
-                }
-                else
-                {
-                    NativeMethods.ProductDllInitPerf(iApp);
-                }
-
-                this.state = State.Enabled;
-
-                // Add an ATOM so that other CodeMarker enabled code in this process
-                // knows that CodeMarkers are enabled
-                NativeMethods.AddAtom(AtomName);
-            }
-            // catch BadImageFormatException to handle 64-bit process loading 32-bit CodeMarker DLL (e.g., msbuild.exe)
-            catch (BadImageFormatException)
-            {
-                this.state = State.DisabledDueToDllImportException;
-            }
-            catch (DllNotFoundException)
-            {
-                this.state = State.DisabledDueToDllImportException;
-                return false;
-            }
-
-            return true;
-        }
-
-
-        // Opposite of InitPerformanceDLL. Call it when your app does not need the code markers dll.
-        public void UninitializePerformanceDLL(int iApp)
-        {
-            bool? usingTestDL = this.shouldUseTestDll; // remember this or we can end up uninitializing the wrong dll.
-            this.shouldUseTestDll = null; // reset which DLL we should use (needed for unit testing)
-            this.regroot = null;
-
-            if (!IsEnabled)
-            {
-                return;
-            }
-
-            this.state = State.Disabled;
-
-            // Delete the atom created during the initialization if it exists
-            System.UInt16 atom = NativeMethods.FindAtom(AtomName);
-            if (atom != 0)
-            {
-                NativeMethods.DeleteAtom(atom);
-            }
-
-            try
-            {
-                if (usingTestDL.HasValue)  // If we don't have a value, then we never initialized the DLL.
-                {
-                    if (usingTestDL.Value)
-                    {
-                        NativeMethods.TestDllUnInitPerf(iApp);
-                    }
-                    else
-                    {
-                        NativeMethods.ProductDllUnInitPerf(iApp);
-                    }
-                }
-            }
-            catch (DllNotFoundException)
-            {
-                // Swallow exception
-            }
-        }
-#endif //Codemarkers_IncludeAppEnum
     }
 
-#if !Codemarkers_NoCodeMarkerStartEnd
     /// <summary>
     ///  Use CodeMarkerStartEnd in a using clause when you need to bracket an operation with a start/end CodeMarker event pair.  If you are using correlated codemarkers and providing your own event manifest, include two GUIDs (the correlation "marker" and the correlation ID itself) as the very first fields.
     /// </summary>
@@ -498,7 +375,7 @@ namespace System.ComponentModel.Design
 
         private void CodeMarker(int id)
         {
-            if (_buffer == null)
+            if (_buffer is null)
             {
                 CodeMarkers.Instance.CodeMarker(id);
             }
@@ -508,60 +385,4 @@ namespace System.ComponentModel.Design
             }
         }
     }
-
-    /// <summary>
-    ///  Use CodeMarkerExStartEnd in a using clause when you need to bracket an operation with a start/end CodeMarker event pair.  If you are using correlated codemarkers and providing your own event manifest, include two GUIDs (the correlation "marker" and the correlation ID itself) as the very first fields.
-    /// </summary>
-    internal struct CodeMarkerExStartEnd : IDisposable
-    {
-        private int _end;
-        private byte[] _aBuff;
-
-        internal CodeMarkerExStartEnd(int begin, int end, byte[] aBuff, bool correlated = false)
-        {
-            Debug.Assert(end != default);
-            _aBuff =
-                correlated
-                ? CodeMarkers.AttachCorrelationId(aBuff, Guid.NewGuid())
-                : aBuff;
-            _end = end;
-            CodeMarkers.Instance.CodeMarkerEx(begin, _aBuff);
-        }
-
-        // Specialization to use Guids for the code marker data
-        internal CodeMarkerExStartEnd(int begin, int end, Guid guidData, bool correlated = false)
-            : this(begin, end, guidData.ToByteArray(), correlated)
-        {
-        }
-
-        // Specialization for string
-        internal CodeMarkerExStartEnd(int begin, int end, string stringData, bool correlated = false)
-            : this(begin, end, CodeMarkers.StringToBytesZeroTerminated(stringData), correlated)
-        {
-        }
-
-        // Specialization for uint
-        internal CodeMarkerExStartEnd(int begin, int end, uint uintData, bool correlated = false)
-            : this(begin, end, BitConverter.GetBytes(uintData), correlated)
-        {
-        }
-
-        // Specialization for ulong
-        internal CodeMarkerExStartEnd(int begin, int end, ulong ulongData, bool correlated = false)
-            : this(begin, end, BitConverter.GetBytes(ulongData), correlated)
-        {
-        }
-
-        public void Dispose()
-        {
-            if (_end != default) // Protect against multiple Dispose calls
-            {
-                CodeMarkers.Instance.CodeMarkerEx(_end, _aBuff);
-                _end = default;
-                _aBuff = null;
-            }
-        }
-    }
-
-#endif
 }

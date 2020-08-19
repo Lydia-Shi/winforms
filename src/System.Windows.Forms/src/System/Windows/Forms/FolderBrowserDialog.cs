@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Buffers;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -9,6 +11,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Win32.SafeHandles;
 using static Interop;
+using static Interop.Shell32;
 
 namespace System.Windows.Forms
 {
@@ -156,29 +159,46 @@ namespace System.Windows.Forms
         /// </returns>
         protected override bool RunDialog(IntPtr hWndOwner)
         {
-            return UseVistaDialogInternal ? RunDialogVista(hWndOwner) : RunDialogOld(hWndOwner);
+            // If running the Vista dialog fails (e.g. on Server Core), we fall back to the
+            // legacy dialog.
+            if (UseVistaDialogInternal && TryRunDialogVista(hWndOwner, out bool returnValue))
+                return returnValue;
+
+            return RunDialogOld(hWndOwner);
         }
 
-        private bool RunDialogVista(IntPtr owner)
+        private bool TryRunDialogVista(IntPtr owner, out bool returnValue)
         {
-            var dialog = new FileDialogNative.NativeFileOpenDialog();
+            OpenFileDialog.NativeFileOpenDialog dialog;
+            try
+            {
+                // Creating the Vista dialog can fail on Windows Server Core, even if the
+                // Server Core App Compatibility FOD is installed.
+                dialog = new OpenFileDialog.NativeFileOpenDialog();
+            }
+            catch (COMException)
+            {
+                returnValue = false;
+                return false;
+            }
+
             try
             {
                 SetDialogProperties(dialog);
-                int result = dialog.Show(owner);
-                if (result < 0)
+                HRESULT hr = dialog.Show(owner);
+                if (!hr.Succeeded())
                 {
-                    if ((HRESULT)result == HRESULT.ERROR_CANCELLED)
+                    if (hr == HRESULT.ERROR_CANCELLED)
                     {
-                        return false;
+                        returnValue = false;
+                        return true;
                     }
-                    else
-                    {
-                        throw Marshal.GetExceptionForHR(result);
-                    }
+
+                    throw Marshal.GetExceptionForHR((int)hr);
                 }
 
                 GetResult(dialog);
+                returnValue = true;
                 return true;
             }
             finally
@@ -190,7 +210,7 @@ namespace System.Windows.Forms
             }
         }
 
-        private void SetDialogProperties(FileDialogNative.IFileDialog dialog)
+        private void SetDialogProperties(IFileDialog dialog)
         {
             // Description
             if (!string.IsNullOrEmpty(_descriptionText))
@@ -201,41 +221,57 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    FileDialogNative.IFileDialogCustomize customize = (FileDialogNative.IFileDialogCustomize)dialog;
+                    IFileDialogCustomize customize = (IFileDialogCustomize)dialog;
                     customize.AddText(0, _descriptionText);
                 }
             }
 
-            dialog.SetOptions(FileDialogNative.FOS.FOS_PICKFOLDERS | FileDialogNative.FOS.FOS_FORCEFILESYSTEM | FileDialogNative.FOS.FOS_FILEMUSTEXIST);
+            dialog.SetOptions(FOS.PICKFOLDERS | FOS.FORCEFILESYSTEM | FOS.FILEMUSTEXIST);
 
             if (!string.IsNullOrEmpty(_selectedPath))
             {
                 string parent = Path.GetDirectoryName(_selectedPath);
-                if (parent == null || !Directory.Exists(parent))
+                if (parent is null || !Directory.Exists(parent))
                 {
                     dialog.SetFileName(_selectedPath);
                 }
                 else
                 {
                     string folder = Path.GetFileName(_selectedPath);
-                    dialog.SetFolder(FileDialogNative.CreateItemFromParsingName(parent));
+                    dialog.SetFolder(CreateItemFromParsingName(parent));
                     dialog.SetFileName(folder);
                 }
             }
         }
 
-        private void GetResult(FileDialogNative.IFileDialog dialog)
+        private static IShellItem CreateItemFromParsingName(string path)
         {
-            dialog.GetResult(out FileDialogNative.IShellItem item);
-            item.GetDisplayName(FileDialogNative.SIGDN.SIGDN_FILESYSPATH, out _selectedPath);
+            Guid guid = typeof(IShellItem).GUID;
+            HRESULT hr = SHCreateItemFromParsingName(path, IntPtr.Zero, ref guid, out object item);
+            if (hr != HRESULT.S_OK)
+            {
+                throw new Win32Exception((int)hr);
+            }
+
+            return (IShellItem)item;
+        }
+
+        private void GetResult(IFileDialog dialog)
+        {
+            dialog.GetResult(out IShellItem item);
+            HRESULT hr = item.GetDisplayName(SIGDN.FILESYSPATH, out _selectedPath);
+            if (!hr.Succeeded())
+            {
+                throw Marshal.GetExceptionForHR((int)hr);
+            }
         }
 
         private unsafe bool RunDialogOld(IntPtr hWndOwner)
         {
-            Shell32.SHGetSpecialFolderLocation(hWndOwner, (int)_rootFolder, out CoTaskMemSafeHandle listHandle);
+            SHGetSpecialFolderLocation(hWndOwner, (int)_rootFolder, out CoTaskMemSafeHandle listHandle);
             if (listHandle.IsInvalid)
             {
-                Shell32.SHGetSpecialFolderLocation(hWndOwner, (int)Environment.SpecialFolder.Desktop, out listHandle);
+                SHGetSpecialFolderLocation(hWndOwner, (int)Environment.SpecialFolder.Desktop, out listHandle);
                 if (listHandle.IsInvalid)
                 {
                     throw new InvalidOperationException(SR.FolderBrowserDialogNoRootFolder);
@@ -244,10 +280,10 @@ namespace System.Windows.Forms
 
             using (listHandle)
             {
-                uint mergedOptions = Shell32.BrowseInfoFlags.BIF_NEWDIALOGSTYLE;
+                uint mergedOptions = BrowseInfoFlags.BIF_NEWDIALOGSTYLE;
                 if (!ShowNewFolderButton)
                 {
-                    mergedOptions |= Shell32.BrowseInfoFlags.BIF_NONEWFOLDERBUTTON;
+                    mergedOptions |= BrowseInfoFlags.BIF_NONEWFOLDERBUTTON;
                 }
 
                 // The SHBrowserForFolder dialog is OLE/COM based, and documented as only being safe to use under the STA
@@ -259,13 +295,13 @@ namespace System.Windows.Forms
                     throw new Threading.ThreadStateException(string.Format(SR.DebuggingExceptionOnly, SR.ThreadMustBeSTA));
                 }
 
-                var callback = new Shell32.BrowseCallbackProc(FolderBrowserDialog_BrowseCallbackProc);
+                var callback = new BrowseCallbackProc(FolderBrowserDialog_BrowseCallbackProc);
                 char[] displayName = ArrayPool<char>.Shared.Rent(Kernel32.MAX_PATH + 1);
                 try
                 {
                     fixed (char* pDisplayName = displayName)
                     {
-                        var bi = new Shell32.BROWSEINFO
+                        var bi = new BROWSEINFO
                         {
                             pidlRoot = listHandle,
                             hwndOwner = hWndOwner,
@@ -278,7 +314,7 @@ namespace System.Windows.Forms
                         };
 
                         // Show the dialog
-                        using (CoTaskMemSafeHandle browseHandle = Shell32.SHBrowseForFolderW(ref bi))
+                        using (CoTaskMemSafeHandle browseHandle = SHBrowseForFolderW(ref bi))
                         {
                             if (browseHandle.IsInvalid)
                             {
@@ -286,7 +322,7 @@ namespace System.Windows.Forms
                             }
 
                             // Retrieve the path from the IDList.
-                            Shell32.SHGetPathFromIDListLongPath(browseHandle.DangerousGetHandle(), out _selectedPath);
+                            SHGetPathFromIDListLongPath(browseHandle.DangerousGetHandle(), out _selectedPath);
                             GC.KeepAlive(callback);
                             return true;
                         }
@@ -305,24 +341,24 @@ namespace System.Windows.Forms
         /// </summary>
         private int FolderBrowserDialog_BrowseCallbackProc(IntPtr hwnd, int msg, IntPtr lParam, IntPtr lpData)
         {
-            switch (msg)
+            switch ((BFFM)msg)
             {
-                case NativeMethods.BFFM_INITIALIZED:
+                case BFFM.INITIALIZED:
                     // Indicates the browse dialog box has finished initializing. The lpData value is zero.
                     if (_selectedPath.Length != 0)
                     {
                         // Try to select the folder specified by selectedPath
-                        UnsafeNativeMethods.SendMessage(new HandleRef(null, hwnd), (int)NativeMethods.BFFM_SETSELECTION, 1, _selectedPath);
+                        User32.SendMessageW(hwnd, (User32.WM)BFFM.SETSELECTIONW, PARAM.FromBool(true), _selectedPath);
                     }
                     break;
-                case NativeMethods.BFFM_SELCHANGED:
+                case BFFM.SELCHANGED:
                     // Indicates the selection has changed. The lpData parameter points to the item identifier list for the newly selected item.
                     IntPtr selectedPidl = lParam;
                     if (selectedPidl != IntPtr.Zero)
                     {
                         // Try to retrieve the path from the IDList
-                        bool isFileSystemFolder = Shell32.SHGetPathFromIDListLongPath(selectedPidl, out _);
-                        UnsafeNativeMethods.SendMessage(new HandleRef(null, hwnd), (int)NativeMethods.BFFM_ENABLEOK, 0, isFileSystemFolder ? 1 : 0);
+                        bool isFileSystemFolder = SHGetPathFromIDListLongPath(selectedPidl, out _);
+                        User32.SendMessageW(hwnd, (User32.WM)BFFM.ENABLEOK, IntPtr.Zero, PARAM.FromBool(isFileSystemFolder));
                     }
                     break;
             }

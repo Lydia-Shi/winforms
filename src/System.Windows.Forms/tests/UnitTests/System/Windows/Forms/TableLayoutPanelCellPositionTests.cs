@@ -12,7 +12,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class TableLayoutPanelCellPositionTests
+    // NB: doesn't require thread affinity
+    public class TableLayoutPanelCellPositionTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void TableLayoutPanelCellPosition_Ctor_Default()

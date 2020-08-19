@@ -16,17 +16,16 @@ namespace System.Windows.Forms.Tests
     using Point = System.Drawing.Point;
     using Size = System.Drawing.Size;
 
-    public class PanelTests
+    public class PanelTests : IClassFixture<ThreadExceptionFixture>
     {
-        public PanelTests()
-        {
-            Application.ThreadException += (sender, e) => throw new Exception(e.Exception.StackTrace.ToString());
-        }
-
         [WinFormsFact]
         public void Panel_Ctor_Default()
         {
             using var control = new SubPanel();
+            Assert.Null(control.AccessibleDefaultActionDescription);
+            Assert.Null(control.AccessibleDescription);
+            Assert.Null(control.AccessibleName);
+            Assert.Equal(AccessibleRole.Default, control.AccessibleRole);
             Assert.False(control.AllowDrop);
             Assert.Equal(AnchorStyles.Top | AnchorStyles.Left, control.Anchor);
             Assert.False(control.AutoScroll);
@@ -43,11 +42,15 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(100, control.Bottom);
             Assert.Equal(new Rectangle(0, 0, 200, 100), control.Bounds);
             Assert.True(control.CanEnableIme);
+            Assert.False(control.CanFocus);
             Assert.True(control.CanRaiseEvents);
+            Assert.False(control.CanSelect);
+            Assert.False(control.Capture);
             Assert.True(control.CausesValidation);
             Assert.Equal(new Rectangle(0, 0, 200, 100), control.ClientRectangle);
             Assert.Equal(new Size(200, 100), control.ClientSize);
             Assert.Null(control.Container);
+            Assert.False(control.ContainsFocus);
             Assert.Null(control.ContextMenuStrip);
             Assert.Empty(control.Controls);
             Assert.Same(control.Controls, control.Controls);
@@ -73,6 +76,7 @@ namespace System.Windows.Forms.Tests
             Assert.True(control.Enabled);
             Assert.NotNull(control.Events);
             Assert.Same(control.Events, control.Events);
+            Assert.False(control.Focused);
             Assert.Equal(Control.DefaultFont, control.Font);
             Assert.Equal(control.Font.Height, control.FontHeight);
             Assert.Equal(Control.DefaultForeColor, control.ForeColor);
@@ -83,6 +87,8 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.HScroll);
             Assert.Equal(ImeMode.NoControl, control.ImeMode);
             Assert.Equal(ImeMode.NoControl, control.ImeModeBase);
+            Assert.False(control.IsAccessible);
+            Assert.False(control.IsMirrored);
             Assert.NotNull(control.LayoutEngine);
             Assert.Same(control.LayoutEngine, control.LayoutEngine);
             Assert.Equal(0, control.Left);
@@ -99,12 +105,15 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.ResizeRedraw);
             Assert.Equal(200, control.Right);
             Assert.Equal(RightToLeft.No, control.RightToLeft);
+            Assert.True(control.ShowFocusCues);
+            Assert.True(control.ShowKeyboardCues);
             Assert.Equal(new Size(200, 100), control.Size);
             Assert.Equal(0, control.TabIndex);
             Assert.False(control.TabStop);
             Assert.Empty(control.Text);
             Assert.Equal(0, control.Top);
             Assert.Null(control.TopLevelControl);
+            Assert.False(control.UseWaitCursor);
             Assert.True(control.Visible);
             Assert.NotNull(control.VerticalScroll);
             Assert.Same(control.VerticalScroll, control.VerticalScroll);
@@ -163,21 +172,25 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetBoolTheoryData))]
         public void Panel_AutoSize_Set_GetReturnsExpected(bool value)
         {
-            using var control = new Panel
-            {
-                AutoSize = value
-            };
+            using var control = new Panel();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.AutoSize = value;
             Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
 
             // Set same.
             control.AutoSize = value;
             Assert.Equal(value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
 
             // Set different.
             control.AutoSize = !value;
             Assert.Equal(!value, control.AutoSize);
+            Assert.Equal(0, layoutCallCount);
             Assert.False(control.IsHandleCreated);
         }
 
@@ -223,19 +236,22 @@ namespace System.Windows.Forms.Tests
         [CommonMemberData(nameof(CommonTestHelper.GetEnumTypeTheoryData), typeof(AutoSizeMode))]
         public void Panel_AutoSizeMode_Set_GetReturnsExpected(AutoSizeMode value)
         {
-            using var control = new SubPanel
-            {
-                AutoSizeMode = value
-            };
+            using var control = new SubPanel();
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) => layoutCallCount++;
+
+            control.AutoSizeMode = value;
             Assert.Equal(value, control.AutoSizeMode);
             Assert.Equal(value, control.GetAutoSizeMode());
             Assert.False(control.IsHandleCreated);
+            Assert.Equal(0, layoutCallCount);
 
             // Set same.
             control.AutoSizeMode = value;
             Assert.Equal(value, control.AutoSizeMode);
             Assert.Equal(value, control.GetAutoSizeMode());
             Assert.False(control.IsHandleCreated);
+            Assert.Equal(0, layoutCallCount);
         }
 
         [WinFormsTheory]
@@ -401,7 +417,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("AutoSize", e.AffectedProperty);
+                Assert.Equal("AutoSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -473,7 +489,7 @@ namespace System.Windows.Forms.Tests
             {
                 Assert.Same(parent, sender);
                 Assert.Same(control, e.AffectedControl);
-                Assert.Same("AutoSize", e.AffectedProperty);
+                Assert.Equal("AutoSize", e.AffectedProperty);
                 parentLayoutCallCount++;
             };
             parent.Layout += parentHandler;
@@ -619,7 +635,6 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(new Size(26, 31), control.PreferredSize);
         }
 
-
         private class BorderedPanel : Panel
         {
             protected override CreateParams CreateParams
@@ -733,7 +748,7 @@ namespace System.Windows.Forms.Tests
             Assert.Equal(2, callCount);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void Panel_Text_Set_GetReturnsExpected(string value, string expected)
         {
@@ -750,7 +765,7 @@ namespace System.Windows.Forms.Tests
             Assert.False(control.IsHandleCreated);
         }
 
-        [Theory]
+        [WinFormsTheory]
         [CommonMemberData(nameof(CommonTestHelper.GetStringNormalizedTheoryData))]
         public void Panel_Text_SetWithHandle_GetReturnsExpected(string value, string expected)
         {
@@ -794,12 +809,12 @@ namespace System.Windows.Forms.Tests
 
             // Set different.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set same.
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(1, callCount);
 
             // Set different.
@@ -810,7 +825,7 @@ namespace System.Windows.Forms.Tests
             // Remove handler.
             control.TextChanged -= handler;
             control.Text = "text";
-            Assert.Same("text", control.Text);
+            Assert.Equal("text", control.Text);
             Assert.Equal(2, callCount);
         }
 
@@ -819,6 +834,21 @@ namespace System.Windows.Forms.Tests
         {
             using var control = new SubPanel();
             Assert.Equal(AutoSizeMode.GrowOnly, control.GetAutoSizeMode());
+        }
+
+        [WinFormsTheory]
+        [InlineData(0, true)]
+        [InlineData(SubPanel.ScrollStateAutoScrolling, false)]
+        [InlineData(SubPanel.ScrollStateFullDrag, false)]
+        [InlineData(SubPanel.ScrollStateHScrollVisible, false)]
+        [InlineData(SubPanel.ScrollStateUserHasScrolled, false)]
+        [InlineData(SubPanel.ScrollStateVScrollVisible, false)]
+        [InlineData(int.MaxValue, false)]
+        [InlineData((-1), false)]
+        public void Panel_GetScrollState_Invoke_ReturnsExpected(int bit, bool expected)
+        {
+            using var control = new SubPanel();
+            Assert.Equal(expected, control.GetScrollState(bit));
         }
 
         [WinFormsTheory]
@@ -849,6 +879,13 @@ namespace System.Windows.Forms.Tests
 
             // Call again to test caching.
             Assert.Equal(expected, control.GetStyle(flag));
+        }
+
+        [WinFormsFact]
+        public void Panel_GetTopLevel_Invoke_ReturnsExpected()
+        {
+            using var control = new SubPanel();
+            Assert.False(control.GetTopLevel());
         }
 
         [WinFormsTheory]
@@ -949,12 +986,14 @@ namespace System.Windows.Forms.Tests
             control.OnResize(eventArgs);
             Assert.Equal(1, callCount);
             Assert.Equal(1, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
 
             // Remove handler.
             control.Resize -= handler;
             control.OnResize(eventArgs);
             Assert.Equal(1, callCount);
             Assert.Equal(2, layoutCallCount);
+            Assert.False(control.IsHandleCreated);
         }
 
         public static IEnumerable<object[]> OnResize_WithHandle_TestData()
@@ -1060,6 +1099,14 @@ namespace System.Windows.Forms.Tests
                 Assert.Same(eventArgs, e);
                 callCount++;
             };
+            int layoutCallCount = 0;
+            control.Layout += (sender, e) =>
+            {
+                Assert.Same(control, sender);
+                Assert.Same(control, e.AffectedControl);
+                Assert.Equal("Bounds", e.AffectedProperty);
+                layoutCallCount++;
+            };
             int invalidatedCallCount = 0;
             control.Invalidated += (sender, e) => invalidatedCallCount++;
             int styleChangedCallCount = 0;
@@ -1071,6 +1118,7 @@ namespace System.Windows.Forms.Tests
             control.Resize += handler;
             control.OnResize(eventArgs);
             Assert.Equal(1, callCount);
+            Assert.Equal(1, layoutCallCount);
             Assert.True(control.IsHandleCreated);
             Assert.Equal(expectedInvalidatedCallCount, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1080,6 +1128,7 @@ namespace System.Windows.Forms.Tests
             control.Resize -= handler;
             control.OnResize(eventArgs);
             Assert.Equal(1, callCount);
+            Assert.Equal(2, layoutCallCount);
             Assert.True(control.IsHandleCreated);
             Assert.Equal(expectedInvalidatedCallCount * 2, invalidatedCallCount);
             Assert.Equal(0, styleChangedCallCount);
@@ -1095,6 +1144,16 @@ namespace System.Windows.Forms.Tests
 
         private class SubPanel : Panel
         {
+            public new const int ScrollStateAutoScrolling = Panel.ScrollStateAutoScrolling;
+
+            public new const int ScrollStateHScrollVisible = Panel.ScrollStateHScrollVisible;
+
+            public new const int ScrollStateVScrollVisible = Panel.ScrollStateVScrollVisible;
+
+            public new const int ScrollStateUserHasScrolled = Panel.ScrollStateUserHasScrolled;
+
+            public new const int ScrollStateFullDrag = Panel.ScrollStateFullDrag;
+
             public new bool CanEnableIme => base.CanEnableIme;
 
             public new bool CanRaiseEvents => base.CanRaiseEvents;
@@ -1149,6 +1208,10 @@ namespace System.Windows.Forms.Tests
                 set => base.ResizeRedraw = value;
             }
 
+            public new bool ShowFocusCues => base.ShowFocusCues;
+
+            public new bool ShowKeyboardCues => base.ShowKeyboardCues;
+
             public new bool VScroll
             {
                 get => base.VScroll;
@@ -1157,7 +1220,11 @@ namespace System.Windows.Forms.Tests
 
             public new AutoSizeMode GetAutoSizeMode() => base.GetAutoSizeMode();
 
+            public new bool GetScrollState(int bit) => base.GetScrollState(bit);
+
             public new bool GetStyle(ControlStyles flag) => base.GetStyle(flag);
+
+            public new bool GetTopLevel() => base.GetTopLevel();
 
             public new void OnKeyDown(KeyEventArgs e) => base.OnKeyDown(e);
 

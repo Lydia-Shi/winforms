@@ -6,7 +6,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class SpanHelpersTests
+    // NB: doesn't require thread affinity
+    public class SpanHelpersTests : IClassFixture<ThreadExceptionFixture>
     {
         [Theory,
             InlineData("", 1, "\0"),

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.IO;
 using static Interop;
 
@@ -177,7 +179,7 @@ namespace System.Windows.Forms
                 {
                     try
                     {
-                        comStream.Commit(Ole32.STGC.STGC_DEFAULT);
+                        comStream.Commit(Ole32.STGC.DEFAULT);
                     }
                     catch (Exception)
                     {

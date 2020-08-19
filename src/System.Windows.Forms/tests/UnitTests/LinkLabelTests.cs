@@ -6,12 +6,12 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class LinkLabelTests
+    public class LinkLabelTests : IClassFixture<ThreadExceptionFixture>
     {
-        [Fact]
+        [WinFormsFact]
         public void LinkLabel_Constructor()
         {
-            var label = new LinkLabel();
+            using var label = new LinkLabel();
 
             Assert.NotNull(label);
             Assert.True(label.LinkArea.IsEmpty);

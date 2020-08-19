@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -23,7 +25,7 @@ namespace System.Windows.Forms
 
         private Border3DStyle borderStyle = Border3DStyle.Flat;
         private ToolStripStatusLabelBorderSides borderSides = ToolStripStatusLabelBorderSides.None;
-        private bool spring = false;
+        private bool spring;
         private AutomationLiveSetting liveSetting;
 
         /// <summary>
@@ -70,7 +72,7 @@ namespace System.Windows.Forms
         ///  Creates an instance of the object that defines how image and text
         ///  gets laid out in the ToolStripItem
         /// </summary>
-        internal override ToolStripItemInternalLayout CreateInternalLayout()
+        private protected override ToolStripItemInternalLayout CreateInternalLayout()
         {
             return new ToolStripStatusLabelLayout(this);
         }
@@ -79,21 +81,13 @@ namespace System.Windows.Forms
         [EditorBrowsable(EditorBrowsableState.Advanced)]
         public new ToolStripItemAlignment Alignment
         {
-            get
-            {
-                return base.Alignment;
-            }
-            set
-            {
-                base.Alignment = value;
-            }
+            get => base.Alignment;
+            set => base.Alignment = value;
         }
 
-        [
-        DefaultValue(Border3DStyle.Flat),
-        SRDescription(nameof(SR.ToolStripStatusLabelBorderStyleDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(Border3DStyle.Flat)]
+        [SRDescription(nameof(SR.ToolStripStatusLabelBorderStyleDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public Border3DStyle BorderStyle
         {
             get
@@ -127,11 +121,9 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        DefaultValue(ToolStripStatusLabelBorderSides.None),
-        SRDescription(nameof(SR.ToolStripStatusLabelBorderSidesDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(ToolStripStatusLabelBorderSides.None)]
+        [SRDescription(nameof(SR.ToolStripStatusLabelBorderSidesDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public ToolStripStatusLabelBorderSides BorderSides
         {
             get
@@ -169,11 +161,9 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        DefaultValue(false),
-        SRDescription(nameof(SR.ToolStripStatusLabelSpringDescr)),
-        SRCategory(nameof(SR.CatAppearance))
-        ]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.ToolStripStatusLabelSpringDescr))]
+        [SRCategory(nameof(SR.CatAppearance))]
         public bool Spring
         {
             get { return spring; }
@@ -186,7 +176,6 @@ namespace System.Windows.Forms
                     {
                         LayoutTransaction.DoLayout(ParentInternal, this, PropertyNames.Spring);
                     }
-
                 }
             }
         }
@@ -195,13 +184,11 @@ namespace System.Windows.Forms
         ///  Indicates the "politeness" level that a client should use
         ///  to notify the user of changes to the live region.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAccessibility)),
-        DefaultValue(AutomationLiveSetting.Off),
-        SRDescription(nameof(SR.LiveRegionAutomationLiveSettingDescr)),
-        Browsable(true),
-        EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [SRCategory(nameof(SR.CatAccessibility))]
+        [DefaultValue(AutomationLiveSetting.Off)]
+        [SRDescription(nameof(SR.LiveRegionAutomationLiveSettingDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutomationLiveSetting LiveSetting
         {
             get
@@ -259,7 +246,6 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         internal class ToolStripStatusLabelAccessibleObject : ToolStripLabelAccessibleObject
         {
             private readonly ToolStripStatusLabel ownerItem;
@@ -313,9 +299,5 @@ namespace System.Windows.Forms
                 return layoutOptions;
             }
         }
-
     }
-
 }
-
-

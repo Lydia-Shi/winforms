@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Globalization;
 
@@ -59,19 +61,19 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             if (destinationType == typeof(string))
             {
-                if (value == null)
+                if (value is null)
                 {
                     return none;
                 }
 
                 string text = ComNativeDescriptor.Instance.GetName(value);
 
-                if (text == null || text.Length == 0)
+                if (text is null || text.Length == 0)
                 {
                     text = ComNativeDescriptor.Instance.GetClassName(value);
                 }
 
-                if (text == null)
+                if (text is null)
                 {
                     return "(Object)";
                 }

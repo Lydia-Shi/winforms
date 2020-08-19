@@ -2,11 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -53,10 +54,9 @@ namespace System.Windows.Forms
             // Parking window list
             private readonly List<ParkingWindow> _parkingWindows = new List<ParkingWindow>();
             private Control _marshalingControl;
-            private CultureInfo _culture;
             private List<IMessageFilter> _messageFilters;
             private List<IMessageFilter> _messageFilterSnapshot;
-            private int _inProcessFilters = 0;
+            private int _inProcessFilters;
             private IntPtr _handle;
             private readonly uint _id;
             private int _messageLoopCount;
@@ -87,7 +87,7 @@ namespace System.Windows.Forms
             private bool _ourModalLoop;
 
             // A private field on Application that stores the callback delegate
-            private MessageLoopCallback _messageLoopCallback = null;
+            private MessageLoopCallback _messageLoopCallback;
 
             /// <summary>
             ///  Creates a new thread context object.
@@ -107,7 +107,11 @@ namespace System.Windows.Forms
                 _id = Kernel32.GetCurrentThreadId();
                 _messageLoopCount = 0;
                 t_currentThreadContext = this;
-                s_contextHash[_id] = this;
+
+                lock (s_tcInternalSyncObject)
+                {
+                    s_contextHash[_id] = this;
+                }
             }
 
             public ApplicationContext ApplicationContext { get; private set; }
@@ -266,13 +270,13 @@ namespace System.Windows.Forms
             ///  Retrieves the actual parking form.  This will demand create the parking window
             ///  if it needs to.
             /// </summary>
-            internal ParkingWindow GetParkingWindow(DpiAwarenessContext context)
+            internal ParkingWindow GetParkingWindow(IntPtr context)
             {
                 // Locking 'this' here is ok since this is an internal class.
                 lock (this)
                 {
                     ParkingWindow parkingWindow = GetParkingWindowForContext(context);
-                    if (parkingWindow == null)
+                    if (parkingWindow is null)
                     {
 #if DEBUG
                         if (CoreSwitches.PerfTrack.Enabled)
@@ -298,7 +302,7 @@ namespace System.Windows.Forms
             ///  Returns parking window that matches dpi awareness context. return null if not found.
             /// </summary>
             /// <returns>return matching parking window from list. returns null if not found</returns>
-            internal ParkingWindow GetParkingWindowForContext(DpiAwarenessContext context)
+            internal ParkingWindow GetParkingWindowForContext(IntPtr context)
             {
                 if (_parkingWindows.Count == 0)
                 {
@@ -308,9 +312,8 @@ namespace System.Windows.Forms
                 // Legacy OS/target framework scenario where ControlDpiContext is set to DPI_AWARENESS_CONTEXT.DPI_AWARENESS_CONTEXT_UNSPECIFIED
                 // because of 'ThreadContextDpiAwareness' API unavailability or this feature is not enabled.
 
-                if (!DpiHelper.IsScalingRequirementMet || CommonUnsafeNativeMethods.TryFindDpiAwarenessContextsEqual(context, DpiAwarenessContext.DPI_AWARENESS_CONTEXT_UNSPECIFIED))
+                if (!DpiHelper.IsScalingRequirementMet || User32.AreDpiAwarenessContextsEqual(context, User32.UNSPECIFIED_DPI_AWARENESS_CONTEXT))
                 {
-
                     Debug.Assert(_parkingWindows.Count == 1, "parkingWindows count can not be > 1 for legacy OS/target framework versions");
                     return _parkingWindows[0];
                 }
@@ -318,7 +321,7 @@ namespace System.Windows.Forms
                 // Supported OS scenario.
                 foreach (ParkingWindow p in _parkingWindows)
                 {
-                    if (CommonUnsafeNativeMethods.TryFindDpiAwarenessContextsEqual(p.DpiAwarenessContext, context))
+                    if (User32.AreDpiAwarenessContextsEqual(p.DpiAwarenessContext, context))
                     {
                         return p;
                     }
@@ -361,7 +364,7 @@ namespace System.Windows.Forms
                 {
                     lock (this)
                     {
-                        if (_marshalingControl == null)
+                        if (_marshalingControl is null)
                         {
 #if DEBUG
                             if (CoreSwitches.PerfTrack.Enabled)
@@ -384,11 +387,11 @@ namespace System.Windows.Forms
             /// </summary>
             internal void AddMessageFilter(IMessageFilter f)
             {
-                if (_messageFilters == null)
+                if (_messageFilters is null)
                 {
                     _messageFilters = new List<IMessageFilter>();
                 }
-                if (_messageFilterSnapshot == null)
+                if (_messageFilterSnapshot is null)
                 {
                     _messageFilterSnapshot = new List<IMessageFilter>();
                 }
@@ -751,7 +754,7 @@ namespace System.Windows.Forms
             internal static ThreadContext FromId(uint id)
             {
                 ThreadContext context = (ThreadContext)s_contextHash[id];
-                if (context == null && id == Kernel32.GetCurrentThreadId())
+                if (context is null && id == Kernel32.GetCurrentThreadId())
                 {
                     context = new ThreadContext();
                 }
@@ -775,19 +778,6 @@ namespace System.Windows.Forms
             ///  Retrieves the ID of this thread.
             /// </summary>
             internal uint GetId() => _id;
-
-            /// <summary>
-            ///  Retrieves the culture for this thread.
-            /// </summary>
-            internal CultureInfo GetCulture()
-            {
-                if (_culture == null || _culture.LCID != Kernel32.GetThreadLocale())
-                {
-                    _culture = new CultureInfo((int)Kernel32.GetThreadLocale());
-                }
-
-                return _culture;
-            }
 
             /// <summary>
             ///  Determines if a message loop exists on this thread.
@@ -846,7 +836,7 @@ namespace System.Windows.Forms
             ///  A method of determining whether we are handling messages that does not demand register
             ///  the componentmanager
             /// </summary>
-            internal bool IsValidComponentId() =>_componentID != s_invalidId;
+            internal bool IsValidComponentId() => _componentID != s_invalidId;
 
             internal ApartmentState OleRequired()
             {
@@ -908,7 +898,7 @@ namespace System.Windows.Forms
                             switch (result)
                             {
                                 case DialogResult.Abort:
-                                    ExitInternal();
+                                    Exit();
                                     Environment.Exit(0);
                                     break;
                                 case DialogResult.Yes:
@@ -944,7 +934,7 @@ namespace System.Windows.Forms
                 //
                 // We can't follow the KB article exactly, becasue we don't have an HWND to PostMessage
                 // to.
-                User32.PostThreadMessageW(_id, User32.WindowMessage.WM_QUIT, IntPtr.Zero, IntPtr.Zero);
+                User32.PostThreadMessageW(_id, User32.WM.QUIT, IntPtr.Zero, IntPtr.Zero);
                 SetState(STATE_POSTEDQUIT, true);
             }
 
@@ -979,7 +969,7 @@ namespace System.Windows.Forms
                 IntPtr userCookie = IntPtr.Zero;
                 if (UseVisualStyles)
                 {
-                    userCookie = ThemingScope.Activate();
+                    userCookie = ThemingScope.Activate(Application.UseVisualStyles);
                 }
 
                 try
@@ -1035,8 +1025,6 @@ namespace System.Windows.Forms
                     {
                         ApplicationContext.MainForm.Visible = true;
                     }
-
-                    DpiHelper.InitializeDpiHelperForWinforms();
                 }
 
                 Form oldForm = _currentForm;
@@ -1075,7 +1063,7 @@ namespace System.Windows.Forms
                     // If the owner window of the dialog is still enabled, disable it now.
                     // This can happen if the owner window is from a different thread or
                     // process.
-                    hwndOwner = UnsafeNativeMethods.GetWindowLong(new HandleRef(_currentForm, _currentForm.Handle), NativeMethods.GWL_HWNDPARENT);
+                    hwndOwner = User32.GetWindowLong(_currentForm, User32.GWL.HWNDPARENT);
                     if (hwndOwner != IntPtr.Zero)
                     {
                         if (User32.IsWindowEnabled(hwndOwner).IsTrue())
@@ -1232,7 +1220,7 @@ namespace System.Windows.Forms
                                 continueLoop = !form.CheckCloseDialog(false);
                             }
                         }
-                        else if (form == null)
+                        else if (form is null)
                         {
                             break;
                         }
@@ -1291,7 +1279,7 @@ namespace System.Windows.Forms
                             if (f is IMessageModifyAndFilter)
                             {
                                 msg.hwnd = m.HWnd;
-                                msg.message = (User32.WindowMessage)m.Msg;
+                                msg.message = (User32.WM)m.Msg;
                                 msg.wParam = m.WParam;
                                 msg.lParam = m.LParam;
                                 modified = true;
@@ -1328,7 +1316,7 @@ namespace System.Windows.Forms
 
                 if (msg.IsKeyMessage())
                 {
-                    if (msg.message == User32.WindowMessage.WM_CHAR)
+                    if (msg.message == User32.WM.CHAR)
                     {
                         int breakLParamMask = 0x1460000; // 1 = extended keyboard, 46 = scan code
                         if (unchecked((int)(long)msg.wParam) == 3 && (unchecked((int)(long)msg.lParam) & breakLParamMask) == breakLParamMask) // ctrl-brk
@@ -1379,7 +1367,7 @@ namespace System.Windows.Forms
                         // winforms code.  This can happen with ActiveX controls that launch dialogs specificially
 
                         // First, get the first top-level window in the hierarchy.
-                        IntPtr hwndRoot = UnsafeNativeMethods.GetAncestor(new HandleRef(null, msg.hwnd), NativeMethods.GA_ROOT);
+                        IntPtr hwndRoot = User32.GetAncestor(msg.hwnd, User32.GA.ROOT);
 
                         // If we got a valid HWND, then call IsDialogMessage on it.  If that returns true, it's been processed
                         // so we should return true to prevent Translate/Dispatch from being called.
@@ -1425,17 +1413,6 @@ namespace System.Windows.Forms
                         _componentManager = null;
                         _componentID = s_invalidId;
                     }
-                }
-            }
-
-            /// <summary>
-            ///  Sets the culture for this thread.
-            /// </summary>
-            internal void SetCulture(CultureInfo culture)
-            {
-                if (culture != null && culture.LCID != (int)Kernel32.GetThreadLocale())
-                {
-                    Kernel32.SetThreadLocale((uint)culture.LCID);
                 }
             }
 
@@ -1534,7 +1511,7 @@ namespace System.Windows.Forms
 
                 // If we get a null message, and we have previously posted the WM_QUIT message,
                 // then someone ate the message...
-                if (pMsgPeeked == null && GetState(STATE_POSTEDQUIT))
+                if (pMsgPeeked is null && GetState(STATE_POSTEDQUIT))
                 {
                     Debug.WriteLineIf(CompModSwitches.MSOComponentManager.TraceInfo, "ComponentManager : Abnormal loop termination, no WM_QUIT received");
                     continueLoop = false;
@@ -1560,7 +1537,7 @@ namespace System.Windows.Forms
                             // dismissed.  If there is no active form, then it is an error that
                             // we got into here, so we terminate the loop.
 
-                            if (_currentForm == null || _currentForm.CheckCloseDialog(false))
+                            if (_currentForm is null || _currentForm.CheckCloseDialog(false))
                             {
                                 continueLoop = false;
                             }

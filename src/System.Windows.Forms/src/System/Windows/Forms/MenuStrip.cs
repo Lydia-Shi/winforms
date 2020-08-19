@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -10,13 +12,10 @@ using static Interop;
 
 namespace System.Windows.Forms
 {
-    [ComVisible(true),
-     ClassInterface(ClassInterfaceType.AutoDispatch),
-     SRDescription(nameof(SR.DescriptionMenuStrip))
-    ]
+    [SRDescription(nameof(SR.DescriptionMenuStrip))]
     public class MenuStrip : ToolStrip
     {
-        private ToolStripMenuItem mdiWindowListItem = null;
+        private ToolStripMenuItem mdiWindowListItem;
 
         private static readonly object EventMenuActivate = new object();
         private static readonly object EventMenuDeactivate = new object();
@@ -26,7 +25,6 @@ namespace System.Windows.Forms
             CanOverflow = false;
             GripStyle = ToolStripGripStyle.Hidden;
             Stretch = true;
-
         }
 
         internal override bool KeyboardActive
@@ -50,17 +48,16 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        DefaultValue(false),
-        SRDescription(nameof(SR.ToolStripCanOverflowDescr)),
-        SRCategory(nameof(SR.CatLayout)),
-        Browsable(false)
-        ]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.ToolStripCanOverflowDescr))]
+        [SRCategory(nameof(SR.CatLayout))]
+        [Browsable(false)]
         public new bool CanOverflow
         {
             get => base.CanOverflow;
             set => base.CanOverflow = value;
         }
+
         protected override bool DefaultShowItemToolTips
             => false;
 
@@ -72,7 +69,6 @@ namespace System.Windows.Forms
                        DpiHelper.LogicalToDeviceUnits(new Padding(2, 2, 0, 2), DeviceDpi) :
                        new Padding(2, 2, 0, 2);
 
-        /// <include file='doc\MenuStrip.uex' path='docs/doc[@for="MenuStrip.DefaultSize"]/*' />
         protected override Size DefaultSize
             => DpiHelper.IsPerMonitorV2Awareness ?
                DpiHelper.LogicalToDeviceUnits(new Size(200, 24), DeviceDpi) :
@@ -103,14 +99,16 @@ namespace System.Windows.Forms
             set => base.GripStyle = value;
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.MenuStripMenuActivateDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.MenuStripMenuActivateDescr))]
         public event EventHandler MenuActivate
         {
             add => Events.AddHandler(EventMenuActivate, value);
             remove => Events.RemoveHandler(EventMenuActivate, value);
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.MenuStripMenuDeactivateDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.MenuStripMenuDeactivateDescr))]
         public event EventHandler MenuDeactivate
         {
             add => Events.AddHandler(EventMenuDeactivate, value);
@@ -177,7 +175,7 @@ namespace System.Windows.Forms
             {
                 AccessibilityNotifyClients(AccessibleEvents.SystemMenuStart, -1);
             }
-            
+
             ((EventHandler)Events[EventMenuActivate])?.Invoke(this, e);
         }
 
@@ -187,7 +185,7 @@ namespace System.Windows.Forms
             {
                 AccessibilityNotifyClients(AccessibleEvents.SystemMenuEnd, -1);
             }
-            
+
             ((EventHandler)Events[EventMenuDeactivate])?.Invoke(this, e);
         }
 
@@ -198,7 +196,7 @@ namespace System.Windows.Forms
         {
             if (!(Focused || ContainsFocus))
             {
-                Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[ProcessMenuKey] set focus to menustrip");
+                Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[ProcessMenuKey] set focus to menustrip");
                 ToolStripManager.ModalMenuFilter.SetActiveToolStrip(this, /*menuKeyPressed=*/true);
 
                 if (DisplayedItems.Count > 0)
@@ -232,24 +230,21 @@ namespace System.Windows.Forms
                     if (Focused || !ContainsFocus)
                     {
                         NotifySelectionChange(null);
-                        Debug.WriteLineIf(ToolStrip.SnapFocusDebug.TraceVerbose, "[MenuStrip.ProcessCmdKey] Rolling up the menu and invoking the system menu");
+                        Debug.WriteLineIf(ToolStrip.s_snapFocusDebug.TraceVerbose, "[MenuStrip.ProcessCmdKey] Rolling up the menu and invoking the system menu");
                         ToolStripManager.ModalMenuFilter.ExitMenuMode();
                         // send a WM_SYSCOMMAND SC_KEYMENU + Space to activate the system menu.
-                        UnsafeNativeMethods.PostMessage(WindowsFormsUtils.GetRootHWnd(this), WindowMessages.WM_SYSCOMMAND, (int)User32.SC.KEYMENU, (int)Keys.Space);
+                        IntPtr ancestor = User32.GetAncestor(this, User32.GA.ROOT);
+                        User32.PostMessageW(ancestor, User32.WM.SYSCOMMAND, (IntPtr)User32.SC.KEYMENU, (IntPtr)Keys.Space);
                         return true;
                     }
                 }
             }
             return base.ProcessCmdKey(ref m, keyData);
-
         }
-        /// <summary>
-        ///  Summary of WndProc.
-        /// </summary>
-        /// <param name=m></param>
+
         protected override void WndProc(ref Message m)
         {
-            if (m.Msg == WindowMessages.WM_MOUSEACTIVATE && (ActiveDropDowns.Count == 0))
+            if (m.Msg == (int)User32.WM.MOUSEACTIVATE && (ActiveDropDowns.Count == 0))
             {
                 // call menu activate before we actually take focus.
                 Point pt = PointToClient(WindowsFormsUtils.LastCursorPoint);
@@ -265,7 +260,6 @@ namespace System.Windows.Forms
             base.WndProc(ref m);
         }
 
-        [ComVisible(true)]
         internal class MenuStripAccessibleObject : ToolStripAccessibleObject
         {
             public MenuStripAccessibleObject(MenuStrip owner)
@@ -288,10 +282,13 @@ namespace System.Windows.Forms
 
             internal override object GetPropertyValue(UiaCore.UIA propertyID)
             {
-                if (propertyID == UiaCore.UIA.ControlTypePropertyId)
+                switch (propertyID)
                 {
-                    return UiaCore.UIA.MenuBarControlTypeId;
-                }
+                    case UiaCore.UIA.ControlTypePropertyId:
+                        return UiaCore.UIA.MenuBarControlTypeId;
+                    case UiaCore.UIA.NamePropertyId:
+                        return Name;
+            }
 
                 return base.GetPropertyValue(propertyID);
             }

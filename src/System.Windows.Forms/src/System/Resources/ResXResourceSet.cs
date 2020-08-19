@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.IO;
 
 namespace System.Resources
@@ -16,7 +18,6 @@ namespace System.Resources
         /// </summary>
         public ResXResourceSet(string fileName) : base(new ResXResourceReader(fileName))
         {
-            ReadResources();
         }
 
         /// <summary>
@@ -24,23 +25,16 @@ namespace System.Resources
         /// </summary>
         public ResXResourceSet(Stream stream) : base(new ResXResourceReader(stream))
         {
-            ReadResources();
         }
 
         /// <summary>
         ///  Gets the default reader type associated with this set.
         /// </summary>
-        public override Type GetDefaultReader()
-        {
-            return typeof(ResXResourceReader);
-        }
+        public override Type GetDefaultReader() => typeof(ResXResourceReader);
 
         /// <summary>
         ///  Gets the default writer type associated with this set.
         /// </summary>
-        public override Type GetDefaultWriter()
-        {
-            return typeof(ResXResourceWriter);
-        }
+        public override Type GetDefaultWriter() => typeof(ResXResourceWriter);
     }
 }

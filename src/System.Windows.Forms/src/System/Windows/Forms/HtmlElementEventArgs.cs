@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -93,7 +95,7 @@ namespace System.Windows.Forms
             get
             {
                 object obj = NativeHTMLEventObj.GetReturnValue();
-                return obj == null ? true : (bool)obj;
+                return obj is null ? true : (bool)obj;
             }
             set => NativeHTMLEventObj.SetReturnValue(value);
         }
@@ -105,7 +107,7 @@ namespace System.Windows.Forms
             get
             {
                 IHTMLElement htmlElement = NativeHTMLEventObj.GetFromElement();
-                return htmlElement == null ? null : new HtmlElement(_shimManager, htmlElement);
+                return htmlElement is null ? null : new HtmlElement(_shimManager, htmlElement);
             }
         }
 
@@ -116,7 +118,7 @@ namespace System.Windows.Forms
             get
             {
                 IHTMLElement htmlElement = NativeHTMLEventObj.GetToElement();
-                return htmlElement == null ? null : new HtmlElement(_shimManager, htmlElement);
+                return htmlElement is null ? null : new HtmlElement(_shimManager, htmlElement);
             }
         }
     }

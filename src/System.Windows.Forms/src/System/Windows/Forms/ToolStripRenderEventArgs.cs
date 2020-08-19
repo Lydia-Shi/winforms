@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 
 namespace System.Windows.Forms
@@ -59,7 +61,7 @@ namespace System.Windows.Forms
                 }
 
                 // get the user specified color
-                if (ToolStrip == null)
+                if (ToolStrip is null)
                 {
                     _backColor = SystemColors.Control;
                     return _backColor;

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -81,7 +83,7 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    throw new ArgumentException(SR.TreeNodeCollectionBadTreeNode, "value");
+                    throw new ArgumentException(SR.TreeNodeCollectionBadTreeNode, nameof(value));
                 }
             }
         }
@@ -109,7 +111,6 @@ namespace System.Windows.Forms
                 {
                     return null;
                 }
-
             }
         }
         // Make this property available to Intellisense. (Removed the EditorBrowsable attribute.)
@@ -239,7 +240,7 @@ namespace System.Windows.Forms
 
         public virtual void AddRange(TreeNode[] nodes)
         {
-            if (nodes == null)
+            if (nodes is null)
             {
                 throw new ArgumentNullException(nameof(nodes));
             }
@@ -268,6 +269,11 @@ namespace System.Windows.Forms
 
         public TreeNode[] Find(string key, bool searchAllChildren)
         {
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key), SR.FindKeyMayNotBeEmptyOrNull);
+            }
+
             ArrayList foundNodes = FindInternal(key, searchAllChildren, this, new ArrayList());
 
             //
@@ -279,7 +285,7 @@ namespace System.Windows.Forms
 
         private ArrayList FindInternal(string key, bool searchAllChildren, TreeNodeCollection treeNodeCollectionToLookIn, ArrayList foundTreeNodes)
         {
-            if ((treeNodeCollectionToLookIn == null) || (foundTreeNodes == null))
+            if ((treeNodeCollectionToLookIn is null) || (foundTreeNodes is null))
             {
                 return null;
             }
@@ -289,7 +295,7 @@ namespace System.Windows.Forms
 
             for (int i = 0; i < treeNodeCollectionToLookIn.Count; i++)
             {
-                if (treeNodeCollectionToLookIn[i] == null)
+                if (treeNodeCollectionToLookIn[i] is null)
                 {
                     continue;
                 }
@@ -306,7 +312,7 @@ namespace System.Windows.Forms
             {
                 for (int i = 0; i < treeNodeCollectionToLookIn.Count; i++)
                 {
-                    if (treeNodeCollectionToLookIn[i] == null)
+                    if (treeNodeCollectionToLookIn[i] is null)
                     {
                         continue;
                     }
@@ -330,13 +336,13 @@ namespace System.Windows.Forms
 
         private int AddInternal(TreeNode node, int delta)
         {
-            if (node == null)
+            if (node is null)
             {
                 throw new ArgumentNullException(nameof(node));
             }
             if (node.handle != IntPtr.Zero)
             {
-                throw new ArgumentException(string.Format(SR.OnlyOneControl, node.Text), "node");
+                throw new ArgumentException(string.Format(SR.OnlyOneControl, node.Text), nameof(node));
             }
 
             // Check for ParentingCycle
@@ -380,7 +386,7 @@ namespace System.Windows.Forms
 
         int IList.Add(object node)
         {
-            if (node == null)
+            if (node is null)
             {
                 throw new ArgumentNullException(nameof(node));
             }
@@ -485,7 +491,7 @@ namespace System.Windows.Forms
         {
             if (node.handle != IntPtr.Zero)
             {
-                throw new ArgumentException(string.Format(SR.OnlyOneControl, node.Text), "node");
+                throw new ArgumentException(string.Format(SR.OnlyOneControl, node.Text), nameof(node));
             }
 
             // Check for ParentingCycle
@@ -520,7 +526,7 @@ namespace System.Windows.Forms
             }
             else
             {
-                throw new ArgumentException(SR.TreeNodeCollectionBadTreeNode, "node");
+                throw new ArgumentException(SR.TreeNodeCollectionBadTreeNode, nameof(node));
             }
         }
 
@@ -663,7 +669,7 @@ namespace System.Windows.Forms
 
         public IEnumerator GetEnumerator()
         {
-            return new WindowsFormsUtils.ArraySubsetEnumerator(owner.children, owner.childCount);
+            return new ArraySubsetEnumerator(owner.children, owner.childCount);
         }
     }
 }

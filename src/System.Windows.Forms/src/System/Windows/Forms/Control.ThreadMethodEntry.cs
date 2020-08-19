@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Threading;
 
 namespace System.Windows.Forms
@@ -29,7 +31,7 @@ namespace System.Windows.Forms
 
             // Optionally store the synchronization context associated with the callee thread.
             // This overrides the sync context in the execution context of the caller thread.
-            internal SynchronizationContext _syncContext = null;
+            internal SynchronizationContext _syncContext;
 
             internal ThreadMethodEntry(Control caller, Control marshaler, Delegate method, object[] args, bool synchronous, ExecutionContext executionContext)
             {
@@ -65,7 +67,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (_resetEvent == null)
+                    if (_resetEvent is null)
                     {
                         // Locking 'this' here is ok since this is an internal class.
                         lock (_invokeSyncObject)
@@ -73,7 +75,7 @@ namespace System.Windows.Forms
                             // BeginInvoke hangs on Multi-proc system:
                             // taking the lock prevents a race condition between IsCompleted
                             // boolean flag and resetEvent mutex in multiproc scenarios.
-                            if (_resetEvent == null)
+                            if (_resetEvent is null)
                             {
                                 _resetEvent = new ManualResetEvent(false);
                                 if (IsCompleted)

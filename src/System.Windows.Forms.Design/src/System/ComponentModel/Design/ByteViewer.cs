@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using static Interop;
 
 namespace System.ComponentModel.Design
 {
@@ -77,7 +78,7 @@ namespace System.ComponentModel.Design
             SetStyle(ControlStyles.ResizeRedraw, true);
         }
 
-        // Stole this code from  XmlSanner       
+        // Stole this code from  XmlSanner
         private static int AnalizeByteOrderMark(byte[] buffer, int index)
         {
             int c1 = buffer[index + 0] << 8 | buffer[index + 1];
@@ -86,17 +87,17 @@ namespace System.ComponentModel.Design
 
             //Assign an index (label) value for first two bytes
             c4 = GetEncodingIndex(c1);
-            //Assign an index (label) value for 3rd and 4th byte            
+            //Assign an index (label) value for 3rd and 4th byte
             c5 = GetEncodingIndex(c2);
 
             //Bellow table is to identify Encoding type based on
-            //first four bytes, those we have converted in index 
+            //first four bytes, those we have converted in index
             //values for this look up table
             //values on column are first two bytes and
-            //values on rows are 3rd and 4th byte 
+            //values on rows are 3rd and 4th byte
 
             int[,] encodings = {
-                   //Unknown 0000 feff fffe efbb  3c00 003c 3f00 003f  3c3f 786d  4c6f  a794 
+                   //Unknown 0000 feff fffe efbb  3c00 003c 3f00 003f  3c3f 786d  4c6f  a794
            /*Unknown*/ {1   ,5   ,1   ,1    ,1   ,1   ,1   ,1   ,1    ,1    ,1    ,1    ,1   },
               /*0000*/ {1   ,1   ,1   ,11   ,1   ,10  ,4   ,1   ,1    ,1    ,1    ,1    ,1   },
               /*feff*/ {2   ,9   ,5   ,2    ,2   ,2   ,2   ,2   ,2    ,2    ,2    ,2    ,2   },
@@ -157,7 +158,7 @@ namespace System.ComponentModel.Design
 
             string hexString = ((startLine + line) * _columnCount).ToString("X8", CultureInfo.InvariantCulture);
 
-            using Brush foreground = new SolidBrush(ForeColor);
+            using var foreground = new SolidBrush(ForeColor);
             g.DrawString(hexString, font, foreground, ADDRESS_START_X, LINE_START_Y + line * CELL_HEIGHT);
         }
 
@@ -236,10 +237,10 @@ namespace System.ComponentModel.Design
             for (int i = 0; i < lineBuffer.Length; i++)
             {
                 result.Append(lineBuffer[i].ToString("X2", CultureInfo.InvariantCulture));
-                result.Append(" ");
+                result.Append(' ');
                 if (i == _columnCount / 2 - 1)
                 {
-                    result.Append(" ");  //add one extra in the middle
+                    result.Append(' ');  // Add one extra in the middle.
                 }
             }
 
@@ -288,7 +289,7 @@ namespace System.ComponentModel.Design
             int unicodeCount = 0;
             int size;
 
-            if ((_dataBuf == null) || (_dataBuf.Length >= 0 && (_dataBuf.Length < 8)))
+            if ((_dataBuf is null) || (_dataBuf.Length >= 0 && (_dataBuf.Length < 8)))
             {
                 return DisplayMode.Hexdump;
             }
@@ -303,11 +304,11 @@ namespace System.ComponentModel.Design
                     return DisplayMode.Unicode;
                 case 4:
                 case 5:
-                    //_Encoding = Ucs4Encoding.UCS4_Bigendian; 
+                    //_Encoding = Ucs4Encoding.UCS4_Bigendian;
                     return DisplayMode.Hexdump;
                 case 6:
                 case 7:
-                    //_Encoding = Ucs4Encoding.UCS4_Littleendian; 
+                    //_Encoding = Ucs4Encoding.UCS4_Littleendian;
                     return DisplayMode.Hexdump;
                 case 8:
                 case 9:
@@ -320,7 +321,7 @@ namespace System.ComponentModel.Design
                 case 12:
                     //8 ebcdic
                     return DisplayMode.Hexdump;
-                case 13: //9                    
+                case 13: //9
                          //_Encoding = new UTF8Encoding(false);
                     return DisplayMode.Ansi;
                 case 14:
@@ -384,7 +385,7 @@ namespace System.ComponentModel.Design
             return _displayMode;
         }
 
-        // Stole this code from  XmlSanner       
+        // Stole this code from  XmlSanner
         private static int GetEncodingIndex(int c1)
         {
             switch (c1)
@@ -421,12 +422,20 @@ namespace System.ComponentModel.Design
         /// <summary>
         ///  Initializes the ansi string variable that will be assigned to the edit box.
         /// </summary>
-        private void InitAnsi()
+        private unsafe void InitAnsi()
         {
-            int size = _dataBuf.Length;
-            char[] text = new char[size + 1];
-            size = Interop.Kernel32.MultiByteToWideChar(0, 0, _dataBuf, size, text, size);
-            text[size] = (char)0;
+            char[] text;
+            int size;
+            fixed (byte* pDataBuff = _dataBuf)
+            {
+                size = Kernel32.MultiByteToWideChar(Kernel32.CP.ACP, 0, pDataBuff, _dataBuf.Length, null, 0);
+                text = new char[size + 1];
+                fixed (char* pText = text)
+                {
+                    size = Kernel32.MultiByteToWideChar(Kernel32.CP.ACP, 0, pDataBuff, size, pText, size);
+                }
+            }
+            text[size] = '\0';
 
             for (int i = 0; i < size; i++)
             {
@@ -600,7 +609,6 @@ namespace System.ComponentModel.Design
             }
 
             _displayLinesCount = (_startLine + _rowCount < _linesCount) ? _rowCount : _linesCount - _startLine;
-
         }
 
         /// <summary>
@@ -608,7 +616,7 @@ namespace System.ComponentModel.Design
         /// </summary>
         public virtual void SaveToFile(string path)
         {
-            if (_dataBuf == null)
+            if (_dataBuf is null)
             {
                 return;
             }
@@ -641,9 +649,9 @@ namespace System.ComponentModel.Design
         /// </summary>
         public virtual void SetBytes(byte[] bytes)
         {
-            if (bytes == null)
+            if (bytes is null)
             {
-                throw new ArgumentNullException("bytes");
+                throw new ArgumentNullException(nameof(bytes));
             }
 
             if (_dataBuf != null)

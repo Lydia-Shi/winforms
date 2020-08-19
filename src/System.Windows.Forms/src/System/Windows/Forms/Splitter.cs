@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
@@ -16,15 +18,11 @@ namespace System.Windows.Forms
     ///  edge. The splitter will then resize the control that is previous in the docking
     ///  order.
     /// </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultEvent(nameof(SplitterMoved)),
-    DefaultProperty(nameof(Dock)),
-    SRDescription(nameof(SR.DescriptionSplitter)),
-    Designer("System.Windows.Forms.Design.SplitterDesigner, " + AssemblyRef.SystemDesign)
-    ]
-    public class Splitter : Control
+    [DefaultEvent(nameof(SplitterMoved))]
+    [DefaultProperty(nameof(Dock))]
+    [SRDescription(nameof(SR.DescriptionSplitter))]
+    [Designer("System.Windows.Forms.Design.SplitterDesigner, " + AssemblyRef.SystemDesign)]
+    public partial class Splitter : Control
     {
         private const int DRAW_START = 1;
         private const int DRAW_MOVE = 2;
@@ -46,7 +44,7 @@ namespace System.Windows.Forms
         private static readonly object EVENT_MOVED = new object();
 
         // Cannot expose IMessageFilter.PreFilterMessage through this unsealed class
-        private SplitterMessageFilter splitterMessageFilter = null;
+        private SplitterMessageFilter splitterMessageFilter;
 
         /// <summary>
         ///  Creates a new Splitter.
@@ -67,8 +65,9 @@ namespace System.Windows.Forms
         ///  determines which edges of the control are anchored to the container's
         ///  edges.
         /// </summary>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
-        DefaultValue(AnchorStyles.None)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DefaultValue(AnchorStyles.None)]
         public override AnchorStyles Anchor
         {
             get
@@ -81,17 +80,12 @@ namespace System.Windows.Forms
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool AllowDrop
         {
-            get
-            {
-                return base.AllowDrop;
-            }
-            set
-            {
-                base.AllowDrop = value;
-            }
+            get => base.AllowDrop;
+            set => base.AllowDrop = value;
         }
 
         /// <summary>
@@ -123,80 +117,64 @@ namespace System.Windows.Forms
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override Color ForeColor
         {
-            get
-            {
-                return base.ForeColor;
-            }
-            set
-            {
-                base.ForeColor = value;
-            }
+            get => base.ForeColor;
+            set => base.ForeColor = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler ForeColorChanged
         {
             add => base.ForeColorChanged += value;
             remove => base.ForeColorChanged -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override Image BackgroundImage
         {
-            get
-            {
-                return base.BackgroundImage;
-            }
-            set
-            {
-                base.BackgroundImage = value;
-            }
+            get => base.BackgroundImage;
+            set => base.BackgroundImage = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler BackgroundImageChanged
         {
             add => base.BackgroundImageChanged += value;
             remove => base.BackgroundImageChanged -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override ImageLayout BackgroundImageLayout
         {
-            get
-            {
-                return base.BackgroundImageLayout;
-            }
-            set
-            {
-                base.BackgroundImageLayout = value;
-            }
+            get => base.BackgroundImageLayout;
+            set => base.BackgroundImageLayout = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
             remove => base.BackgroundImageLayoutChanged -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override Font Font
         {
-            get
-            {
-                return base.Font;
-            }
-            set
-            {
-                base.Font = value;
-            }
+            get => base.Font;
+            set => base.Font = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler FontChanged
         {
             add => base.FontChanged += value;
@@ -228,6 +206,9 @@ namespace System.Windows.Forms
                 }
             }
         }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+            => new SplitterAccessibleObject(this);
 
         /// <summary>
         ///  Returns the parameters needed to create the handle.  Inheriting classes
@@ -264,17 +245,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        Localizable(true),
-        DefaultValue(DockStyle.Left)
-        ]
+        [Localizable(true)]
+        [DefaultValue(DockStyle.Left)]
         public override DockStyle Dock
         {
-            get { return base.Dock; }
+            get => base.Dock;
 
             set
             {
-
                 if (!(value == DockStyle.Top || value == DockStyle.Bottom || value == DockStyle.Left || value == DockStyle.Right))
                 {
                     throw new ArgumentException(SR.SplitterInvalidDockEnum);
@@ -315,20 +293,16 @@ namespace System.Windows.Forms
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public ImeMode ImeMode
         {
-            get
-            {
-                return base.ImeMode;
-            }
-            set
-            {
-                base.ImeMode = value;
-            }
+            get => base.ImeMode;
+            set => base.ImeMode = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler ImeModeChanged
         {
             add => base.ImeModeChanged += value;
@@ -341,12 +315,10 @@ namespace System.Windows.Forms
         ///  is not occupied by edge docked controls, this is the are that
         ///  would be used for any fill docked control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Localizable(true),
-        DefaultValue(25),
-        SRDescription(nameof(SR.SplitterMinExtraDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Localizable(true)]
+        [DefaultValue(25)]
+        [SRDescription(nameof(SR.SplitterMinExtraDescr))]
         public int MinExtra
         {
             get
@@ -369,12 +341,10 @@ namespace System.Windows.Forms
         ///  splitter. The target of a splitter is always the control adjacent
         ///  to the splitter, just prior in the dock order.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Localizable(true),
-        DefaultValue(25),
-        SRDescription(nameof(SR.SplitterMinSizeDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Localizable(true)]
+        [DefaultValue(25)]
+        [SRDescription(nameof(SR.SplitterMinSizeDescr))]
         public int MinSize
         {
             get
@@ -396,12 +366,10 @@ namespace System.Windows.Forms
         ///  The position of the splitter. If the splitter is not bound
         ///  to a control, SplitPosition will be -1.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatLayout)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.SplitterSplitPositionDescr))
-        ]
+        [SRCategory(nameof(SR.CatLayout))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.SplitterSplitPositionDescr))]
         public int SplitPosition
         {
             get
@@ -430,12 +398,10 @@ namespace System.Windows.Forms
                     value = minSize;
                 }
 
-                // if (value == splitSize) return;  -- do we need this check?
-
                 splitSize = value;
                 DrawSplitBar(DRAW_END);
 
-                if (spd.target == null)
+                if (spd.target is null)
                 {
                     splitSize = -1;
                     return;
@@ -462,97 +428,95 @@ namespace System.Windows.Forms
                 spd.target.Bounds = bounds;
                 Application.DoEvents();
                 OnSplitterMoved(new SplitterEventArgs(Left, Top, (Left + bounds.Width / 2), (Top + bounds.Height / 2)));
-
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        internal override bool SupportsUiaProviders => true;
+
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public bool TabStop
         {
-            get
-            {
-                return base.TabStop;
-            }
-            set
-            {
-                base.TabStop = value;
-            }
+            get => base.TabStop;
+            set => base.TabStop = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler TabStopChanged
         {
             add => base.TabStopChanged += value;
             remove => base.TabStopChanged -= value;
         }
 
-        [
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
-        Bindable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Bindable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override string Text
         {
-            get
-            {
-                return base.Text;
-            }
-            set
-            {
-                base.Text = value;
-            }
+            get => base.Text;
+            set => base.Text = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler TextChanged
         {
             add => base.TextChanged += value;
             remove => base.TextChanged -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler Enter
         {
             add => base.Enter += value;
             remove => base.Enter -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event KeyEventHandler KeyUp
         {
             add => base.KeyUp += value;
             remove => base.KeyUp -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event KeyEventHandler KeyDown
         {
             add => base.KeyDown += value;
             remove => base.KeyDown -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event KeyPressEventHandler KeyPress
         {
             add => base.KeyPress += value;
             remove => base.KeyPress -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler Leave
         {
             add => base.Leave += value;
             remove => base.Leave -= value;
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.SplitterSplitterMovingDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.SplitterSplitterMovingDescr))]
         public event SplitterEventHandler SplitterMoving
         {
             add => Events.AddHandler(EVENT_MOVING, value);
             remove => Events.RemoveHandler(EVENT_MOVING, value);
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.SplitterSplitterMovedDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.SplitterSplitterMovedDescr))]
         public event SplitterEventHandler SplitterMoved
         {
             add => Events.AddHandler(EVENT_MOVED, value);
@@ -644,7 +608,7 @@ namespace System.Windows.Forms
         private int CalcSplitSize()
         {
             Control target = FindTarget();
-            if (target == null)
+            if (target is null)
             {
                 return -1;
             }
@@ -727,19 +691,19 @@ namespace System.Windows.Forms
         /// </summary>
         private void DrawSplitHelper(int splitSize)
         {
-            if (splitTarget == null)
+            if (splitTarget is null)
             {
                 return;
             }
 
             Rectangle r = CalcSplitLine(splitSize, 3);
-            IntPtr dc = User32.GetDCEx(ParentInternal, IntPtr.Zero, User32.DCX.CACHE | User32.DCX.LOCKWINDOWUPDATE);
-            IntPtr halftone = ControlPaint.CreateHalftoneHBRUSH();
-            IntPtr saveBrush = Gdi32.SelectObject(dc, halftone);
-            SafeNativeMethods.PatBlt(new HandleRef(ParentInternal, dc), r.X, r.Y, r.Width, r.Height, NativeMethods.PATINVERT);
-            Gdi32.SelectObject(dc, saveBrush);
-            Gdi32.DeleteObject(halftone);
-            User32.ReleaseDC(new HandleRef(ParentInternal, ParentInternal.Handle), dc);
+            using var dc = new User32.GetDcScope(ParentInternal.Handle, IntPtr.Zero, User32.DCX.CACHE | User32.DCX.LOCKWINDOWUPDATE);
+            Gdi32.HBRUSH halftone = ControlPaint.CreateHalftoneHBRUSH();
+            using var halftoneScope = new Gdi32.ObjectScope(halftone);
+            using var selection = new Gdi32.SelectObjectScope(dc, halftone);
+            Gdi32.PatBlt(dc, r.X, r.Y, r.Width, r.Height, Gdi32.ROP.PATINVERT);
+
+            GC.KeepAlive(ParentInternal);
         }
 
         /// <summary>
@@ -751,7 +715,7 @@ namespace System.Windows.Forms
         private Control FindTarget()
         {
             Control parent = ParentInternal;
-            if (parent == null)
+            if (parent is null)
             {
                 return null;
             }
@@ -1022,7 +986,7 @@ namespace System.Windows.Forms
 
         private class SplitterMessageFilter : IMessageFilter
         {
-            private readonly Splitter owner = null;
+            private readonly Splitter owner;
 
             public SplitterMessageFilter(Splitter splitter)
             {
@@ -1033,9 +997,9 @@ namespace System.Windows.Forms
             /// </summary>
             public bool PreFilterMessage(ref Message m)
             {
-                if (m.Msg >= WindowMessages.WM_KEYFIRST && m.Msg <= WindowMessages.WM_KEYLAST)
+                if (m.Msg >= (int)User32.WM.KEYFIRST && m.Msg <= (int)User32.WM.KEYLAST)
                 {
-                    if (m.Msg == WindowMessages.WM_KEYDOWN && unchecked((int)(long)m.WParam) == (int)Keys.Escape)
+                    if (m.Msg == (int)User32.WM.KEYDOWN && unchecked((int)(long)m.WParam) == (int)Keys.Escape)
                     {
                         owner.SplitEnd(false);
                     }
@@ -1046,4 +1010,3 @@ namespace System.Windows.Forms
         }
     }
 }
-

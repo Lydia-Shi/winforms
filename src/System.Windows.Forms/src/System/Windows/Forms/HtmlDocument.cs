@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -34,7 +36,6 @@ namespace System.Windows.Forms
             Debug.Assert(NativeHtmlDocument2 != null, "The document should implement IHtmlDocument2");
 
             this.shimManager = shimManager;
-
         }
 
         internal IHTMLDocument2 NativeHtmlDocument2
@@ -52,7 +53,7 @@ namespace System.Windows.Forms
                 if (ShimManager != null)
                 {
                     HtmlDocumentShim shim = ShimManager.GetDocumentShim(this);
-                    if (shim == null)
+                    if (shim is null)
                     {
                         shimManager.AddDocumentShim(this);
                         shim = ShimManager.GetDocumentShim(this);
@@ -126,7 +127,7 @@ namespace System.Windows.Forms
             get
             {
                 IHTMLLocation iHtmlLocation = NativeHtmlDocument2.GetLocation();
-                string stringLocation = (iHtmlLocation == null) ? "" : iHtmlLocation.GetHref();
+                string stringLocation = (iHtmlLocation is null) ? "" : iHtmlLocation.GetHref();
                 return string.IsNullOrEmpty(stringLocation) ? null : new Uri(stringLocation);
             }
         }
@@ -151,7 +152,7 @@ namespace System.Windows.Forms
                 }
                 catch (Exception ex)
                 {
-                    if (ClientUtils.IsSecurityOrCriticalException(ex))
+                    if (ClientUtils.IsCriticalException(ex))
                     {
                         throw;
                     }
@@ -176,7 +177,7 @@ namespace System.Windows.Forms
                 }
                 catch (Exception ex)
                 {
-                    if (ClientUtils.IsSecurityOrCriticalException(ex))
+                    if (ClientUtils.IsCriticalException(ex))
                     {
                         throw;
                     }
@@ -201,7 +202,7 @@ namespace System.Windows.Forms
                 }
                 catch (Exception ex)
                 {
-                    if (ClientUtils.IsSecurityOrCriticalException(ex))
+                    if (ClientUtils.IsCriticalException(ex))
                     {
                         throw;
                     }
@@ -226,7 +227,7 @@ namespace System.Windows.Forms
                 }
                 catch (Exception ex)
                 {
-                    if (ClientUtils.IsSecurityOrCriticalException(ex))
+                    if (ClientUtils.IsCriticalException(ex))
                     {
                         throw;
                     }
@@ -251,7 +252,7 @@ namespace System.Windows.Forms
                 }
                 catch (Exception ex)
                 {
-                    if (ClientUtils.IsSecurityOrCriticalException(ex))
+                    if (ClientUtils.IsCriticalException(ex))
                     {
                         throw;
                     }
@@ -417,62 +418,57 @@ namespace System.Windows.Forms
 
         public unsafe object InvokeScript(string scriptName, object[] args)
         {
-            object retVal = null;
-            var dispParams = new Ole32.DISPPARAMS
-            {
-                rgvarg = IntPtr.Zero
-            };
             try
             {
-                if (NativeHtmlDocument2.GetScript() is UnsafeNativeMethods.IDispatch scriptObject)
+                if (NativeHtmlDocument2.GetScript() is Oleaut32.IDispatch scriptObject)
                 {
                     Guid g = Guid.Empty;
                     string[] names = new string[] { scriptName };
                     Ole32.DispatchID dispid = Ole32.DispatchID.UNKNOWN;
                     HRESULT hr = scriptObject.GetIDsOfNames(&g, names, 1, Kernel32.GetThreadLocale(), &dispid);
-                    if (hr.Succeeded() && dispid != Ole32.DispatchID.UNKNOWN)
+                    if (!hr.Succeeded() || dispid == Ole32.DispatchID.UNKNOWN)
                     {
-                        if (args != null)
-                        {
-                            // Reverse the arg order so that parms read naturally after IDispatch. (
-                            Array.Reverse(args);
-                        }
-                        dispParams.rgvarg = (args == null) ? IntPtr.Zero : HtmlDocument.ArrayToVARIANTVector(args);
-                        dispParams.cArgs = (args == null) ? 0 : (uint)args.Length;
-                        dispParams.rgdispidNamedArgs = IntPtr.Zero;
+                        return null;
+                    }
+
+                    if (args != null)
+                    {
+                        // Reverse the arg order so that they read naturally after IDispatch.
+                        Array.Reverse(args);
+                    }
+
+                    using var vectorArgs = new Oleaut32.VARIANTVector(args);
+                    fixed (Oleaut32.VARIANT* pVariants = vectorArgs.Variants)
+                    {
+                        var dispParams = new Oleaut32.DISPPARAMS();
+                        dispParams.rgvarg = pVariants;
+                        dispParams.cArgs = (uint)vectorArgs.Variants.Length;
+                        dispParams.rgdispidNamedArgs = null;
                         dispParams.cNamedArgs = 0;
 
-                        object[] retVals = new object[1];
-                        var pExcepInfo = new Ole32.EXCEPINFO();
-
+                        var retVals = new object[1];
+                        var excepInfo = new Oleaut32.EXCEPINFO();
                         hr = scriptObject.Invoke(
                             dispid,
                             &g,
                             Kernel32.GetThreadLocale(),
-                            NativeMethods.DISPATCH_METHOD,
+                            Oleaut32.DISPATCH.METHOD,
                             &dispParams,
                             retVals,
-                            &pExcepInfo,
+                            &excepInfo,
                             null);
                         if (hr == HRESULT.S_OK)
                         {
-                            retVal = retVals[0];
+                            return retVals[0];
                         }
                     }
                 }
             }
-            catch (Exception ex) when (!ClientUtils.IsSecurityOrCriticalException(ex))
+            catch (Exception ex) when (!ClientUtils.IsCriticalException(ex))
             {
-            }
-            finally
-            {
-                if (dispParams.rgvarg != IntPtr.Zero)
-                {
-                    HtmlDocument.FreeVARIANTVector(dispParams.rgvarg, args.Length);
-                }
             }
 
-            return retVal;
+            return null;
         }
 
         public object InvokeScript(string scriptName)
@@ -547,7 +543,6 @@ namespace System.Windows.Forms
         {
             add => DocumentShim.AddHandler(EventMouseOver, value);
             remove => DocumentShim.RemoveHandler(EventMouseOver, value);
-
         }
 
         public event HtmlElementEventHandler MouseUp
@@ -560,47 +555,6 @@ namespace System.Windows.Forms
         {
             add => DocumentShim.AddHandler(EventStop, value);
             remove => DocumentShim.RemoveHandler(EventStop, value);
-        }
-
-        //
-        // Private helper methods:
-        //
-        [StructLayout(LayoutKind.Sequential, Pack = 1)]
-        private struct FindSizeOfVariant
-        {
-            [MarshalAs(UnmanagedType.Struct)]
-            public object var;
-            public byte b;
-        }
-        private static readonly int VariantSize = (int)Marshal.OffsetOf(typeof(FindSizeOfVariant), "b");
-        
-        /// <summary>
-        ///  Convert a object[] into an array of VARIANT, allocated with CoTask allocators.
-        /// </summary>
-        internal unsafe static IntPtr ArrayToVARIANTVector(object[] args)
-        {
-            int len = args.Length;
-            IntPtr mem = Marshal.AllocCoTaskMem(len * VariantSize);
-            byte* a = (byte*)(void*)mem;
-            for (int i = 0; i < len; ++i)
-            {
-                Marshal.GetNativeVariantForObject(args[i], (IntPtr)(a + VariantSize * i));
-            }
-            return mem;
-        }
-        
-        /// <summary>
-        ///  Free a Variant array created with the above function
-        /// </summary>
-        internal unsafe static void FreeVARIANTVector(IntPtr mem, int len)
-        {
-            byte* a = (byte*)(void*)mem;
-            for (int i = 0; i < len; ++i)
-            {
-                Oleaut32.VariantClear((IntPtr)(a + VariantSize * i));
-            }
-
-            Marshal.FreeCoTaskMem(mem);
         }
 
         private Color ColorFromObject(object oColor)
@@ -631,7 +585,7 @@ namespace System.Windows.Forms
             }
             catch (Exception ex)
             {
-                if (ClientUtils.IsSecurityOrCriticalException(ex))
+                if (ClientUtils.IsCriticalException(ex))
                 {
                     throw;
                 }
@@ -640,7 +594,7 @@ namespace System.Windows.Forms
             return Color.Empty;
         }
 
-        ///<summary>
+        /// <summary>
         ///  HtmlDocumentShim - this is the glue between the DOM eventing mechanisms
         ///          and our CLR callbacks.
         ///
@@ -652,12 +606,12 @@ namespace System.Windows.Forms
         ///                       for a method named DISPID=0.  For each event that's subscribed, we create
         ///                       a new HtmlToClrEventProxy, detect the callback and fire the corresponding
         ///                       CLR event.
-        ///</summary>
+        /// </summary>
         internal class HtmlDocumentShim : HtmlShim
         {
             private AxHost.ConnectionPointCookie cookie;
             private HtmlDocument htmlDocument;
-            private readonly IHTMLWindow2 associatedWindow = null;
+            private readonly IHTMLWindow2 associatedWindow;
 
             internal HtmlDocumentShim(HtmlDocument htmlDocument)
             {
@@ -691,14 +645,12 @@ namespace System.Windows.Forms
             ///  Support IHtmlDocument3.AttachHandler
             public override void AttachEventHandler(string eventName, EventHandler eventHandler)
             {
-
                 // IE likes to call back on an IDispatch of DISPID=0 when it has an event,
                 // the HtmlToClrEventProxy helps us fake out the CLR so that we can call back on
                 // our EventHandler properly.
 
                 HtmlToClrEventProxy proxy = AddEventProxy(eventName, eventHandler);
-                bool success = ((IHTMLDocument3)NativeHtmlDocument2).AttachEvent(eventName, proxy);
-                Debug.Assert(success, "failed to add event");
+                ((IHTMLDocument3)NativeHtmlDocument2).AttachEvent(eventName, proxy);
             }
 
             ///  Support IHtmlDocument3.DetachHandler
@@ -709,7 +661,6 @@ namespace System.Windows.Forms
                 {
                     ((IHTMLDocument3)NativeHtmlDocument2).DetachEvent(eventName, proxy);
                 }
-
             }
 
             //
@@ -717,7 +668,7 @@ namespace System.Windows.Forms
             //
             public override void ConnectToEvents()
             {
-                if (cookie == null || !cookie.Connected)
+                if (cookie is null || !cookie.Connected)
                 {
                     cookie = new AxHost.ConnectionPointCookie(NativeHtmlDocument2,
                                                                           new HTMLDocumentEvents2(htmlDocument),
@@ -753,7 +704,6 @@ namespace System.Windows.Forms
                     }
                     htmlDocument = null;
                 }
-
             }
 
             protected override object GetEventSender()
@@ -1006,4 +956,3 @@ namespace System.Windows.Forms
 
     }
 }
-

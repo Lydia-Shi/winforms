@@ -1,5 +1,4 @@
-﻿
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -15,7 +14,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class ListViewItemTests
+    // NB: doesn't require thread affinity
+    public class ListViewItemTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void ListViewItem_Ctor_Default()
@@ -201,7 +201,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> Ctor_ListViewSubItemArray_String_ListViewGroup_TestData()
         {
-            yield return new object[] { new ListViewItem.ListViewSubItem[0], null, null, string.Empty, string.Empty };
+            yield return new object[] { Array.Empty<ListViewItem.ListViewSubItem>(), null, null, string.Empty, string.Empty };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, string.Empty, null, string.Empty, "text" };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, "imageKey", new ListViewGroup(), "imageKey", "text" };
         }
@@ -238,7 +238,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> Ctor_ListViewSubItemArray_Int_ListViewGroup_TestData()
         {
-            yield return new object[] { new ListViewItem.ListViewSubItem[0], 0, null, string.Empty };
+            yield return new object[] { Array.Empty<ListViewItem.ListViewSubItem>(), 0, null, string.Empty };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, 1, null, "text" };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, -1, new ListViewGroup(), "text" };
         }
@@ -427,7 +427,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> Ctor_ListViewSubItemArray_String_TestData()
         {
-            yield return new object[] { new ListViewItem.ListViewSubItem[0], null, string.Empty, string.Empty };
+            yield return new object[] { Array.Empty<ListViewItem.ListViewSubItem>(), null, string.Empty, string.Empty };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, string.Empty, string.Empty, "text" };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, "imageKey", "imageKey", "text" };
         }
@@ -464,7 +464,7 @@ namespace System.Windows.Forms.Tests
 
         public static IEnumerable<object[]> Ctor_ListViewSubItemArray_Int_TestData()
         {
-            yield return new object[] { new ListViewItem.ListViewSubItem[0], 0, string.Empty };
+            yield return new object[] { Array.Empty<ListViewItem.ListViewSubItem>(), 0, string.Empty };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, 1, "text" };
             yield return new object[] { new ListViewItem.ListViewSubItem[] { new ListViewItem.ListViewSubItem(null, "text") }, -1, "text" };
         }
@@ -1054,7 +1054,7 @@ namespace System.Windows.Forms.Tests
 
         private static void AssertEqualListViewSubItem(ListViewItem.ListViewSubItem[] expected, ListViewItem.ListViewSubItem[] actual)
         {
-            if (expected == null || expected.Length == 0)
+            if (expected is null || expected.Length == 0)
             {
                 ListViewItem.ListViewSubItem subItem = Assert.Single(actual.Cast<ListViewItem.ListViewSubItem>());
                 Assert.Empty(subItem.Text);

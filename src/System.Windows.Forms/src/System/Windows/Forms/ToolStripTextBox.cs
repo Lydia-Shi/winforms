@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
@@ -16,18 +18,18 @@ namespace System.Windows.Forms
     [ToolStripItemDesignerAvailability(ToolStripItemDesignerAvailability.MenuStrip | ToolStripItemDesignerAvailability.ToolStrip | ToolStripItemDesignerAvailability.ContextMenuStrip)]
     public class ToolStripTextBox : ToolStripControlHost
     {
-        internal static readonly object EventTextBoxTextAlignChanged = new object();
-        internal static readonly object EventAcceptsTabChanged = new object();
-        internal static readonly object EventBorderStyleChanged = new object();
-        internal static readonly object EventHideSelectionChanged = new object();
-        internal static readonly object EventReadOnlyChanged = new object();
-        internal static readonly object EventMultilineChanged = new object();
-        internal static readonly object EventModifiedChanged = new object();
+        internal static readonly object s_eventTextBoxTextAlignChanged = new object();
+        internal static readonly object s_eventAcceptsTabChanged = new object();
+        internal static readonly object s_eventBorderStyleChanged = new object();
+        internal static readonly object s_eventHideSelectionChanged = new object();
+        internal static readonly object s_eventReadOnlyChanged = new object();
+        internal static readonly object s_eventMultilineChanged = new object();
+        internal static readonly object s_eventModifiedChanged = new object();
 
-        private static readonly Padding defaultMargin = new Padding(1, 0, 1, 0);
-        private static readonly Padding defaultDropDownMargin = new Padding(1);
-        private Padding scaledDefaultMargin = defaultMargin;
-        private Padding scaledDefaultDropDownMargin = defaultDropDownMargin;
+        private static readonly Padding s_defaultMargin = new Padding(1, 0, 1, 0);
+        private static readonly Padding s_defaultDropDownMargin = new Padding(1);
+        private Padding _scaledDefaultMargin = s_defaultMargin;
+        private Padding _scaledDefaultDropDownMargin = s_defaultDropDownMargin;
 
         public ToolStripTextBox() : base(CreateControlInstance())
         {
@@ -36,8 +38,8 @@ namespace System.Windows.Forms
 
             if (DpiHelper.IsScalingRequirementMet)
             {
-                scaledDefaultMargin = DpiHelper.LogicalToDeviceUnits(defaultMargin);
-                scaledDefaultDropDownMargin = DpiHelper.LogicalToDeviceUnits(defaultDropDownMargin);
+                _scaledDefaultMargin = DpiHelper.LogicalToDeviceUnits(s_defaultMargin);
+                _scaledDefaultDropDownMargin = DpiHelper.LogicalToDeviceUnits(s_defaultDropDownMargin);
             }
         }
 
@@ -52,38 +54,22 @@ namespace System.Windows.Forms
             throw new NotSupportedException(SR.ToolStripMustSupplyItsOwnTextBox);
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override Image BackgroundImage
         {
-            get
-            {
-                return base.BackgroundImage;
-            }
-            set
-            {
-                base.BackgroundImage = value;
-            }
+            get => base.BackgroundImage;
+            set => base.BackgroundImage = value;
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override ImageLayout BackgroundImageLayout
         {
-            get
-            {
-                return base.BackgroundImageLayout;
-            }
-            set
-            {
-                base.BackgroundImageLayout = value;
-            }
+            get => base.BackgroundImageLayout;
+            set => base.BackgroundImageLayout = value;
         }
 
         /// <summary>
@@ -96,11 +82,11 @@ namespace System.Windows.Forms
             {
                 if (IsOnDropDown)
                 {
-                    return scaledDefaultDropDownMargin;
+                    return _scaledDefaultDropDownMargin;
                 }
                 else
                 {
-                    return scaledDefaultMargin;
+                    return _scaledDefaultMargin;
                 }
             }
         }
@@ -112,7 +98,8 @@ namespace System.Windows.Forms
                 return new Size(100, 22);
             }
         }
-        [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TextBox TextBox
         {
             get
@@ -163,31 +150,31 @@ namespace System.Windows.Forms
         }
         private void HandleTextBoxTextAlignChanged(object sender, EventArgs e)
         {
-            RaiseEvent(EventTextBoxTextAlignChanged, e);
+            RaiseEvent(s_eventTextBoxTextAlignChanged, e);
         }
         protected virtual void OnAcceptsTabChanged(EventArgs e)
         {
-            RaiseEvent(EventAcceptsTabChanged, e);
+            RaiseEvent(s_eventAcceptsTabChanged, e);
         }
         protected virtual void OnBorderStyleChanged(EventArgs e)
         {
-            RaiseEvent(EventBorderStyleChanged, e);
+            RaiseEvent(s_eventBorderStyleChanged, e);
         }
         protected virtual void OnHideSelectionChanged(EventArgs e)
         {
-            RaiseEvent(EventHideSelectionChanged, e);
+            RaiseEvent(s_eventHideSelectionChanged, e);
         }
         protected virtual void OnModifiedChanged(EventArgs e)
         {
-            RaiseEvent(EventModifiedChanged, e);
+            RaiseEvent(s_eventModifiedChanged, e);
         }
         protected virtual void OnMultilineChanged(EventArgs e)
         {
-            RaiseEvent(EventMultilineChanged, e);
+            RaiseEvent(s_eventMultilineChanged, e);
         }
         protected virtual void OnReadOnlyChanged(EventArgs e)
         {
-            RaiseEvent(EventReadOnlyChanged, e);
+            RaiseEvent(s_eventReadOnlyChanged, e);
         }
 
         protected override void OnSubscribeControlEvents(Control control)
@@ -203,7 +190,6 @@ namespace System.Windows.Forms
                 textBox.MultilineChanged += new EventHandler(HandleMultilineChanged);
                 textBox.ReadOnlyChanged += new EventHandler(HandleReadOnlyChanged);
                 textBox.TextAlignChanged += new EventHandler(HandleTextBoxTextAlignChanged);
-
             }
 
             base.OnSubscribeControlEvents(control);
@@ -224,7 +210,6 @@ namespace System.Windows.Forms
                 textBox.TextAlignChanged -= new EventHandler(HandleTextBoxTextAlignChanged);
             }
             base.OnUnsubscribeControlEvents(control);
-
         }
 
         internal override bool ShouldSerializeFont()
@@ -233,57 +218,50 @@ namespace System.Windows.Forms
         }
 
         #region WrappedProperties
-        [
-         SRCategory(nameof(SR.CatBehavior)),
-         DefaultValue(false),
-         SRDescription(nameof(SR.TextBoxAcceptsTabDescr))
-         ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.TextBoxAcceptsTabDescr))]
         public bool AcceptsTab
         {
             get { return TextBox.AcceptsTab; }
             set { TextBox.AcceptsTab = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.TextBoxAcceptsReturnDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.TextBoxAcceptsReturnDescr))]
         public bool AcceptsReturn
         {
             get { return TextBox.AcceptsReturn; }
             set { TextBox.AcceptsReturn = value; }
         }
 
-        [
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
-        Localizable(true),
-        SRDescription(nameof(SR.TextBoxAutoCompleteCustomSourceDescr)),
-        Editor("System.Windows.Forms.Design.ListControlStringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        Browsable(true), EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.TextBoxAutoCompleteCustomSourceDescr))]
+        [Editor("System.Windows.Forms.Design.ListControlStringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutoCompleteStringCollection AutoCompleteCustomSource
         {
             get { return TextBox.AutoCompleteCustomSource; }
             set { TextBox.AutoCompleteCustomSource = value; }
         }
 
-        [
-        DefaultValue(AutoCompleteMode.None),
-        SRDescription(nameof(SR.TextBoxAutoCompleteModeDescr)),
-        Browsable(true), EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [DefaultValue(AutoCompleteMode.None)]
+        [SRDescription(nameof(SR.TextBoxAutoCompleteModeDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutoCompleteMode AutoCompleteMode
         {
             get { return TextBox.AutoCompleteMode; }
             set { TextBox.AutoCompleteMode = value; }
         }
 
-        [
-        DefaultValue(AutoCompleteSource.None),
-        SRDescription(nameof(SR.TextBoxAutoCompleteSourceDescr)),
-        Browsable(true), EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [DefaultValue(AutoCompleteSource.None)]
+        [SRDescription(nameof(SR.TextBoxAutoCompleteSourceDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutoCompleteSource AutoCompleteSource
         {
             get { return TextBox.AutoCompleteSource; }
@@ -300,139 +278,116 @@ namespace System.Windows.Forms
             set => TextBox.BorderStyle = value;
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.TextBoxCanUndoDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.TextBoxCanUndoDescr))]
         public bool CanUndo
         {
             get { return TextBox.CanUndo; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(CharacterCasing.Normal),
-        SRDescription(nameof(SR.TextBoxCharacterCasingDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(CharacterCasing.Normal)]
+        [SRDescription(nameof(SR.TextBoxCharacterCasingDescr))]
         public CharacterCasing CharacterCasing
         {
             get { return TextBox.CharacterCasing; }
             set { TextBox.CharacterCasing = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(true),
-        SRDescription(nameof(SR.TextBoxHideSelectionDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.TextBoxHideSelectionDescr))]
         public bool HideSelection
         {
             get { return TextBox.HideSelection; }
             set { TextBox.HideSelection = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        Localizable(true),
-        SRDescription(nameof(SR.TextBoxLinesDescr)),
-        Editor("System.Windows.Forms.Design.StringArrayEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.TextBoxLinesDescr))]
+        [Editor("System.Windows.Forms.Design.StringArrayEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         public string[] Lines
         {
             get { return TextBox.Lines; }
             set { TextBox.Lines = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(32767),
-        Localizable(true),
-        SRDescription(nameof(SR.TextBoxMaxLengthDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(32767)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.TextBoxMaxLengthDescr))]
         public int MaxLength
         {
             get { return TextBox.MaxLength; }
             set { TextBox.MaxLength = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.TextBoxModifiedDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.TextBoxModifiedDescr))]
         public bool Modified
         {
             get { return TextBox.Modified; }
             set { TextBox.Modified = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        Localizable(true),
-        SRDescription(nameof(SR.TextBoxMultilineDescr)),
-        RefreshProperties(RefreshProperties.All),
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never)
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.TextBoxMultilineDescr))]
+        [RefreshProperties(RefreshProperties.All)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool Multiline
         {
             get { return TextBox.Multiline; }
             set { TextBox.Multiline = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.TextBoxReadOnlyDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.TextBoxReadOnlyDescr))]
         public bool ReadOnly
         {
             get { return TextBox.ReadOnly; }
             set { TextBox.ReadOnly = value; }
         }
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.TextBoxSelectedTextDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.TextBoxSelectedTextDescr))]
         public string SelectedText
         {
             get { return TextBox.SelectedText; }
             set { TextBox.SelectedText = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.TextBoxSelectionLengthDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.TextBoxSelectionLengthDescr))]
         public int SelectionLength
         {
             get { return TextBox.SelectionLength; }
             set { TextBox.SelectionLength = value; }
         }
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.TextBoxSelectionStartDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.TextBoxSelectionStartDescr))]
         public int SelectionStart
         {
             get { return TextBox.SelectionStart; }
             set { TextBox.SelectionStart = value; }
         }
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(true),
-        SRDescription(nameof(SR.TextBoxShortcutsEnabledDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.TextBoxShortcutsEnabledDescr))]
         public bool ShortcutsEnabled
         {
             get { return TextBox.ShortcutsEnabled; }
@@ -444,25 +399,22 @@ namespace System.Windows.Forms
             get { return TextBox.TextLength; }
         }
 
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(HorizontalAlignment.Left),
-        SRDescription(nameof(SR.TextBoxTextAlignDescr))
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(HorizontalAlignment.Left)]
+        [SRDescription(nameof(SR.TextBoxTextAlignDescr))]
         public HorizontalAlignment TextBoxTextAlign
         {
             get { return TextBox.TextAlign; }
             set { TextBox.TextAlign = value; }
         }
 
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Localizable(true),
-        DefaultValue(true),
-        SRDescription(nameof(SR.TextBoxWordWrapDescr)),
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never)
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Localizable(true)]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.TextBoxWordWrapDescr))]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool WordWrap
         {
             get { return TextBox.WordWrap; }
@@ -472,53 +424,62 @@ namespace System.Windows.Forms
         #endregion WrappedProperties
 
         #region WrappedEvents
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.TextBoxBaseOnAcceptsTabChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.TextBoxBaseOnAcceptsTabChangedDescr))]
         public event EventHandler AcceptsTabChanged
         {
-            add => Events.AddHandler(EventAcceptsTabChanged, value);
-            remove => Events.RemoveHandler(EventAcceptsTabChanged, value);
+            add => Events.AddHandler(s_eventAcceptsTabChanged, value);
+            remove => Events.RemoveHandler(s_eventAcceptsTabChanged, value);
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.TextBoxBaseOnBorderStyleChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.TextBoxBaseOnBorderStyleChangedDescr))]
         public event EventHandler BorderStyleChanged
         {
-            add => Events.AddHandler(EventBorderStyleChanged, value);
-            remove => Events.RemoveHandler(EventBorderStyleChanged, value);
+            add => Events.AddHandler(s_eventBorderStyleChanged, value);
+            remove => Events.RemoveHandler(s_eventBorderStyleChanged, value);
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.TextBoxBaseOnHideSelectionChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.TextBoxBaseOnHideSelectionChangedDescr))]
         public event EventHandler HideSelectionChanged
         {
-            add => Events.AddHandler(EventHideSelectionChanged, value);
-            remove => Events.RemoveHandler(EventHideSelectionChanged, value);
+            add => Events.AddHandler(s_eventHideSelectionChanged, value);
+            remove => Events.RemoveHandler(s_eventHideSelectionChanged, value);
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.TextBoxBaseOnModifiedChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.TextBoxBaseOnModifiedChangedDescr))]
         public event EventHandler ModifiedChanged
         {
-            add => Events.AddHandler(EventModifiedChanged, value);
-            remove => Events.RemoveHandler(EventModifiedChanged, value);
+            add => Events.AddHandler(s_eventModifiedChanged, value);
+            remove => Events.RemoveHandler(s_eventModifiedChanged, value);
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.TextBoxBaseOnMultilineChangedDescr)), Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.TextBoxBaseOnMultilineChangedDescr))]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public event EventHandler MultilineChanged
         {
-            add => Events.AddHandler(EventMultilineChanged, value);
-            remove => Events.RemoveHandler(EventMultilineChanged, value);
+            add => Events.AddHandler(s_eventMultilineChanged, value);
+            remove => Events.RemoveHandler(s_eventMultilineChanged, value);
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.TextBoxBaseOnReadOnlyChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.TextBoxBaseOnReadOnlyChangedDescr))]
         public event EventHandler ReadOnlyChanged
         {
-            add => Events.AddHandler(EventReadOnlyChanged, value);
-            remove => Events.RemoveHandler(EventReadOnlyChanged, value);
+            add => Events.AddHandler(s_eventReadOnlyChanged, value);
+            remove => Events.RemoveHandler(s_eventReadOnlyChanged, value);
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.ToolStripTextBoxTextBoxTextAlignChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.ToolStripTextBoxTextBoxTextAlignChangedDescr))]
         public event EventHandler TextBoxTextAlignChanged
         {
-            add => Events.AddHandler(EventTextBoxTextAlignChanged, value);
-            remove => Events.RemoveHandler(EventTextBoxTextAlignChanged, value);
+            add => Events.AddHandler(s_eventTextBoxTextAlignChanged, value);
+            remove => Events.RemoveHandler(s_eventTextBoxTextAlignChanged, value);
         }
         #endregion WrappedEvents
 
@@ -543,15 +504,15 @@ namespace System.Windows.Forms
         #endregion
         private class ToolStripTextBoxControl : TextBox
         {
-            private bool mouseIsOver = false;
-            private bool isFontSet = true;
-            private bool alreadyHooked;
+            private bool _mouseIsOver;
+            private bool _isFontSet = true;
+            private bool _alreadyHooked;
 
             public ToolStripTextBoxControl()
             {
                 // required to make the text box height match the combo.
                 Font = ToolStripManager.DefaultFont;
-                isFontSet = false;
+                _isFontSet = false;
             }
 
             // returns the distance from the client rect to the upper left hand corner of the control
@@ -562,7 +523,7 @@ namespace System.Windows.Forms
                     RECT rect = new RECT();
                     CreateParams cp = CreateParams;
 
-                    AdjustWindowRectEx(ref rect, cp.Style, HasMenu, cp.ExStyle);
+                    AdjustWindowRectEx(ref rect, cp.Style, false, cp.ExStyle);
 
                     // the coordinates we get back are negative, we need to translate this back to positive.
                     int offsetX = -rect.left; // one to get back to 0,0, another to translate
@@ -614,12 +575,12 @@ namespace System.Windows.Forms
 
             internal bool MouseIsOver
             {
-                get { return mouseIsOver; }
+                get { return _mouseIsOver; }
                 set
                 {
-                    if (mouseIsOver != value)
+                    if (_mouseIsOver != value)
                     {
-                        mouseIsOver = value;
+                        _mouseIsOver = value;
                         if (!Focused)
                         {
                             InvalidateNonClient();
@@ -630,11 +591,11 @@ namespace System.Windows.Forms
 
             public override Font Font
             {
-                get { return base.Font; }
+                get => base.Font;
                 set
                 {
                     base.Font = value;
-                    isFontSet = ShouldSerializeFont();
+                    _isFontSet = ShouldSerializeFont();
                 }
             }
 
@@ -652,11 +613,15 @@ namespace System.Windows.Forms
                 RECT absoluteClientRectangle = AbsoluteClientRECT;
 
                 // Get the total client area, then exclude the client by using XOR
-                IntPtr hTotalRegion = Gdi32.CreateRectRgn(0, 0, Width, Height);
-                IntPtr hClientRegion = Gdi32.CreateRectRgn(absoluteClientRectangle.left, absoluteClientRectangle.top, absoluteClientRectangle.right, absoluteClientRectangle.bottom);
-                IntPtr hNonClientRegion = Gdi32.CreateRectRgn(0, 0, 0, 0);
+                using var hTotalRegion = new Gdi32.RegionScope(0, 0, Width, Height);
+                using var hClientRegion = new Gdi32.RegionScope(
+                    absoluteClientRectangle.left,
+                    absoluteClientRectangle.top,
+                    absoluteClientRectangle.right,
+                    absoluteClientRectangle.bottom);
+                using var hNonClientRegion = new Gdi32.RegionScope(0, 0, 0, 0);
 
-                Gdi32.CombineRgn(hNonClientRegion, hTotalRegion, hClientRegion, Gdi32.CombineMode.RGN_XOR);
+                Gdi32.CombineRgn(hNonClientRegion, hTotalRegion, hClientRegion, Gdi32.RGN.XOR);
 
                 // Call RedrawWindow with the region.
                 User32.RedrawWindow(
@@ -665,19 +630,6 @@ namespace System.Windows.Forms
                     hNonClientRegion,
                     User32.RDW.INVALIDATE | User32.RDW.ERASE | User32.RDW.UPDATENOW
                         | User32.RDW.ERASENOW | User32.RDW.FRAME);
-
-                if (hNonClientRegion != IntPtr.Zero)
-                {
-                    Gdi32.DeleteObject(hNonClientRegion);
-                }
-                if (hClientRegion != IntPtr.Zero)
-                {
-                    Gdi32.DeleteObject(hClientRegion);
-                }
-                if (hTotalRegion != IntPtr.Zero)
-                {
-                    Gdi32.DeleteObject(hTotalRegion);
-                }
             }
 
             protected override void OnGotFocus(EventArgs e)
@@ -690,14 +642,12 @@ namespace System.Windows.Forms
             {
                 base.OnLostFocus(e);
                 InvalidateNonClient();
-
             }
 
             protected override void OnMouseEnter(EventArgs e)
             {
                 base.OnMouseEnter(e);
                 MouseIsOver = true;
-
             }
 
             protected override void OnMouseLeave(EventArgs e)
@@ -710,7 +660,7 @@ namespace System.Windows.Forms
             {
                 if (hook)
                 {
-                    if (!alreadyHooked)
+                    if (!_alreadyHooked)
                     {
                         try
                         {
@@ -718,11 +668,11 @@ namespace System.Windows.Forms
                         }
                         finally
                         {
-                            alreadyHooked = true;
+                            _alreadyHooked = true;
                         }
                     }
                 }
-                else if (alreadyHooked)
+                else if (_alreadyHooked)
                 {
                     try
                     {
@@ -730,17 +680,16 @@ namespace System.Windows.Forms
                     }
                     finally
                     {
-                        alreadyHooked = false;
+                        _alreadyHooked = false;
                     }
                 }
-
             }
 
             private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs e)
             {
                 if (e.Category == UserPreferenceCategory.Window)
                 {
-                    if (!isFontSet)
+                    if (!_isFontSet)
                     {
                         Font = ToolStripManager.DefaultFont;
                     }
@@ -772,7 +721,6 @@ namespace System.Windows.Forms
 
             private void WmNCPaint(ref Message m)
             {
-
                 if (!IsPopupTextBox)
                 {
                     base.WndProc(ref m);
@@ -781,59 +729,45 @@ namespace System.Windows.Forms
 
                 // Paint over the edges of the text box.
 
-                // Using GetWindowDC instead of GetDCEx as GetDCEx seems to return a null handle and a last error of
-                // the operation succeeded.  We're not going to use the clipping rect anyways - so it's not
-                // that bigga deal.
-                IntPtr hdc = UnsafeNativeMethods.GetWindowDC(new HandleRef(this, m.HWnd));
-                if (hdc == IntPtr.Zero)
+                // Note that GetWindowDC just calls GetDCEx with DCX_WINDOW | DCX_USESTYLE.
+
+                using var hdc = new User32.GetDcScope(m.HWnd, IntPtr.Zero, User32.DCX.WINDOW | User32.DCX.USESTYLE);
+                if (hdc.IsNull)
                 {
                     throw new Win32Exception();
                 }
-                try
+
+                // Don't set the clipping region based on the WParam - windows seems to take out the two pixels intended for the non-client border.
+
+                Color outerBorderColor = (MouseIsOver || Focused) ? ColorTable.TextBoxBorder : BackColor;
+                Color innerBorderColor = BackColor;
+
+                if (!Enabled)
                 {
-                    // Don't set the clipping region based on the WParam - windows seems to take out the two pixels intended for the non-client border.
-
-                    Color outerBorderColor = (MouseIsOver || Focused) ? ColorTable.TextBoxBorder : BackColor;
-                    Color innerBorderColor = BackColor;
-
-                    if (!Enabled)
-                    {
-                        outerBorderColor = SystemColors.ControlDark;
-                        innerBorderColor = SystemColors.Control;
-                    }
-                    using (Graphics g = Graphics.FromHdcInternal(hdc))
-                    {
-
-                        Rectangle clientRect = AbsoluteClientRectangle;
-
-                        // could have set up a clip and fill-rectangled, thought this would be faster.
-                        using (Brush b = new SolidBrush(innerBorderColor))
-                        {
-                            g.FillRectangle(b, 0, 0, Width, clientRect.Top); // top border
-                            g.FillRectangle(b, 0, 0, clientRect.Left, Height); // left border
-                            g.FillRectangle(b, 0, clientRect.Bottom, Width, Height - clientRect.Height); // bottom border
-                            g.FillRectangle(b, clientRect.Right, 0, Width - clientRect.Right, Height); // right border
-                        }
-
-                        // paint the outside rect.
-                        using (Pen p = new Pen(outerBorderColor))
-                        {
-                            g.DrawRectangle(p, 0, 0, Width - 1, Height - 1);
-                        }
-
-                    }
+                    outerBorderColor = SystemColors.ControlDark;
+                    innerBorderColor = SystemColors.Control;
                 }
-                finally
-                {
-                    User32.ReleaseDC(new HandleRef(this, Handle), hdc);
-                }
-                // we've handled WM_NCPAINT.
+
+                using Graphics g = hdc.CreateGraphics();
+                Rectangle clientRect = AbsoluteClientRectangle;
+
+                // Could have set up a clip and fill-rectangled, thought this would be faster.
+                using var brush = innerBorderColor.GetCachedSolidBrushScope();
+                g.FillRectangle(brush, 0, 0, Width, clientRect.Top);                                // top border
+                g.FillRectangle(brush, 0, 0, clientRect.Left, Height);                              // left border
+                g.FillRectangle(brush, 0, clientRect.Bottom, Width, Height - clientRect.Height);    // bottom border
+                g.FillRectangle(brush, clientRect.Right, 0, Width - clientRect.Right, Height);      // right border
+
+                // Paint the outside rect.
+                using var pen = outerBorderColor.GetCachedPenScope();
+                g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
+
+                // We've handled WM_NCPAINT.
                 m.Result = IntPtr.Zero;
-
             }
             protected override void WndProc(ref Message m)
             {
-                if (m.Msg == WindowMessages.WM_NCPAINT)
+                if (m.Msg == (int)User32.WM.NCPAINT)
                 {
                     WmNCPaint(ref m);
                     return;
@@ -853,10 +787,13 @@ namespace System.Windows.Forms
 
             internal override object GetPropertyValue(UiaCore.UIA propertyID)
             {
-                if (propertyID == UiaCore.UIA.ControlTypePropertyId)
+                switch (propertyID)
                 {
-                    return UiaCore.UIA.EditControlTypeId;
-                }
+                    case UiaCore.UIA.ControlTypePropertyId:
+                       return UiaCore.UIA.EditControlTypeId;
+                    case UiaCore.UIA.NamePropertyId:
+                       return Name;
+            }
 
                 return base.GetPropertyValue(propertyID);
             }
@@ -872,5 +809,4 @@ namespace System.Windows.Forms
             }
         }
     }
-
 }

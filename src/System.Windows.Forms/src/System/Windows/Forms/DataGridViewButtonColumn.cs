@@ -2,19 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Text;
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Globalization;
+using System.Text;
 
 namespace System.Windows.Forms
 {
     [ToolboxBitmap(typeof(DataGridViewButtonColumn), "DataGridViewButtonColumn")]
     public class DataGridViewButtonColumn : DataGridViewColumn
     {
-        private static readonly Type columnType = typeof(DataGridViewButtonColumn);
-
-        private string text;
+        private static readonly Type s_columnType = typeof(DataGridViewButtonColumn);
+        private string _text;
 
         public DataGridViewButtonColumn()
             : base(new DataGridViewButtonCell())
@@ -26,16 +27,11 @@ namespace System.Windows.Forms
             DefaultCellStyle = defaultCellStyle;
         }
 
-        [
-            Browsable(false),
-            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override DataGridViewCell CellTemplate
         {
-            get
-            {
-                return base.CellTemplate;
-            }
+            get => base.CellTemplate;
             set
             {
                 if (value != null && !(value is DataGridViewButtonCell))
@@ -46,33 +42,23 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            Browsable(true),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_ColumnDefaultCellStyleDescr))
-        ]
+        [Browsable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_ColumnDefaultCellStyleDescr))]
         public override DataGridViewCellStyle DefaultCellStyle
         {
-            get
-            {
-                return base.DefaultCellStyle;
-            }
-            set
-            {
-                base.DefaultCellStyle = value;
-            }
+            get => base.DefaultCellStyle;
+            set => base.DefaultCellStyle = value;
         }
 
-        [
-            DefaultValue(FlatStyle.Standard),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_ButtonColumnFlatStyleDescr))
-        ]
+        [DefaultValue(FlatStyle.Standard)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_ButtonColumnFlatStyleDescr))]
         public FlatStyle FlatStyle
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -101,22 +87,20 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(null),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_ButtonColumnTextDescr))
-        ]
+        [DefaultValue(null)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_ButtonColumnTextDescr))]
         public string Text
         {
             get
             {
-                return text;
+                return _text;
             }
             set
             {
-                if (!string.Equals(value, text, StringComparison.Ordinal))
+                if (!string.Equals(value, _text, StringComparison.Ordinal))
                 {
-                    text = value;
+                    _text = value;
                     if (DataGridView != null)
                     {
                         if (UseColumnTextForButtonValue)
@@ -143,16 +127,14 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-            DefaultValue(false),
-            SRCategory(nameof(SR.CatAppearance)),
-            SRDescription(nameof(SR.DataGridView_ButtonColumnUseColumnTextForButtonValueDescr))
-        ]
+        [DefaultValue(false)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DataGridView_ButtonColumnUseColumnTextForButtonValueDescr))]
         public bool UseColumnTextForButtonValue
         {
             get
             {
-                if (CellTemplate == null)
+                if (CellTemplate is null)
                 {
                     throw new InvalidOperationException(SR.DataGridViewColumn_CellTemplateRequired);
                 }
@@ -186,7 +168,7 @@ namespace System.Windows.Forms
             DataGridViewButtonColumn dataGridViewColumn;
             Type thisType = GetType();
 
-            if (thisType == columnType) //performance improvement
+            if (thisType == s_columnType) //performance improvement
             {
                 dataGridViewColumn = new DataGridViewButtonColumn();
             }
@@ -197,7 +179,7 @@ namespace System.Windows.Forms
             if (dataGridViewColumn != null)
             {
                 base.CloneInternal(dataGridViewColumn);
-                dataGridViewColumn.Text = text;
+                dataGridViewColumn.Text = _text;
             }
             return dataGridViewColumn;
         }

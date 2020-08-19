@@ -9,7 +9,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests
 {
-    public class SpecialFolderEnumConverterTests
+    // NB: doesn't require thread affinity
+    public class SpecialFolderEnumConverterTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void SpecialFolderEnumConverter_ConvertFrom_String_Success()
@@ -101,7 +102,9 @@ namespace System.Windows.Forms.Tests
 
         private class CustomReflectionType
         {
-            public static int Personal = 0;
+#pragma warning disable CS0649
+            public static int Personal;
+#pragma warning restore CS0649
         }
 
         private enum CustomEnum

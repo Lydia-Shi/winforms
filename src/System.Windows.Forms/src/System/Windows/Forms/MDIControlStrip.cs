@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Drawing;
+#nullable disable
+
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using static Interop;
 
@@ -75,28 +77,10 @@ namespace System.Windows.Forms
             ResumeLayout(false);
         }
 
-        #region Buttons
-        /* Unused
-        public ToolStripMenuItem System {
-            get { return system; }
-        }
-        */
-
         public ToolStripMenuItem Close
         {
             get { return close; }
         }
-
-        /* Unused
-        public ToolStripMenuItem Minimize {
-            get { return minimize; }
-        }
-
-        public ToolStripMenuItem Restore {
-            get { return restore; }
-        }
-        */
-        #endregion
 
         internal MenuStrip MergedMenu
         {
@@ -110,26 +94,13 @@ namespace System.Windows.Forms
             }
         }
 
-        /* PERF: consider shutting off layout
-        #region ShutOffLayout
-                    protected override void OnLayout(LayoutEventArgs e) {
-                        return;  // if someone attempts
-                    }
-
-                    protected override Size GetPreferredSize(Size proposedSize) {
-                        return Size.Empty;
-                    }
-        #endregion
-        */
-
         private Image GetTargetWindowIcon()
         {
-            Image systemIcon = null;
-            IntPtr hIcon = UnsafeNativeMethods.SendMessage(new HandleRef(this, Control.GetSafeHandle(target)), WindowMessages.WM_GETICON, NativeMethods.ICON_SMALL, 0);
-            Icon icon = (hIcon != IntPtr.Zero) ? Icon.FromHandle(hIcon) : Form.DefaultIcon;
+            IntPtr hIcon = User32.SendMessageW(new HandleRef(this, GetSafeHandle(target)), User32.WM.GETICON, (IntPtr)User32.ICON.SMALL, IntPtr.Zero);
+            Icon icon = hIcon != IntPtr.Zero ? Icon.FromHandle(hIcon) : Form.DefaultIcon;
             Icon smallIcon = new Icon(icon, SystemInformation.SmallIconSize);
 
-            systemIcon = smallIcon.ToBitmap();
+            Image systemIcon = smallIcon.ToBitmap();
             smallIcon.Dispose();
 
             return systemIcon;
@@ -180,7 +151,7 @@ namespace System.Windows.Forms
             {
                 system.DropDown = ToolStripDropDownMenu.FromHMenu(User32.GetSystemMenu(new HandleRef(this, Control.GetSafeHandle(target)), bRevert: BOOL.FALSE), target);
             }
-            else if (MergedMenu == null)
+            else if (MergedMenu is null)
             {
                 system.DropDown.Dispose();
             }
@@ -212,7 +183,6 @@ namespace System.Windows.Forms
                 }
                 target = null;
             }
-
         }
 
         // when the system menu item shortcut is evaluated - pop the dropdown
@@ -251,7 +221,6 @@ namespace System.Windows.Forms
                 }
                 base.OnOwnerChanged(e);
             }
-
         }
     }
 }

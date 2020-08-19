@@ -8,8 +8,8 @@ using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.ComponentModel.Design.Serialization;
 using System.Diagnostics;
-using System.Reflection;
 using System.Globalization;
+using System.Reflection;
 
 namespace System.Windows.Forms.Design
 {
@@ -26,9 +26,9 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public override object Deserialize(IDesignerSerializationManager manager, object codeObject)
         {
-            if (manager == null || codeObject == null)
+            if (manager is null || codeObject is null)
             {
-                throw new ArgumentNullException(manager == null ? "manager" : "codeObject");
+                throw new ArgumentNullException(manager is null ? "manager" : "codeObject");
             }
 
             //Attempt to suspend all components within the icontainer
@@ -57,10 +57,10 @@ namespace System.Windows.Forms.Design
 
             try
             {
-                // Find our base class's serializer.  
+                // Find our base class's serializer.
                 CodeDomSerializer serializer = (CodeDomSerializer)manager.GetSerializer(typeof(Component), typeof(CodeDomSerializer));
 
-                if (serializer == null)
+                if (serializer is null)
                 {
                     Debug.Fail("Unable to find a CodeDom serializer for 'Component'. Has someone tampered with the serialization providers?");
 
@@ -76,11 +76,11 @@ namespace System.Windows.Forms.Design
                 {
                     foreach (Control c in suspendedComponents)
                     {
-                        // Dev10 Bug #462211: Controls in design time may change their size due to incorrectly
+                        // .NET Framework 4.0 (Dev10 #462211): Controls in design time may change their size due to incorrectly
                         // calculated anchor info.
                         // UNDONE: c.ResumeLayout(false) because it regressed layouts with Dock property
                         // see Dev11 bug 117530 DTS Winforms: Upgraded project -Control location and size are changed in the designer gen'd code
-                        c.ResumeLayout(true /*performLayout*/);
+                        c.ResumeLayout(performLayout: true);
                     }
                 }
             }
@@ -157,15 +157,15 @@ namespace System.Windows.Forms.Design
         /// </summary>
         public override object Serialize(IDesignerSerializationManager manager, object value)
         {
-            if (manager == null || value == null)
+            if (manager is null || value is null)
             {
-                throw new ArgumentNullException(manager == null ? "manager" : "value");
+                throw new ArgumentNullException(manager is null ? "manager" : "value");
             }
 
-            // Find our base class's serializer.  
+            // Find our base class's serializer.
             CodeDomSerializer serializer = (CodeDomSerializer)manager.GetSerializer(typeof(Component), typeof(CodeDomSerializer));
 
-            if (serializer == null)
+            if (serializer is null)
             {
                 Debug.Fail("Unable to find a CodeDom serializer for 'Component'.  Has someone tampered with the serialization providers?");
 
@@ -204,7 +204,7 @@ namespace System.Windows.Forms.Design
                 }
 
                 CodeStatementCollection csCollection = retVal as CodeStatementCollection;
-                
+
                 if (csCollection != null)
                 {
                     Control control = (Control)value;
@@ -216,14 +216,14 @@ namespace System.Windows.Forms.Design
                         SerializeSuspendLayout(manager, csCollection, value);
                         SerializeResumeLayout(manager, csCollection, value);
                         ControlDesigner controlDesigner = host.GetDesigner(control) as ControlDesigner;
-                        
+
                         if (HasAutoSizedChildren(control) || (controlDesigner != null && controlDesigner.SerializePerformLayout))
                         {
                             SerializePerformLayout(manager, csCollection, value);
                         }
                     }
 
-                    // And now serialize the correct z-order relationships for the controls.  We only need to 
+                    // And now serialize the correct z-order relationships for the controls.  We only need to
                     // do this if there are controls in the collection that are inherited.
                     if (HasMixedInheritedChildren(control))
                     {
@@ -270,7 +270,7 @@ namespace System.Windows.Forms.Design
 
                         // Now emit the data
                         string componentName = manager.GetName(component);
-                        string componentTypeName = mthelperSvc == null ? component.GetType().AssemblyQualifiedName : mthelperSvc.GetAssemblyQualifiedName(component.GetType());
+                        string componentTypeName = mthelperSvc is null ? component.GetType().AssemblyQualifiedName : mthelperSvc.GetAssemblyQualifiedName(component.GetType());
 
                         if (componentName != null)
                         {
@@ -284,9 +284,9 @@ namespace System.Windows.Forms.Design
                     name = manager.GetName(value);
 
                     // if we get null back, this must be an unsited control
-                    if (name == null)
+                    if (name is null)
                     {
-                        Debug.Assert(!(value is IComponent) || ((IComponent)value).Site == null, "Unnamed, sited control in hierarchy");
+                        Debug.Assert(!(value is IComponent) || ((IComponent)value).Site is null, "Unnamed, sited control in hierarchy");
                         return;
                     }
                 }
@@ -294,11 +294,11 @@ namespace System.Windows.Forms.Design
                 SerializeResourceInvariant(manager, ">>" + name + ".Name", manager.GetName(value));
 
                 // Object type
-                SerializeResourceInvariant(manager, ">>" + name + ".Type", mthelperSvc == null ? control.GetType().AssemblyQualifiedName : mthelperSvc.GetAssemblyQualifiedName(control.GetType()));
+                SerializeResourceInvariant(manager, ">>" + name + ".Type", mthelperSvc is null ? control.GetType().AssemblyQualifiedName : mthelperSvc.GetAssemblyQualifiedName(control.GetType()));
 
                 // Parent
                 Control parent = control.Parent;
-                
+
                 if (parent != null && parent.Site != null)
                 {
                     string parentName;
@@ -344,11 +344,10 @@ namespace System.Windows.Forms.Design
         private static Type[] ToTargetTypes(object context, Type[] runtimeTypes)
         {
             Type[] types = new Type[runtimeTypes.Length];
-            
+
             for (int i = 0; i < runtimeTypes.Length; i++)
             {
                 types[i] = ToTargetType(context, runtimeTypes[i]);
-            
             }
 
             return types;
@@ -364,24 +363,24 @@ namespace System.Windows.Forms.Design
                 string name = manager.GetName(control);
                 Trace(name + "." + methodName);
 
-                // Use IReflect to see if this method name exists on the control.  
+                // Use IReflect to see if this method name exists on the control.
                 paramTypes = ToTargetTypes(control, paramTypes);
                 MethodInfo mi = TypeDescriptor.GetReflectionType(control).GetMethod(methodName, BindingFlags.Public | BindingFlags.Instance, null, paramTypes, null);
-                
+
                 if (mi != null)
                 {
                     CodeExpression field = SerializeToExpression(manager, control);
                     CodeMethodReferenceExpression method = new CodeMethodReferenceExpression(field, methodName);
                     CodeMethodInvokeExpression methodInvoke = new CodeMethodInvokeExpression();
                     methodInvoke.Method = method;
-                    
+
                     if (parameters != null)
                     {
                         methodInvoke.Parameters.AddRange(parameters);
                     }
 
                     CodeExpressionStatement statement = new CodeExpressionStatement(methodInvoke);
-                    
+
                     switch (ordering)
                     {
                         case StatementOrdering.Prepend:
@@ -402,7 +401,7 @@ namespace System.Windows.Forms.Design
 
         private void SerializePerformLayout(IDesignerSerializationManager manager, CodeStatementCollection statements, object control)
         {
-            SerializeMethodInvocation(manager, statements, control, "PerformLayout", null, new Type[0], StatementOrdering.Append);
+            SerializeMethodInvocation(manager, statements, control, "PerformLayout", null, Array.Empty<Type>(), StatementOrdering.Append);
         }
 
         private void SerializeResumeLayout(IDesignerSerializationManager manager, CodeStatementCollection statements, object control)
@@ -415,7 +414,7 @@ namespace System.Windows.Forms.Design
 
         private void SerializeSuspendLayout(IDesignerSerializationManager manager, CodeStatementCollection statements, object control)
         {
-            SerializeMethodInvocation(manager, statements, control, "SuspendLayout", null, new Type[0], StatementOrdering.Prepend);
+            SerializeMethodInvocation(manager, statements, control, "SuspendLayout", null, Array.Empty<Type>(), StatementOrdering.Prepend);
         }
 
         /// <summary>
@@ -434,13 +433,13 @@ namespace System.Windows.Forms.Design
                     // (b) not being privately inherited
                     Control child = control.Controls[i];
 
-                    if (child.Site == null || child.Site.Container != control.Site.Container)
+                    if (child.Site is null || child.Site.Container != control.Site.Container)
                     {
                         continue;
                     }
 
                     InheritanceAttribute attr = (InheritanceAttribute)TypeDescriptor.GetAttributes(child)[typeof(InheritanceAttribute)];
-                    
+
                     if (attr.InheritanceLevel == InheritanceLevel.InheritedReadOnly)
                     {
                         continue;

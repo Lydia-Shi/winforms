@@ -2,51 +2,42 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Windows.Forms.Layout;
+using static Interop;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Represents a Windows up-down control that displays string values.
     /// </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultProperty(nameof(Items)),
-    DefaultEvent(nameof(SelectedItemChanged)),
-    DefaultBindingProperty(nameof(SelectedItem)),
-    SRDescription(nameof(SR.DescriptionDomainUpDown))
-    ]
+    [DefaultProperty(nameof(Items))]
+    [DefaultEvent(nameof(SelectedItemChanged))]
+    [DefaultBindingProperty(nameof(SelectedItem))]
+    [SRDescription(nameof(SR.DescriptionDomainUpDown))]
     public class DomainUpDown : UpDownBase
     {
-        private readonly static string DefaultValue = string.Empty;
-        private readonly static bool DefaultWrap = false;
+        private readonly static string s_defaultValue = string.Empty;
 
-        //////////////////////////////////////////////////////////////
-        // Member variables
-        //
-        //////////////////////////////////////////////////////////////
         /// <summary>
         ///  Allowable strings for the domain updown.
         /// </summary>
-        private DomainUpDownItemCollection domainItems = null;
+        private DomainUpDownItemCollection _domainItems;
 
-        private string stringValue = DefaultValue;      // Current string value
-        private int domainIndex = -1;                    // Index in the domain list
-        private bool sorted = false;                 // Sort the domain values
+        private string _stringValue = s_defaultValue;      // Current string value
+        private int _domainIndex = -1;                    // Index in the domain list
+        private bool _sorted;                 // Sort the domain values
 
-        private bool wrap = DefaultWrap;             // Wrap around domain items
+        private EventHandler _onSelectedItemChanged;
 
-        private EventHandler onSelectedItemChanged = null;
-
-        private bool inSort = false;
+        private bool _inSort;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='DomainUpDown'/> class.
@@ -64,40 +55,34 @@ namespace System.Windows.Forms
         ///  Gets the collection of objects assigned to the
         ///  up-down control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatData)),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
-        SRDescription(nameof(SR.DomainUpDownItemsDescr)),
-        Localizable(true),
-        Editor("System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))
-        ]
+        [SRCategory(nameof(SR.CatData))]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [SRDescription(nameof(SR.DomainUpDownItemsDescr))]
+        [Localizable(true)]
+        [Editor("System.Windows.Forms.Design.StringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
         public DomainUpDownItemCollection Items
         {
             get
             {
-                if (domainItems == null)
+                if (_domainItems is null)
                 {
-                    domainItems = new DomainUpDownItemCollection(this);
+                    _domainItems = new DomainUpDownItemCollection(this);
                 }
-                return domainItems;
+                return _domainItems;
             }
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public new Padding Padding
         {
-            get { return base.Padding; }
-            set { base.Padding = value; }
+            get => base.Padding;
+            set => base.Padding = value;
         }
 
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never)
-        ]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler PaddingChanged
         {
             add => base.PaddingChanged += value;
@@ -107,12 +92,10 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets the index value of the selected item.
         /// </summary>
-        [
-        Browsable(false),
-        DefaultValue(-1),
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.DomainUpDownSelectedIndexDescr))
-        ]
+        [Browsable(false)]
+        [DefaultValue(-1)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.DomainUpDownSelectedIndexDescr))]
         public int SelectedIndex
         {
             get
@@ -123,7 +106,7 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    return domainIndex;
+                    return _domainIndex;
                 }
             }
 
@@ -146,11 +129,9 @@ namespace System.Windows.Forms
         ///  of the selected item in the
         ///  collection.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.DomainUpDownSelectedItemDescr))
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.DomainUpDownSelectedItemDescr))]
         public object SelectedItem
         {
             get
@@ -160,10 +141,9 @@ namespace System.Windows.Forms
             }
             set
             {
-
                 // Treat null as selecting no item
                 //
-                if (value == null)
+                if (value is null)
                 {
                     SelectedIndex = -1;
                 }
@@ -173,7 +153,7 @@ namespace System.Windows.Forms
                     //
                     for (int i = 0; i < Items.Count; i++)
                     {
-                        if (value != null && value.Equals(Items[i]))
+                        if (value.Equals(Items[i]))
                         {
                             SelectedIndex = i;
                             break;
@@ -186,50 +166,37 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Gets or sets a value indicating whether the item collection is sorted.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.DomainUpDownSortedDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.DomainUpDownSortedDescr))]
         public bool Sorted
         {
             get
             {
-                return sorted;
+                return _sorted;
             }
 
             set
             {
-                sorted = value;
-                if (sorted)
+                _sorted = value;
+                if (_sorted)
                 {
                     SortDomainItems();
                 }
             }
         }
 
+        internal override bool SupportsUiaProviders => true;
+
         /// <summary>
         ///  Gets or sets a value indicating whether the collection of items continues to
         ///  the first or last item if the user continues past the end of the list.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Localizable(true),
-        DefaultValue(false),
-        SRDescription(nameof(SR.DomainUpDownWrapDescr))
-        ]
-        public bool Wrap
-        {
-            get
-            {
-                return wrap;
-            }
-
-            set
-            {
-                wrap = value;
-            }
-        }
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Localizable(true)]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.DomainUpDownWrapDescr))]
+        public bool Wrap { get; set; }
 
         //////////////////////////////////////////////////////////////
         // Methods
@@ -239,11 +206,12 @@ namespace System.Windows.Forms
         ///  Occurs when the <see cref='SelectedItem'/> property has
         ///  been changed.
         /// </summary>
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.DomainUpDownOnSelectedItemChangedDescr))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.DomainUpDownOnSelectedItemChangedDescr))]
         public event EventHandler SelectedItemChanged
         {
-            add => onSelectedItemChanged += value;
-            remove => onSelectedItemChanged -= value;
+            add => _onSelectedItemChanged += value;
+            remove => _onSelectedItemChanged -= value;
         }
 
         /// <summary>
@@ -262,11 +230,11 @@ namespace System.Windows.Forms
         {
             // Make sure domain values exist, and there are >0 items
             //
-            if (domainItems == null)
+            if (_domainItems is null)
             {
                 return;
             }
-            if (domainItems.Count <= 0)
+            if (_domainItems.Count <= 0)
             {
                 return;
             }
@@ -276,27 +244,26 @@ namespace System.Windows.Forms
             int matchIndex = -1;
             if (UserEdit)
             {
-                matchIndex = MatchIndex(Text, false, domainIndex);
+                matchIndex = MatchIndex(Text, false, _domainIndex);
             }
             if (matchIndex != -1)
             {
                 // Found a match, so select this value
-                domainIndex = matchIndex;
+                _domainIndex = matchIndex;
                 SelectIndex(matchIndex);
             }
             else
             {
                 // Otherwise, get the next string in the domain list
-                if (domainIndex < domainItems.Count - 1)
+                if (_domainIndex < _domainItems.Count - 1)
                 {
-                    SelectIndex(domainIndex + 1);
+                    SelectIndex(_domainIndex + 1);
                 }
                 else if (Wrap)
                 {
                     SelectIndex(0);
                 }
             }
-
         }
 
         /// <summary>
@@ -308,13 +275,13 @@ namespace System.Windows.Forms
         /// </summary>
         internal int MatchIndex(string text, bool complete)
         {
-            return MatchIndex(text, complete, domainIndex);
+            return MatchIndex(text, complete, _domainIndex);
         }
 
         internal int MatchIndex(string text, bool complete, int startPosition)
         {
             // Make sure domain values exist
-            if (domainItems == null)
+            if (_domainItems is null)
             {
                 return -1;
             }
@@ -324,15 +291,15 @@ namespace System.Windows.Forms
             {
                 return -1;
             }
-            if (domainItems.Count <= 0)
+            if (_domainItems.Count <= 0)
             {
                 return -1;
             }
             if (startPosition < 0)
             {
-                startPosition = domainItems.Count - 1;
+                startPosition = _domainItems.Count - 1;
             }
-            if (startPosition >= domainItems.Count)
+            if (startPosition >= _domainItems.Count)
             {
                 startPosition = 0;
             }
@@ -368,11 +335,10 @@ namespace System.Windows.Forms
 
                 // Calculate the next index to attempt to match
                 index++;
-                if (index >= domainItems.Count)
+                if (index >= _domainItems.Count)
                 {
                     index = 0;
                 }
-
             } while (!found && index != startPosition);
 
             return matchIndex;
@@ -408,12 +374,10 @@ namespace System.Windows.Forms
                     || uc == UnicodeCategory.OtherNumber
                     || uc == UnicodeCategory.UppercaseLetter)
                 {
-
                     // Attempt to match the character to a domain item
-                    int matchIndex = MatchIndex(new string(character), false, domainIndex + 1);
+                    int matchIndex = MatchIndex(new string(character), false, _domainIndex + 1);
                     if (matchIndex != -1)
                     {
-
                         // Select the matching domain item
                         SelectIndex(matchIndex);
                     }
@@ -429,7 +393,7 @@ namespace System.Windows.Forms
         protected void OnSelectedItemChanged(object source, EventArgs e)
         {
             // Call the event handler
-            onSelectedItemChanged?.Invoke(this, e);
+            _onSelectedItemChanged?.Invoke(this, e);
         }
 
         /// <summary>
@@ -439,9 +403,9 @@ namespace System.Windows.Forms
         {
             // Sanity check index
 
-            Debug.Assert(domainItems != null, "Domain values array is null");
-            Debug.Assert(index < domainItems.Count && index >= -1, "SelectValue: index out of range");
-            if (domainItems == null || index < -1 || index >= domainItems.Count)
+            Debug.Assert(_domainItems != null, "Domain values array is null");
+            Debug.Assert(index < _domainItems.Count && index >= -1, "SelectValue: index out of range");
+            if (_domainItems is null || index < -1 || index >= _domainItems.Count)
             {
                 // Defensive programming
                 index = -1;
@@ -450,10 +414,10 @@ namespace System.Windows.Forms
 
             // If the selected index has changed, update the text
             //
-            domainIndex = index;
-            if (domainIndex >= 0)
+            _domainIndex = index;
+            if (_domainIndex >= 0)
             {
-                stringValue = domainItems[domainIndex].ToString();
+                _stringValue = _domainItems[_domainIndex].ToString();
                 UserEdit = false;
                 UpdateEditText();
             }
@@ -462,7 +426,7 @@ namespace System.Windows.Forms
                 UserEdit = true;
             }
 
-            Debug.Assert(domainIndex >= 0 || UserEdit == true, "UserEdit should be true when domainIndex < 0 " + UserEdit);
+            Debug.Assert(_domainIndex >= 0 || UserEdit == true, "UserEdit should be true when domainIndex < 0 " + UserEdit);
         }
 
         /// <summary>
@@ -470,31 +434,26 @@ namespace System.Windows.Forms
         /// </summary>
         private void SortDomainItems()
         {
-            if (inSort)
+            if (_inSort)
             {
                 return;
             }
 
-            inSort = true;
+            _inSort = true;
             try
             {
                 // Sanity check
-                Debug.Assert(sorted == true, "Sorted == false");
-                if (!sorted)
-                {
-                    return;
-                }
+                Debug.Assert(_sorted, "Sorted == false");
 
-                if (domainItems != null)
+                if (_domainItems != null)
                 {
-
                     // Sort the domain values
-                    ArrayList.Adapter(domainItems).Sort(new DomainUpDownItemCompare());
+                    ArrayList.Adapter(_domainItems).Sort(new DomainUpDownItemCompare());
 
                     // Update the domain index
                     if (!UserEdit)
                     {
-                        int newIndex = MatchIndex(stringValue, true);
+                        int newIndex = MatchIndex(_stringValue, true);
                         if (newIndex != -1)
                         {
                             SelectIndex(newIndex);
@@ -504,7 +463,7 @@ namespace System.Windows.Forms
             }
             finally
             {
-                inSort = false;
+                _inSort = false;
             }
         }
 
@@ -529,11 +488,11 @@ namespace System.Windows.Forms
         public override void UpButton()
         {
             // Make sure domain values exist, and there are >0 items
-            if (domainItems == null)
+            if (_domainItems is null)
             {
                 return;
             }
-            if (domainItems.Count <= 0)
+            if (_domainItems.Count <= 0)
             {
                 return;
             }
@@ -542,24 +501,24 @@ namespace System.Windows.Forms
             int matchIndex = -1;
             if (UserEdit)
             {
-                matchIndex = MatchIndex(Text, false, domainIndex);
+                matchIndex = MatchIndex(Text, false, _domainIndex);
             }
             if (matchIndex != -1)
             {
                 // Found a match, so set the domain index accordingly
-                domainIndex = matchIndex;
+                _domainIndex = matchIndex;
                 SelectIndex(matchIndex);
             }
             else
             {
                 // Otherwise, get the previous string in the domain list
-                if (domainIndex > 0)
+                if (_domainIndex > 0)
                 {
-                    SelectIndex(domainIndex - 1);
+                    SelectIndex(_domainIndex - 1);
                 }
                 else if (Wrap)
                 {
-                    SelectIndex(domainItems.Count - 1);
+                    SelectIndex(_domainItems.Count - 1);
                 }
             }
         }
@@ -569,13 +528,11 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void UpdateEditText()
         {
-            Debug.Assert(!UserEdit, "UserEdit should be false");
-            // Defensive programming
             UserEdit = false;
-
             ChangingText = true;
-            Text = stringValue;
+            Text = _stringValue;
         }
+
         // This is not a breaking change -- Even though this control previously autosized to hieght,
         // it didn't actually have an AutoSize property.  The new AutoSize property enables the
         // smarter behavior.
@@ -585,7 +542,7 @@ namespace System.Windows.Forms
             int width = LayoutUtils.OldGetLargestStringSizeInCollection(Font, Items).Width;
 
             // AdjuctWindowRect with our border, since textbox is borderless.
-            width = SizeFromClientSize(width, height).Width + upDownButtons.Width;
+            width = SizeFromClientSize(width, height).Width + _upDownButtons.Width;
             return new Size(width, height) + Padding.Size;
         }
 
@@ -605,9 +562,8 @@ namespace System.Windows.Forms
                 this.owner = owner;
             }
 
-            /// <summary>
-            /// </summary>
-            [Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+            [Browsable(false)]
+            [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
             public override object this[int index]
             {
                 get
@@ -665,15 +621,15 @@ namespace System.Windows.Forms
             /// </summary>
             public override void RemoveAt(int item)
             {
-                // Overridden to update the domain index if neccessary
+                // Overridden to update the domain index if necessary
                 base.RemoveAt(item);
 
-                if (item < owner.domainIndex)
+                if (item < owner._domainIndex)
                 {
                     // The item removed was before the currently selected item
-                    owner.SelectIndex(owner.domainIndex - 1);
+                    owner.SelectIndex(owner._domainIndex - 1);
                 }
-                else if (item == owner.domainIndex)
+                else if (item == owner._domainIndex)
                 {
                     // The currently selected item was removed
                     //
@@ -702,7 +658,7 @@ namespace System.Windows.Forms
                     return 0;
                 }
 
-                if (p == null || q == null)
+                if (p is null || q is null)
                 {
                     return 0;
                 }
@@ -711,30 +667,38 @@ namespace System.Windows.Forms
             }
         }
 
-        [ComVisible(true)]
         public class DomainUpDownAccessibleObject : ControlAccessibleObject
         {
             private DomainItemListAccessibleObject itemList;
+            private readonly UpDownBase _owner;
 
             /// <summary>
             /// </summary>
-            public DomainUpDownAccessibleObject(Control owner) : base(owner)
+            public DomainUpDownAccessibleObject(DomainUpDown owner) : base(owner)
             {
+                _owner = owner;
             }
 
-            /// <summary>
-            ///  Gets or sets the accessible name.
-            /// </summary>
-            public override string Name
+            internal override object GetPropertyValue(UiaCore.UIA propertyID)
             {
-                get
+                switch (propertyID)
                 {
-                    string baseName = base.Name;
-                    return ((DomainUpDown)Owner).GetAccessibleName(baseName);
-                }
-                set
-                {
-                    base.Name = value;
+                    case UiaCore.UIA.RuntimeIdPropertyId:
+                        return RuntimeId;
+                    case UiaCore.UIA.NamePropertyId:
+                        return Name;
+                    case UiaCore.UIA.ControlTypePropertyId:
+                        return UiaCore.UIA.SpinnerControlTypeId;
+                    case UiaCore.UIA.BoundingRectanglePropertyId:
+                        return Bounds;
+                    case UiaCore.UIA.LegacyIAccessibleStatePropertyId:
+                        return State;
+                    case UiaCore.UIA.LegacyIAccessibleRolePropertyId:
+                        return Role;
+                    case UiaCore.UIA.IsKeyboardFocusablePropertyId:
+                        return false;
+                    default:
+                        return base.GetPropertyValue(propertyID);
                 }
             }
 
@@ -742,10 +706,11 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    if (itemList == null)
+                    if (itemList is null)
                     {
                         itemList = new DomainItemListAccessibleObject(this);
                     }
+
                     return itemList;
                 }
             }
@@ -755,14 +720,13 @@ namespace System.Windows.Forms
                 get
                 {
                     AccessibleRole role = Owner.AccessibleRole;
+
                     if (role != AccessibleRole.Default)
                     {
                         return role;
                     }
-                    else
-                    {
-                        return AccessibleRole.SpinButton;
-                    }
+
+                    return AccessibleRole.SpinButton;
                 }
             }
 
@@ -773,27 +737,44 @@ namespace System.Windows.Forms
                 switch (index)
                 {
                     // TextBox child
-                    //
                     case 0:
-                        return ((UpDownBase)Owner).TextBox.AccessibilityObject.Parent;
-
+                        return _owner.TextBox.AccessibilityObject.Parent;
                     // Up/down buttons
-                    //
                     case 1:
-                        return ((UpDownBase)Owner).UpDownButtonsInternal.AccessibilityObject.Parent;
-
+                        return _owner.UpDownButtonsInternal.AccessibilityObject.Parent;
                     case 2:
                         return ItemList;
+                    default:
+                        return null;
                 }
-
-                return null;
             }
 
-            /// <summary>
-            /// </summary>
             public override int GetChildCount()
             {
                 return 3;
+            }
+
+            internal override int[] RuntimeId
+            {
+                get
+                {
+                    if (_owner is null)
+                    {
+                        return base.RuntimeId;
+                    }
+
+                    // we need to provide a unique ID
+                    // others are implementing this in the same manner
+                    // first item is static - 0x2a (RuntimeIDFirstItem)
+                    // second item can be anything, but here it is a hash
+
+                    var runtimeId = new int[3];
+                    runtimeId[0] = RuntimeIDFirstItem;
+                    runtimeId[1] = (int)(long)_owner.Handle;
+                    runtimeId[2] = _owner.GetHashCode();
+
+                    return runtimeId;
+                }
             }
         }
 
@@ -811,16 +792,13 @@ namespace System.Windows.Forms
                 get
                 {
                     string baseName = base.Name;
-                    if (baseName == null || baseName.Length == 0)
+                    if (baseName is null || baseName.Length == 0)
                     {
                         return "Items";
                     }
                     return baseName;
                 }
-                set
-                {
-                    base.Name = value;
-                }
+                set => base.Name = value;
             }
 
             public override AccessibleObject Parent
@@ -849,7 +827,6 @@ namespace System.Windows.Forms
 
             public override AccessibleObject GetChild(int index)
             {
-
                 if (index >= 0 && index < GetChildCount())
                 {
                     return new DomainItemAccessibleObject(((DomainUpDown)parent.Owner).Items[index].ToString(), this);
@@ -862,10 +839,8 @@ namespace System.Windows.Forms
             {
                 return ((DomainUpDown)parent.Owner).Items.Count;
             }
-
         }
 
-        [ComVisible(true)]
         public class DomainItemAccessibleObject : AccessibleObject
         {
             private string name;
@@ -921,6 +896,5 @@ namespace System.Windows.Forms
                 }
             }
         }
-
     }
 }

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using static Interop;
@@ -23,7 +25,7 @@ namespace System.Windows.Forms
                 ushort* rcb)
             {
                 Debug.WriteLineIf(AxHTraceSwitch.TraceVerbose, "in Format");
-                if (rcb == null)
+                if (rcb is null)
                 {
                     return HRESULT.E_INVALIDARG;
                 }

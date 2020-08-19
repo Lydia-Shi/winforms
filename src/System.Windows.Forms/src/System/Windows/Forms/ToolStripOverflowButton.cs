@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms.Design;
@@ -18,7 +20,7 @@ namespace System.Windows.Forms
         // we need to cache this away as the Parent property gets reset a lot.
         private readonly ToolStrip parentToolStrip;
 
-        private static bool isScalingInitialized = false;
+        private static bool isScalingInitialized;
         private const int MAX_WIDTH = 16;
         private const int MAX_HEIGHT = 16;
         private static int maxWidth = MAX_WIDTH;
@@ -76,21 +78,14 @@ namespace System.Windows.Forms
         {
             get { return parentToolStrip; }
         }
-        [
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public new bool RightToLeftAutoMirrorImage
         {
-            get
-            {
-                return base.RightToLeftAutoMirrorImage;
-            }
-            set
-            {
-                base.RightToLeftAutoMirrorImage = value;
-            }
+            get => base.RightToLeftAutoMirrorImage;
+            set => base.RightToLeftAutoMirrorImage = value;
         }
 
         protected override AccessibleObject CreateAccessibilityInstance()
@@ -126,7 +121,6 @@ namespace System.Windows.Forms
         {
             if (ParentInternal != null && ParentInternal.LayoutEngine is ToolStripSplitStackLayout)
             {
-
                 if (ParentInternal.Orientation == Orientation.Horizontal)
                 {
                     bounds.Height = ParentInternal.Height;
@@ -173,10 +167,7 @@ namespace System.Windows.Forms
                     }
                     return stockName;
                 }
-                set
-                {
-                    base.Name = value;
-                }
+                set => base.Name = value;
             }
 
             internal override object GetPropertyValue(UiaCore.UIA propertyID)
@@ -188,8 +179,6 @@ namespace System.Windows.Forms
 
                 return base.GetPropertyValue(propertyID);
             }
-
         }
-
     }
 }

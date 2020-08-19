@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.Runtime.InteropServices;
@@ -36,7 +38,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             {
                 ICom2PropertyPageDisplayService propPageSvc = (ICom2PropertyPageDisplayService)provider.GetService(typeof(ICom2PropertyPageDisplayService));
 
-                if (propPageSvc == null)
+                if (propPageSvc is null)
                 {
                     propPageSvc = this;
                 }

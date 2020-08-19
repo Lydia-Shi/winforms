@@ -1,6 +1,8 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
+
+#nullable disable
 
 using System.Collections;
 using System.ComponentModel;
@@ -24,7 +26,7 @@ namespace System.Windows.Forms
             private TypeConverter converter;
             private UITypeEditor editor;
             private readonly ArrayList updateAttrs = new ArrayList();
-            private int flags = 0;
+            private int flags;
 
             private const int FlagUpdatedEditorAndConverter = 0x00000001;
             private const int FlagCheckGetter = 0x00000002;
@@ -84,7 +86,6 @@ namespace System.Windows.Forms
             {
                 get
                 {
-
                     if (dispid != null)
                     {
                         UpdateTypeConverterAndTypeEditorInternal(false, Dispid);
@@ -143,7 +144,15 @@ namespace System.Windows.Forms
 
             public override object GetEditor(Type editorBaseType)
             {
-                UpdateTypeConverterAndTypeEditorInternal(false, (Ole32.DispatchID)dispid.Value);
+                if (editorBaseType is null)
+                {
+                    throw new ArgumentNullException(nameof(editorBaseType));
+                }
+
+                if (dispid != null)
+                {
+                    UpdateTypeConverterAndTypeEditorInternal(false, (Ole32.DispatchID)dispid.Value);
+                }
 
                 if (editorBaseType.Equals(typeof(UITypeEditor)) && editor != null)
                 {
@@ -162,8 +171,8 @@ namespace System.Windows.Forms
             {
                 try
                 {
-                    Ole32.IPerPropertyBrowsing ippb = owner.GetPerPropertyBrowsing();
-                    if (ippb == null)
+                    Oleaut32.IPerPropertyBrowsing ippb = owner.GetPerPropertyBrowsing();
+                    if (ippb is null)
                     {
                         return Guid.Empty;
                     }
@@ -209,7 +218,7 @@ namespace System.Windows.Forms
                         owner.RefreshAllProperties = true;
                         SetFlag(FlagGettterThrew, true);
                     }
-                    throw e;
+                    throw;
                 }
                 finally
                 {
@@ -251,7 +260,7 @@ namespace System.Windows.Forms
                 try
                 {
                     SetFlag(FlagSettingValue, true);
-                    if (PropertyType.IsEnum && (value.GetType() != PropertyType))
+                    if (PropertyType.IsEnum && value != null && value.GetType() != PropertyType)
                     {
                         baseProp.SetValue(component, Enum.ToObject(PropertyType, value));
                     }
@@ -319,7 +328,6 @@ namespace System.Windows.Forms
             /// </summary>
             internal unsafe void UpdateTypeConverterAndTypeEditorInternal(bool force, Ole32.DispatchID dispid)
             {
-
                 // check to see if we're being forced here or if the work really
                 // needs to be done.
                 //
@@ -328,22 +336,22 @@ namespace System.Windows.Forms
                     return;
                 }
 
-                if (owner.GetOcx() == null)
+                if (owner.GetOcx() is null)
                 {
                     return;
                 }
 
                 try
                 {
-                    Ole32.IPerPropertyBrowsing ppb = owner.GetPerPropertyBrowsing();
+                    Oleaut32.IPerPropertyBrowsing ppb = owner.GetPerPropertyBrowsing();
 
                     if (ppb != null)
                     {
                         bool hasStrings = false;
 
                         // check for enums
-                        var caStrings = new Ole32.CA_STRUCT();
-                        var caCookies = new Ole32.CA_STRUCT();
+                        var caStrings = new Ole32.CA();
+                        var caCookies = new Ole32.CA();
 
                         HRESULT hr = HRESULT.S_OK;
                         try
@@ -380,7 +388,7 @@ namespace System.Windows.Forms
 
                             if (stringMarshaler.Count > 0 && intMarshaler.Count > 0)
                             {
-                                if (converter == null)
+                                if (converter is null)
                                 {
                                     converter = new AxEnumConverter(this, new AxPerPropertyBrowsingEnum(this, owner, stringMarshaler, intMarshaler, true));
                                 }
@@ -391,9 +399,7 @@ namespace System.Windows.Forms
                                     {
                                         axEnum.RefreshArrays(stringMarshaler, intMarshaler);
                                     }
-
                                 }
-
                             }
                             else
                             {
@@ -409,7 +415,7 @@ namespace System.Windows.Forms
                             // have a .Net Editor for this type.
                             //
                             ComAliasNameAttribute comAlias = (ComAliasNameAttribute)baseProp.Attributes[typeof(ComAliasNameAttribute)];
-                            if (comAlias == null)
+                            if (comAlias is null)
                             {
                                 Guid g = GetPropertyPage(dispid);
 
@@ -503,14 +509,12 @@ namespace System.Windows.Forms
 
             public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
             {
-
                 // make sure the converter has been properly refreshed -- calling
                 // the Converter property does this.
                 //
                 TypeConverter tc = this;
                 tc = target.Converter;
                 return base.GetStandardValues(context);
-
             }
         }
     }

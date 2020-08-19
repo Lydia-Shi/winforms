@@ -24,10 +24,10 @@ namespace System.Windows.Forms
     {
         private static Size s_cursorSize = Size.Empty;
 
-        private readonly byte[] _cursorData;
+        private readonly byte[]? _cursorData;
         private IntPtr _handle = IntPtr.Zero;       // handle to loaded image
         private bool _ownHandle = true;
-        private readonly int _resourceId = 0;
+        private readonly int _resourceId;
 
         /// <summary>
         ///  Private constructor. If you want a standard system cursor, use one of the
@@ -38,7 +38,7 @@ namespace System.Windows.Forms
             // We don't delete stock cursors.
             _ownHandle = false;
             _resourceId = nResourceId;
-            _handle = User32.LoadCursorW(IntPtr.Zero, nResourceId);
+            _handle = User32.LoadCursorW(IntPtr.Zero, (IntPtr)nResourceId);
         }
 
         /// <summary>
@@ -70,8 +70,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Initializes a new instance of the <see cref='Cursor'/> class from the specified resource.
         /// </summary>
-        public Cursor(Type type, string resource) 
-            : this((type?? throw new ArgumentNullException(nameof(type))).Module.Assembly.GetManifestResourceStream(type, resource))
+        public Cursor(Type type, string resource)
+            : this((type ?? throw new ArgumentNullException(nameof(type))).Module.Assembly.GetManifestResourceStream(type, resource)!)
         {
         }
 
@@ -81,7 +81,7 @@ namespace System.Windows.Forms
         /// </summary>
         public Cursor(Stream stream)
         {
-            if (stream == null)
+            if (stream is null)
             {
                 throw new ArgumentNullException(nameof(stream));
             }
@@ -123,7 +123,7 @@ namespace System.Windows.Forms
         ///  Gets or sets a <see cref='Cursor'/> that represents the current mouse cursor.
         ///  The value is <see langword="null"/> if the current mouse cursor is not visible.
         /// </summary>
-        public static Cursor Current
+        public static Cursor? Current
         {
             get
             {
@@ -197,15 +197,13 @@ namespace System.Windows.Forms
             }
         }
 
-        [
-        SRCategory(nameof(SR.CatData)),
-        Localizable(false),
-        Bindable(true),
-        SRDescription(nameof(SR.ControlTagDescr)),
-        DefaultValue(null),
-        TypeConverter(typeof(StringConverter)),
-        ]
-        public object Tag { get; set; }
+        [SRCategory(nameof(SR.CatData))]
+        [Localizable(false)]
+        [Bindable(true)]
+        [SRDescription(nameof(SR.ControlTagDescr))]
+        [DefaultValue(null)]
+        [TypeConverter(typeof(StringConverter))]
+        public object? Tag { get; set; }
 
         /// <summary>
         ///  Duplicates this the Win32 handle of this <see cref='Cursor'/>.
@@ -247,7 +245,7 @@ namespace System.Windows.Forms
         // This method is way more powerful than what we expose, but I'll leave it in place.
         private void DrawImageCore(Graphics graphics, Rectangle imageRect, Rectangle targetRect, bool stretch)
         {
-            if (graphics == null)
+            if (graphics is null)
             {
                 throw new ArgumentNullException(nameof(graphics));
             }
@@ -340,7 +338,7 @@ namespace System.Windows.Forms
                 // is merely a matter of offsetting and clipping.
                 Gdi32.IntersectClipRect(this, targetX, targetY, targetX + clipWidth, targetY + clipHeight);
                 User32.DrawIconEx(
-                    dc,
+                    (Gdi32.HDC)dc,
                     targetX - imageX,
                     targetY - imageY,
                     this,
@@ -398,12 +396,12 @@ namespace System.Windows.Forms
         private Size GetIconSize(IntPtr iconHandle)
         {
             using User32.ICONINFO info = User32.GetIconInfo(iconHandle);
-            if (info.hbmColor != IntPtr.Zero)
+            if (!info.hbmColor.IsNull)
             {
                 Gdi32.GetObjectW(info.hbmColor, out Gdi32.BITMAP bitmap);
                 return new Size(bitmap.bmWidth, bitmap.bmHeight);
             }
-            else if (info.hbmMask != IntPtr.Zero)
+            else if (!info.hbmMask.IsNull)
             {
                 Gdi32.GetObjectW(info.hbmMask, out Gdi32.BITMAP bitmap);
                 return new Size(bitmap.bmWidth, bitmap.bmHeight / 2);
@@ -466,7 +464,7 @@ namespace System.Windows.Forms
             {
                 throw new FormatException(SR.CursorCannotCovertToBytes);
             }
-            if (_cursorData == null)
+            if (_cursorData is null)
             {
                 throw new InvalidOperationException(SR.InvalidPictureFormat);
             }
@@ -485,7 +483,7 @@ namespace System.Windows.Forms
         /// </summary>
         public override string ToString()
         {
-            string s = null;
+            string? s = null;
 
             if (!_ownHandle)
             {
@@ -501,19 +499,17 @@ namespace System.Windows.Forms
 
         public static bool operator ==(Cursor left, Cursor right)
         {
-            if (left is null != right is null)
+            if (right is null)
+            {
+                return left is null;
+            }
+
+            if (left is null)
             {
                 return false;
             }
 
-            if (!(left is null))
-            {
-                return (left._handle == right._handle);
-            }
-            else
-            {
-                return true;
-            }
+            return left._handle == right._handle;
         }
 
         public static bool operator !=(Cursor left, Cursor right)
@@ -527,7 +523,7 @@ namespace System.Windows.Forms
             return unchecked((int)_handle);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!(obj is Cursor))
             {

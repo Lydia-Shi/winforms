@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
@@ -13,17 +15,11 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
 {
     internal class Com2IManagedPerPropertyBrowsingHandler : Com2ExtendedBrowsingHandler
     {
-        public override Type Interface
-        {
-            get
-            {
-                return typeof(NativeMethods.IManagedPerPropertyBrowsing);
-            }
-        }
+        public override Type Interface => typeof(VSSDK.IVSMDPerPropertyBrowsing);
 
         public override void SetupPropertyHandlers(Com2PropertyDescriptor[] propDesc)
         {
-            if (propDesc == null)
+            if (propDesc is null)
             {
                 return;
             }
@@ -41,9 +37,9 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
         {
             object target = sender.TargetObject;
 
-            if (target is NativeMethods.IManagedPerPropertyBrowsing)
+            if (target is VSSDK.IVSMDPerPropertyBrowsing)
             {
-                Attribute[] attrs = GetComponentAttributes((NativeMethods.IManagedPerPropertyBrowsing)target, sender.DISPID);
+                Attribute[] attrs = GetComponentAttributes((VSSDK.IVSMDPerPropertyBrowsing)target, sender.DISPID);
                 if (attrs != null)
                 {
                     for (int i = 0; i < attrs.Length; i++)
@@ -54,14 +50,14 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             }
         }
 
-        internal static Attribute[] GetComponentAttributes(NativeMethods.IManagedPerPropertyBrowsing target, Ole32.DispatchID dispid)
+        internal unsafe static Attribute[] GetComponentAttributes(VSSDK.IVSMDPerPropertyBrowsing target, Ole32.DispatchID dispid)
         {
-            int cItems = 0;
+            uint cItems = 0;
             IntPtr pbstrs = IntPtr.Zero;
-            IntPtr pvars = IntPtr.Zero;
+            Oleaut32.VARIANT* pvars = null;
 
-            HRESULT hr = target.GetPropertyAttributes(dispid, ref cItems, ref pbstrs, ref pvars);
-            if (hr != HRESULT.S_OK || cItems == 0)
+            HRESULT hr = target.GetPropertyAttributes(dispid, &cItems, &pbstrs, &pvars);
+            if (hr != HRESULT.S_OK || cItems == 0 || pvars is null)
             {
                 return Array.Empty<Attribute>();
             }
@@ -81,7 +77,6 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             Type[] types = new Type[attrTypeNames.Length];
             for (int i = 0; i < attrTypeNames.Length; i++)
             {
-
                 string attrName = attrTypeNames[i];
 
                 // try the name first
@@ -93,9 +88,8 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                     a = t.Assembly;
                 }
 
-                if (t == null)
+                if (t is null)
                 {
-
                     // check for an assembly name.
                     //
                     string assemblyName = string.Empty;
@@ -122,7 +116,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                     }
 
                     // try to get the field value
-                    if (a == null)
+                    if (a is null)
                     {
                         t = Type.GetType(attrName.Substring(0, lastDot) + assemblyName);
                     }
@@ -131,7 +125,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
                         t = a.GetType(attrName.Substring(0, lastDot) + assemblyName);
                     }
 
-                    if (t == null)
+                    if (t is null)
                     {
                         Debug.Fail("Failed load attribute '" + attrName + assemblyName + "'.  It's Type could not be found.");
                         continue;
@@ -222,7 +216,7 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             return temp;
         }
 
-        private static string[] GetStringsFromPtr(IntPtr ptr, int cStrings)
+        private static string[] GetStringsFromPtr(IntPtr ptr, uint cStrings)
         {
             if (ptr != IntPtr.Zero)
             {
@@ -264,47 +258,31 @@ namespace System.Windows.Forms.ComponentModel.Com2Interop
             }
         }
 
-        private static object[] GetVariantsFromPtr(IntPtr ptr, int cVariants)
+        private unsafe static object[] GetVariantsFromPtr(Oleaut32.VARIANT* ptr, uint cVariants)
         {
-            if (ptr != IntPtr.Zero)
+            var objects = new object[cVariants];
+            for (int i = 0; i < cVariants; i++)
             {
-                object[] objects = new object[cVariants];
-                IntPtr curVariant;
-
-                for (int i = 0; i < cVariants; i++)
-                {
-                    try
-                    {
-                        curVariant = (IntPtr)((long)ptr + (i * 16 /*sizeof(VARIANT)*/));
-                        if (curVariant != IntPtr.Zero)
-                        {
-                            objects[i] = Marshal.GetObjectForNativeVariant(curVariant);
-                            Oleaut32.VariantClear(curVariant);
-                        }
-                        else
-                        {
-                            objects[i] = Convert.DBNull;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.Fail("Failed to marshal component attribute VARIANT " + i.ToString(CultureInfo.InvariantCulture), ex.ToString());
-                    }
-                }
                 try
                 {
-                    Marshal.FreeCoTaskMem(ptr);
+                    using Oleaut32.VARIANT variant = ptr[i];
+                    objects[i] = variant.ToObject();
                 }
                 catch (Exception ex)
                 {
-                    Debug.Fail("Failed to free VARIANT array memory", ex.ToString());
+                    Debug.Fail("Failed to marshal component attribute VARIANT " + i, ex.ToString());
                 }
-                return objects;
             }
-            else
+            try
             {
-                return new object[cVariants];
+                Marshal.FreeCoTaskMem((IntPtr)ptr);
             }
+            catch (Exception ex)
+            {
+                Debug.Fail("Failed to free VARIANT array memory", ex.ToString());
+            }
+
+            return objects;
         }
     }
 }

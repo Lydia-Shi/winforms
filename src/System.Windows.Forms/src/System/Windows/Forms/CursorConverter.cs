@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
@@ -53,25 +55,23 @@ namespace System.Windows.Forms
         /// </summary>
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
         {
-            if (value is string)
+            if (value is string s)
             {
-                string text = ((string)value).Trim();
+                string text = s.Trim();
 
                 PropertyInfo[] props = GetProperties();
-                for (int i = 0; i < props.Length; i++)
+                foreach (var prop in props)
                 {
-                    PropertyInfo prop = props[i];
                     if (string.Equals(prop.Name, text, StringComparison.OrdinalIgnoreCase))
                     {
-                        object[] tempIndex = null;
-                        return prop.GetValue(null, tempIndex);
+                        return prop.GetValue(null, null);
                     }
                 }
             }
 
-            if (value is byte[])
+            if (value is byte[] bytes)
             {
-                MemoryStream ms = new MemoryStream((byte[])value);
+                using MemoryStream ms = new MemoryStream(bytes);
                 return new Cursor(ms);
             }
 
@@ -140,7 +140,7 @@ namespace System.Windows.Forms
                     return cursor.GetData();
                 }
             }
-            else if (destinationType == typeof(byte[]) && value == null)
+            else if (destinationType == typeof(byte[]) && value is null)
             {
                 return Array.Empty<byte>();
             }
@@ -164,7 +164,7 @@ namespace System.Windows.Forms
         /// </summary>
         public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
         {
-            if (values == null)
+            if (values is null)
             {
                 ArrayList list = new ArrayList();
                 PropertyInfo[] props = GetProperties();
@@ -192,4 +192,3 @@ namespace System.Windows.Forms
         }
     }
 }
-

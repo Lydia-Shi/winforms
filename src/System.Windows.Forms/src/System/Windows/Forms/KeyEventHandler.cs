@@ -9,5 +9,5 @@ namespace System.Windows.Forms
     ///  or <see cref='Control.KeyDown'/> event of a
     /// <see cref='Control'/>.
     /// </summary>
-    public delegate void KeyEventHandler(object sender, KeyEventArgs e);
+    public delegate void KeyEventHandler(object? sender, KeyEventArgs e);
 }

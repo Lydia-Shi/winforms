@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using static Interop;
 
@@ -63,7 +65,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (downScrollImage == null)
+                if (downScrollImage is null)
                 {
                     downScrollImage = DpiHelper.GetBitmapFromIcon(typeof(ToolStripScrollButton), "ScrollButtonDown");
                 }
@@ -83,7 +85,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (upScrollImage == null)
+                if (upScrollImage is null)
                 {
                     upScrollImage = DpiHelper.GetBitmapFromIcon(typeof(ToolStripScrollButton), "ScrollButtonUp");
                 }
@@ -95,7 +97,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (mouseDownTimer == null)
+                if (mouseDownTimer is null)
                 {
                     mouseDownTimer = new Timer();
                 }
@@ -180,11 +182,10 @@ namespace System.Windows.Forms
             public StickyLabel()
             {
             }
-            private readonly bool freezeLocationChange = false;
 
             public bool FreezeLocationChange
             {
-                get { return freezeLocationChange; }
+                get => false;
             }
 
             protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
@@ -198,11 +199,8 @@ namespace System.Windows.Forms
 
             protected override void WndProc(ref Message m)
             {
-
-                if (m.Msg >= WindowMessages.WM_KEYFIRST && m.Msg <= WindowMessages.WM_KEYLAST)
+                if (m.Msg >= (int)User32.WM.KEYFIRST && m.Msg <= (int)User32.WM.KEYLAST)
                 {
-                    //
-
                     DefWndProc(ref m);
                     return;
                 }
@@ -212,5 +210,3 @@ namespace System.Windows.Forms
         }
     }
 }
-
-

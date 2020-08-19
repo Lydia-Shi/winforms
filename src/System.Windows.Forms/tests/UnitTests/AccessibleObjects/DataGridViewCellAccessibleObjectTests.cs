@@ -8,14 +8,14 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests.AccessibleObjects
 {
-    public class DataGridViewCellsAccessibleObjectTests
+    public class DataGridViewCellsAccessibleObjectTests : IClassFixture<ThreadExceptionFixture>
     {
-        [Theory]
+        [WinFormsTheory]
         [InlineData(RightToLeft.No)]
         [InlineData(RightToLeft.Yes)]
         public void DataGridViewCellsAccessibleObject_Ctor_Default(RightToLeft rightToLeft)
         {
-            DataGridView dataGridView = new DataGridView
+            using var dataGridView = new DataGridView
             {
                 RightToLeft = rightToLeft,
                 ColumnCount = 4,
@@ -39,14 +39,14 @@ namespace System.Windows.Forms.Tests.AccessibleObjects
             Assert.True(accCellWidthSum == accRowWidth - dataGridView.RowHeadersWidth);
         }
 
-        [StaFact]
+        [WinFormsFact]
         public void DataGridViewCellsAccessibleObject_IsReadOnly_property()
         {
-            DataGridView dataGridView = new DataGridView();
+            using var dataGridView = new DataGridView();
             dataGridView.Columns.Add(new DataGridViewTextBoxColumn());
             dataGridView.Columns.Add(new DataGridViewTextBoxColumn());
-            dataGridView.Rows.Add(new DataGridViewRow()); 
-            dataGridView.Rows.Add(new DataGridViewRow()); 
+            dataGridView.Rows.Add(new DataGridViewRow());
+            dataGridView.Rows.Add(new DataGridViewRow());
 
             dataGridView.Rows[0].Cells[0].ReadOnly = true;
             dataGridView.Rows[1].ReadOnly = true;

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -46,14 +48,14 @@ namespace System.Windows.Forms
                         connectionPoint = null;
                     }
 
-                    if (connectionPoint == null)
+                    if (connectionPoint is null)
                     {
                         if (throwException)
                         {
                             throw new ArgumentException(string.Format(SR.AXNoEventInterface, eventInterface.Name));
                         }
                     }
-                    else if (sink == null || !eventInterface.IsInstanceOfType(sink))
+                    else if (sink is null || !eventInterface.IsInstanceOfType(sink))
                     {
                         if (throwException)
                         {
@@ -89,7 +91,7 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (connectionPoint == null || cookie == 0)
+                if (connectionPoint is null || cookie == 0)
                 {
                     if (connectionPoint != null)
                     {

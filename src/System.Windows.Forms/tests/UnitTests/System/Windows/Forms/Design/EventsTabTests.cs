@@ -12,7 +12,8 @@ using Xunit;
 
 namespace System.Windows.Forms.Design.Tests
 {
-    public class EventsTabTests
+    // NB: doesn't require thread affinity
+    public class EventsTabTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void EventsTab_Ctor_IServiceProvider()
@@ -78,7 +79,7 @@ namespace System.Windows.Forms.Design.Tests
             }
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(GetDefaultProperty_TestData))]
         public void EventsTab_GetDefaultProperty_Invoke_ReturnsExpected(object obj, IServiceProvider serviceProvider, object expected)
         {
@@ -119,11 +120,11 @@ namespace System.Windows.Forms.Design.Tests
             }
         }
 
-        [Theory]
+        [WinFormsTheory]
         [MemberData(nameof(GetDefaultProperty_IDesignerEventService_TestData))]
         public void EventsTab_GetDefaultProperty_IDesignerEventService_Success(object obj, ActiveDesignerEventArgs e, object expected)
         {
-            var service = new CustomDesignerEventService();
+            using var service = new CustomDesignerEventService();
             var mockServiceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
             mockServiceProvider
                 .Setup(p => p.GetService(typeof(IDesignerEventService)))

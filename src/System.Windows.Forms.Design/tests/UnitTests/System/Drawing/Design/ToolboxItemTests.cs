@@ -17,7 +17,7 @@ using Xunit;
 
 namespace System.Drawing.Design.Tests
 {
-    public class ToolboxItemTests
+    public class ToolboxItemTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void ToolboxItem_Ctor_Default()
@@ -58,7 +58,7 @@ namespace System.Drawing.Design.Tests
             {
                 AssemblyName = value
             };
-            if (value == null)
+            if (value is null)
             {
                 Assert.Null(item.AssemblyName);
                 Assert.Null(item.Properties["AssemblyName"]);
@@ -77,7 +77,7 @@ namespace System.Drawing.Design.Tests
 
             // Set same.
             item.AssemblyName = value;
-            if (value == null)
+            if (value is null)
             {
                 Assert.Null(item.AssemblyName);
                 Assert.Null(item.Properties["AssemblyName"]);
@@ -172,7 +172,7 @@ namespace System.Drawing.Design.Tests
             {
                 DependentAssemblies = value
             };
-            if (value == null)
+            if (value is null)
             {
                 Assert.Null(item.DependentAssemblies);
                 Assert.Null(item.Properties["DependentAssemblies"]);
@@ -187,7 +187,7 @@ namespace System.Drawing.Design.Tests
 
             // Set same.
             item.DependentAssemblies = value;
-            if (value == null)
+            if (value is null)
             {
                 Assert.Null(item.DependentAssemblies);
                 Assert.Null(item.Properties["DependentAssemblies"]);
@@ -1124,7 +1124,6 @@ namespace System.Drawing.Design.Tests
         public void ToolboxItem_Equals_Invoke_ReturnsExpected(ToolboxItem item, object other, bool expected)
         {
             Assert.Equal(expected, item.Equals(other));
-
         }
 
         public static IEnumerable<object[]> FilterPropertyValue_TestData()

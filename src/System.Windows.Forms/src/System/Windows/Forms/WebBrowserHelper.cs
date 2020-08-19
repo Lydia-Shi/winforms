@@ -2,13 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Drawing;
 using static Interop;
-
 
 namespace System.Windows.Forms
 {
@@ -71,7 +72,7 @@ namespace System.Windows.Forms
         internal static Guid maskEdit_Clsid = new Guid("{c932ba85-4374-101b-a56c-00aa003668dc}");
 
         // Window message to check if we have already sub-classed
-        internal static readonly User32.WindowMessage REGMSG_MSG = User32.RegisterWindowMessageW(Application.WindowMessagesVersion + "_subclassCheck");
+        internal static readonly User32.WM REGMSG_MSG = User32.RegisterWindowMessageW(Application.WindowMessagesVersion + "_subclassCheck");
         internal const int REGMSG_RETVAL = 123;
 
         //
@@ -95,7 +96,7 @@ namespace System.Windows.Forms
             {
                 if (logPixelsX == -1)
                 {
-                    using ScreenDC dc = ScreenDC.Create();
+                    using var dc = User32.GetDcScope.ScreenDC;
                     logPixelsX = Gdi32.GetDeviceCaps(dc, Gdi32.DeviceCapability.LOGPIXELSX);
                 }
                 return logPixelsX;
@@ -109,7 +110,7 @@ namespace System.Windows.Forms
             {
                 if (logPixelsY == -1)
                 {
-                    using ScreenDC dc = ScreenDC.Create();
+                    using var dc = User32.GetDcScope.ScreenDC;
                     logPixelsY = Gdi32.GetDeviceCaps(dc, Gdi32.DeviceCapability.LOGPIXELSY);
                 }
                 return logPixelsY;
@@ -123,7 +124,7 @@ namespace System.Windows.Forms
             if (site != null)
             {
                 object o = site.GetService(typeof(ISelectionService));
-                Debug.Assert(o == null || o is ISelectionService, "service must implement ISelectionService");
+                Debug.Assert(o is null || o is ISelectionService, "service must implement ISelectionService");
                 if (o is ISelectionService)
                 {
                     return (ISelectionService)o;
@@ -132,7 +133,9 @@ namespace System.Windows.Forms
             return null;
         }
 
-        // Returns a big COMRECT
+        /// <remarks>
+        ///  Returns a big clip RECT.
+        /// </remarks>
         internal static RECT GetClipRect()
         {
             return new Rectangle(0, 0, 32000, 32000);

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -16,20 +18,16 @@ namespace System.Windows.Forms
     ///  standard
     ///  Windows radio button (option button).
     /// </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultProperty(nameof(Checked)),
-    DefaultEvent(nameof(CheckedChanged)),
-    DefaultBindingProperty(nameof(Checked)),
-    ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign),
-    Designer("System.Windows.Forms.Design.RadioButtonDesigner, " + AssemblyRef.SystemDesign),
-    SRDescription(nameof(SR.DescriptionRadioButton))
-    ]
-    public class RadioButton : ButtonBase
+    [DefaultProperty(nameof(Checked))]
+    [DefaultEvent(nameof(CheckedChanged))]
+    [DefaultBindingProperty(nameof(Checked))]
+    [ToolboxItem("System.Windows.Forms.Design.AutoSizeToolboxItem," + AssemblyRef.SystemDesign)]
+    [Designer("System.Windows.Forms.Design.RadioButtonDesigner, " + AssemblyRef.SystemDesign)]
+    [SRDescription(nameof(SR.DescriptionRadioButton))]
+    public partial class RadioButton : ButtonBase
     {
         private static readonly object EVENT_CHECKEDCHANGED = new object();
-        private static readonly ContentAlignment anyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
+        private const ContentAlignment AnyRight = ContentAlignment.TopRight | ContentAlignment.MiddleRight | ContentAlignment.BottomRight;
 
         // Used to see if we need to iterate through the autochecked items and modify their tabstops.
         private bool firstfocus = true;
@@ -69,11 +67,9 @@ namespace System.Windows.Forms
         ///  value and the appearance of
         ///  the control automatically change when the control is clicked.
         /// </summary>
-        [
-        DefaultValue(true),
-        SRCategory(nameof(SR.CatBehavior)),
-        SRDescription(nameof(SR.RadioButtonAutoCheckDescr))
-        ]
+        [DefaultValue(true)]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RadioButtonAutoCheckDescr))]
         public bool AutoCheck
         {
             get
@@ -96,12 +92,10 @@ namespace System.Windows.Forms
         ///  button
         ///  control is drawn.
         /// </summary>
-        [
-        DefaultValue(Appearance.Normal),
-        SRCategory(nameof(SR.CatAppearance)),
-        Localizable(true),
-        SRDescription(nameof(SR.RadioButtonAppearanceDescr))
-        ]
+        [DefaultValue(Appearance.Normal)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.RadioButtonAppearanceDescr))]
         public Appearance Appearance
         {
             get
@@ -139,7 +133,8 @@ namespace System.Windows.Forms
 
         private static readonly object EVENT_APPEARANCECHANGED = new object();
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.RadioButtonOnAppearanceChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.RadioButtonOnAppearanceChangedDescr))]
         public event EventHandler AppearanceChanged
         {
             add => Events.AddHandler(EVENT_APPEARANCECHANGED, value);
@@ -152,12 +147,10 @@ namespace System.Windows.Forms
         ///  sets the location of the check box portion of the
         ///  radio button control.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(ContentAlignment.MiddleLeft),
-        SRDescription(nameof(SR.RadioButtonCheckAlignDescr))
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(ContentAlignment.MiddleLeft)]
+        [SRDescription(nameof(SR.RadioButtonCheckAlignDescr))]
         public ContentAlignment CheckAlign
         {
             get
@@ -187,13 +180,11 @@ namespace System.Windows.Forms
         ///  Gets or sets a value indicating whether the
         ///  control is checked or not.
         /// </summary>
-        [
-        Bindable(true),
-        SettingsBindable(true),
-        DefaultValue(false),
-        SRCategory(nameof(SR.CatAppearance)),
-        SRDescription(nameof(SR.RadioButtonCheckedDescr))
-        ]
+        [Bindable(true),
+        SettingsBindable(true)]
+        [DefaultValue(false)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [SRDescription(nameof(SR.RadioButtonCheckedDescr))]
         public bool Checked
         {
             get
@@ -209,7 +200,7 @@ namespace System.Windows.Forms
 
                     if (IsHandleCreated)
                     {
-                        SendMessage(NativeMethods.BM_SETCHECK, value ? 1 : 0, 0);
+                        User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, PARAM.FromBool(value));
                     }
 
                     Invalidate();
@@ -221,7 +212,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler DoubleClick
         {
             add => base.DoubleClick += value;
@@ -229,7 +221,8 @@ namespace System.Windows.Forms
         }
 
         /// <hideinheritance/>
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event MouseEventHandler MouseDoubleClick
         {
             add => base.MouseDoubleClick += value;
@@ -241,25 +234,25 @@ namespace System.Windows.Forms
             get
             {
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = "BUTTON";
+                cp.ClassName = ComCtl32.WindowClasses.WC_BUTTON;
                 if (OwnerDraw)
                 {
-                    cp.Style |= NativeMethods.BS_OWNERDRAW;
+                    cp.Style |= (int)User32.BS.OWNERDRAW;
                 }
                 else
                 {
-                    cp.Style |= NativeMethods.BS_RADIOBUTTON;
+                    cp.Style |= (int)User32.BS.RADIOBUTTON;
                     if (Appearance == Appearance.Button)
                     {
-                        cp.Style |= NativeMethods.BS_PUSHLIKE;
+                        cp.Style |= (int)User32.BS.PUSHLIKE;
                     }
 
                     // Determine the alignment of the radio button
                     //
                     ContentAlignment align = RtlTranslateContent(CheckAlign);
-                    if ((int)(align & anyRight) != 0)
+                    if ((int)(align & AnyRight) != 0)
                     {
-                        cp.Style |= NativeMethods.BS_RIGHTBUTTON;
+                        cp.Style |= (int)User32.BS.RIGHTBUTTON;
                     }
                 }
                 return cp;
@@ -351,37 +344,25 @@ namespace System.Windows.Forms
             }
         }
 
+        internal override bool SupportsUiaProviders => true;
+
         [DefaultValue(false)]
         new public bool TabStop
         {
-            get
-            {
-                return base.TabStop;
-            }
-            set
-            {
-                base.TabStop = value;
-            }
+            get => base.TabStop;
+            set => base.TabStop = value;
         }
 
         /// <summary>
         ///  Gets or sets the value indicating whether the user can give the focus to this
         ///  control using the TAB key.
         /// </summary>
-        [
-        Localizable(true),
-        DefaultValue(ContentAlignment.MiddleLeft)
-        ]
+        [Localizable(true)]
+        [DefaultValue(ContentAlignment.MiddleLeft)]
         public override ContentAlignment TextAlign
         {
-            get
-            {
-                return base.TextAlign;
-            }
-            set
-            {
-                base.TextAlign = value;
-            }
+            get => base.TextAlign;
+            set => base.TextAlign = value;
         }
 
         /// <summary>
@@ -408,12 +389,10 @@ namespace System.Windows.Forms
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            //Since this is protected override, this can be called directly in a overriden class
-            //and the handle doesn't need to be created.
-            //So check for the handle to improve performance
+
             if (IsHandleCreated)
             {
-                SendMessage(NativeMethods.BM_SETCHECK, isChecked ? 1 : 0, 0);
+                User32.SendMessageW(this, (User32.WM)User32.BM.SETCHECK, PARAM.FromBool(isChecked));
             }
         }
 
@@ -423,8 +402,14 @@ namespace System.Windows.Forms
         /// </summary>
         protected virtual void OnCheckedChanged(EventArgs e)
         {
+            // MSAA events:
             AccessibilityNotifyClients(AccessibleEvents.StateChange, -1);
             AccessibilityNotifyClients(AccessibleEvents.NameChange, -1);
+
+            // UIA events:
+            AccessibilityObject.RaiseAutomationPropertyChangedEvent(UiaCore.UIA.SelectionItemIsSelectedPropertyId, Checked, !Checked);
+            AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationPropertyChangedEventId);
+
             ((EventHandler)Events[EVENT_CHECKEDCHANGED])?.Invoke(this, e);
         }
 
@@ -564,7 +549,7 @@ namespace System.Windows.Forms
                 if (base.MouseIsDown)
                 {
                     Point pt = PointToScreen(new Point(mevent.X, mevent.Y));
-                    if (UnsafeNativeMethods.WindowFromPoint(pt) == Handle)
+                    if (User32.WindowFromPoint(pt) == Handle)
                     {
                         //Paint in raised state...
                         //
@@ -574,7 +559,6 @@ namespace System.Windows.Forms
                             OnClick(mevent);
                             OnMouseClick(mevent);
                         }
-
                     }
                 }
             }
@@ -597,7 +581,6 @@ namespace System.Windows.Forms
                     OnClick(EventArgs.Empty);
                 }
             }
-
         }
 
         protected internal override bool ProcessMnemonic(char charCode)
@@ -625,58 +608,5 @@ namespace System.Windows.Forms
             string s = base.ToString();
             return s + ", Checked: " + Checked.ToString();
         }
-
-        [ComVisible(true)]
-        public class RadioButtonAccessibleObject : ButtonBaseAccessibleObject
-        {
-            public RadioButtonAccessibleObject(RadioButton owner) : base(owner)
-            {
-            }
-
-            public override string DefaultAction
-            {
-                get
-                {
-                    string defaultAction = Owner.AccessibleDefaultActionDescription;
-                    if (defaultAction != null)
-                    {
-                        return defaultAction;
-                    }
-
-                    return SR.AccessibleActionCheck;
-                }
-            }
-
-            public override AccessibleRole Role
-            {
-                get
-                {
-                    AccessibleRole role = Owner.AccessibleRole;
-                    if (role != AccessibleRole.Default)
-                    {
-                        return role;
-                    }
-                    return AccessibleRole.RadioButton;
-                }
-            }
-
-            public override AccessibleStates State
-            {
-                get
-                {
-                    if (((RadioButton)Owner).Checked)
-                    {
-                        return AccessibleStates.Checked | base.State;
-                    }
-                    return base.State;
-                }
-            }
-
-            public override void DoDefaultAction()
-            {
-                ((RadioButton)Owner).PerformClick();
-            }
-        }
-
     }
 }

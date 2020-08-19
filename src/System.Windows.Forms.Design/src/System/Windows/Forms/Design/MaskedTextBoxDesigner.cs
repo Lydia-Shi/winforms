@@ -25,7 +25,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_actions == null)
+                if (_actions is null)
                 {
                     _actions = new DesignerActionListCollection();
                     _actions.Add(new MaskedTextBoxDesignerActionList(this));
@@ -43,7 +43,7 @@ namespace System.Windows.Forms.Design
         internal static MaskedTextBox GetDesignMaskedTextBox(MaskedTextBox maskedTextBox)
         {
             MaskedTextBox designMaskedTextBox;
-            if (maskedTextBox == null)
+            if (maskedTextBox is null)
             {
                 // return a default control.
                 designMaskedTextBox = new MaskedTextBox();
@@ -52,7 +52,7 @@ namespace System.Windows.Forms.Design
             {
                 MaskedTextProvider maskedTextProvider = maskedTextBox.MaskedTextProvider;
 
-                if (maskedTextProvider == null)
+                if (maskedTextProvider is null)
                 {
                     designMaskedTextBox = new MaskedTextBox();
                     designMaskedTextBox.Text = maskedTextBox.Text;
@@ -121,7 +121,6 @@ namespace System.Windows.Forms.Design
                 default:
                     Debug.Fail("Unknown RejectionHint, defaulting to InvalidInput...");
                     goto case MaskedTextResultHint.InvalidInput;
-
             }
 
             return string.Format(CultureInfo.CurrentCulture, SR.MaskedTextBoxTextEditorErrorFormatString, e.Position, rejectionHint);
@@ -167,7 +166,7 @@ namespace System.Windows.Forms.Design
                 "PasswordChar"
             };
 
-            Attribute[] empty = new Attribute[0];
+            Attribute[] empty = Array.Empty<Attribute>();
 
             for (int i = 0; i < shadowProps.Length; i++)
             {
@@ -196,7 +195,7 @@ namespace System.Windows.Forms.Design
 
         /// <summary>
         ///  Shadows the PasswordChar.  UseSystemPasswordChar overrides PasswordChar so independent on the value
-        ///  of PasswordChar it will return the systemp password char.  However, the value of PasswordChar is 
+        ///  of PasswordChar it will return the systemp password char.  However, the value of PasswordChar is
         ///  cached so if UseSystemPasswordChar is reset at design time the PasswordChar value can be restored.
         ///  So in the case both properties are set, we need to serialize the real PasswordChar value as well.
         /// </summary>
@@ -287,7 +286,7 @@ namespace System.Windows.Forms.Design
         {
             get
             {
-                if (_verbs == null)
+                if (_verbs is null)
                 {
                     _verbs = new DesignerVerbCollection();
                     _verbs.Add(new DesignerVerb(SR.MaskedTextBoxDesignerVerbsSetMaskDesc, new EventHandler(OnVerbSetMask)));

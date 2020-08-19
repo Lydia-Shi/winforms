@@ -12,7 +12,6 @@ using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
@@ -30,7 +29,6 @@ namespace System.ComponentModel.Design
         private const int ListBoxMaximumHeight = 200; // The maximum height of a dropdown listbox
         private const int MinimumWidth = 150; // The minimum overall width of the panel
         private const int BottomPadding = 2; // Padding at the bottom of the panel
-        private const int TopPadding = 2; // Padding at the top of the panel
 
         private const int LineLeftMargin = 5; // Left padding for all lines
         private const int LineRightMargin = 4; // Right padding for all lines
@@ -152,7 +150,7 @@ namespace System.ComponentModel.Design
         {
             get
             {
-                if (_filteredCommandIDs == null)
+                if (_filteredCommandIDs is null)
                 {
                     _filteredCommandIDs = new CommandID[] {
                         StandardCommands.Copy,
@@ -282,20 +280,20 @@ namespace System.ComponentModel.Design
         private void AddToCategories(LineInfo lineInfo, ListDictionary categories)
         {
             string categoryName = lineInfo.Item.Category;
-            if (categoryName == null)
+            if (categoryName is null)
             {
                 categoryName = string.Empty;
             }
 
             ListDictionary category = (ListDictionary)categories[categoryName];
-            if (category == null)
+            if (category is null)
             {
                 category = new ListDictionary();
                 categories.Add(categoryName, category);
             }
 
             List<LineInfo> categoryList = (List<LineInfo>)category[lineInfo.List];
-            if (categoryList == null)
+            if (categoryList is null)
             {
                 categoryList = new List<LineInfo>();
                 category.Add(lineInfo.List, categoryList);
@@ -477,7 +475,7 @@ namespace System.ComponentModel.Design
             {
                 return true;
             }
-            return (pd.ComponentType.GetProperty(pd.Name).GetSetMethod() == null);
+            return (pd.ComponentType.GetProperty(pd.Name).GetSetMethod() is null);
         }
 
         protected override void OnFontChanged(EventArgs e)
@@ -616,7 +614,7 @@ namespace System.ComponentModel.Design
 
         private void ProcessLists(DesignerActionListCollection lists, ListDictionary categories)
         {
-            if (lists == null)
+            if (lists is null)
             {
                 return;
             }
@@ -629,12 +627,12 @@ namespace System.ComponentModel.Design
                     {
                         foreach (DesignerActionItem item in items)
                         {
-                            if (item == null)
+                            if (item is null)
                             {
                                 continue;
                             }
                             LineInfo lineInfo = ProcessTaskItem(list, item);
-                            if (lineInfo == null)
+                            if (lineInfo is null)
                             {
                                 continue;
                             }
@@ -683,7 +681,7 @@ namespace System.ComponentModel.Design
             {
                 // Try to use the component's service provider if it exists so that we end up getting the right IDesignerHost.
                 IServiceProvider serviceProvider = relatedComponent.Site;
-                if (serviceProvider == null)
+                if (serviceProvider is null)
                 {
                     serviceProvider = ServiceProvider;
                 }
@@ -739,7 +737,7 @@ namespace System.ComponentModel.Design
             else if (item is DesignerActionPropertyItem pti)
             {
                 PropertyDescriptor pd = TypeDescriptor.GetProperties(list)[pti.MemberName];
-                if (pd == null)
+                if (pd is null)
                 {
                     throw new InvalidOperationException(string.Format(SR.DesignerActionPanel_CouldNotFindProperty, pti.MemberName, list.GetType().FullName));
                 }
@@ -747,7 +745,7 @@ namespace System.ComponentModel.Design
                 TypeDescriptorContext context = new TypeDescriptorContext(_serviceProvider, pd, list);
                 UITypeEditor editor = (UITypeEditor)pd.GetEditor(typeof(UITypeEditor));
                 bool standardValuesSupported = pd.Converter.GetStandardValuesSupported(context);
-                if (editor == null)
+                if (editor is null)
                 {
                     if (pd.PropertyType == typeof(bool))
                     {
@@ -818,8 +816,8 @@ namespace System.ComponentModel.Design
 
         /// <summary>
         ///  Strips out ampersands used for mnemonics so that they don't show up in the rendering.
-        ///  - Convert "&&" to "&"
-        ///  - Convert "&x" to "x"
+        ///  - Convert "&amp;&amp;" to "&amp;"
+        ///  - Convert "&amp;x" to "x"
         ///  - An ampersand by itself at the end of a string is displayed as-is
         /// </summary>
         private static string StripAmpersands(string s)
@@ -1055,7 +1053,7 @@ namespace System.ComponentModel.Design
                         {
                             return false;
                         }
-                        throw ce;
+                        throw;
                     }
                 }
                 return true;
@@ -1079,7 +1077,7 @@ namespace System.ComponentModel.Design
             public Line(IServiceProvider serviceProvider, DesignerActionPanel actionPanel)
             {
                 _serviceProvider = serviceProvider;
-                _actionPanel = actionPanel ?? throw new ArgumentNullException("actionPanel");
+                _actionPanel = actionPanel ?? throw new ArgumentNullException(nameof(actionPanel));
             }
 
             protected DesignerActionPanel ActionPanel
@@ -1392,7 +1390,7 @@ namespace System.ComponentModel.Design
             {
                 get
                 {
-                    if (_propDesc == null)
+                    if (_propDesc is null)
                     {
                         _propDesc = TypeDescriptor.GetProperties(_actionList)[_propertyItem.MemberName];
                     }
@@ -1409,7 +1407,7 @@ namespace System.ComponentModel.Design
             {
                 get
                 {
-                    if (_typeDescriptorContext == null)
+                    if (_typeDescriptorContext is null)
                     {
                         _typeDescriptorContext = new TypeDescriptorContext(ServiceProvider, PropertyDescriptor, _actionList);
                     }
@@ -1909,7 +1907,7 @@ namespace System.ComponentModel.Design
             private bool _hasSwatch;
             private Image _swatch;
             private FlyoutDialog _dropDownHolder;
-            private bool _ignoreNextSelectChange = false;
+            private bool _ignoreNextSelectChange;
             private bool _ignoreDropDownValue;
 
             public EditorPropertyLine(IServiceProvider serviceProvider, DesignerActionPanel actionPanel) : base(serviceProvider, actionPanel)
@@ -1938,6 +1936,7 @@ namespace System.ComponentModel.Design
                         IntegralHeight = false,
                         Font = ActionPanel.Font
                     };
+
                     listBox.KeyDown += new KeyEventHandler(OnListBoxKeyDown);
                     TypeConverter.StandardValuesCollection standardValues = GetStandardValues();
                     if (standardValues != null)
@@ -1956,20 +1955,22 @@ namespace System.ComponentModel.Design
 
                     // All measurement code borrowed from WinForms PropertyGridView.cs
                     int maxWidth = 0;
+
                     // The listbox draws with GDI, not GDI+.  So, we use a normal DC here.
-                    IntPtr hdc = User32.GetDC(new HandleRef(listBox, listBox.Handle));
-                    IntPtr hFont = listBox.Font.ToHfont();
-                    var tm = new Gdi32.TEXTMETRICW();
-                    try
+                    using (var hdc = new User32.GetDcScope(listBox.Handle))
                     {
-                        hFont = Gdi32.SelectObject(hdc, hFont);
+                        using var hFont = new Gdi32.ObjectScope(listBox.Font.ToHFONT());
+                        using var fontSelection = new Gdi32.SelectObjectScope(hdc, hFont);
+
+                        var tm = new Gdi32.TEXTMETRICW();
+
                         if (listBox.Items.Count > 0)
                         {
                             foreach (string s in listBox.Items)
                             {
                                 var textSize = new Size();
-                                Gdi32.GetTextExtentPoint32W(new HandleRef(listBox, hdc), s, s.Length, ref textSize);
-                                maxWidth = Math.Max((int)textSize.Width, maxWidth);
+                                Gdi32.GetTextExtentPoint32W(hdc, s, s.Length, ref textSize);
+                                maxWidth = Math.Max(textSize.Width, maxWidth);
                             }
                         }
 
@@ -1977,17 +1978,12 @@ namespace System.ComponentModel.Design
 
                         // border + padding + scrollbar
                         maxWidth += 2 + tm.tmMaxCharWidth + SystemInformation.VerticalScrollBarWidth;
-                        hFont = Gdi32.SelectObject(hdc, hFont);
-                    }
-                    finally
-                    {
-                        Gdi32.DeleteObject(hFont);
-                        User32.ReleaseDC(new HandleRef(listBox, listBox.Handle), hdc);
+
+                        listBox.Height = Math.Max(tm.tmHeight + 2, Math.Min(ListBoxMaximumHeight, listBox.PreferredHeight));
+                        listBox.Width = Math.Max(maxWidth, EditRegionSize.Width);
+                        _ignoreDropDownValue = false;
                     }
 
-                    listBox.Height = Math.Max(tm.tmHeight + 2, Math.Min(ListBoxMaximumHeight, listBox.PreferredHeight));
-                    listBox.Width = Math.Max(maxWidth, EditRegionSize.Width);
-                    _ignoreDropDownValue = false;
                     try
                     {
                         ShowDropDown(listBox, SystemColors.ControlDark);
@@ -2168,7 +2164,7 @@ namespace System.ComponentModel.Design
                 base.PaintLine(g, lineWidth, lineHeight);
                 if (_hasSwatch)
                 {
-                    if (_swatch == null)
+                    if (_swatch is null)
                     {
                         int width = EditRegionSize.Height - EditorLineSwatchPadding * 2;
                         int height = width - 1;
@@ -2334,7 +2330,7 @@ namespace System.ComponentModel.Design
                 }
             }
 
-            internal class FlyoutDialog : Form
+            internal class FlyoutDialog : Form, IHandle
             {
                 private readonly Control _hostedControl;
                 private readonly Control _parentControl;
@@ -2419,7 +2415,7 @@ namespace System.ComponentModel.Design
                 {
                     while (hWnd != IntPtr.Zero)
                     {
-                        hWnd = UnsafeNativeMethods.GetWindowLong(new HandleRef(null, hWnd), NativeMethods.GWL_HWNDPARENT);
+                        hWnd = User32.GetWindowLong(hWnd, User32.GWL.HWNDPARENT);
                         if (hWnd == IntPtr.Zero)
                         {
                             return false;
@@ -2449,12 +2445,13 @@ namespace System.ComponentModel.Design
                 {
                     try
                     {
-                        UnsafeNativeMethods.SetWindowLong(new HandleRef(this, Handle), NativeMethods.GWL_HWNDPARENT, new HandleRef(parent, parent.Handle));
+                        User32.SetWindowLong(this, User32.GWL.HWNDPARENT, parent.Handle);
+
                         // Lifted directly from Form.ShowDialog()...
                         IntPtr hWndCapture = User32.GetCapture();
                         if (hWndCapture != IntPtr.Zero)
                         {
-                            UnsafeNativeMethods.SendMessage(new HandleRef(null, hWndCapture), WindowMessages.WM_CANCELMODE, 0, 0);
+                            User32.SendMessageW(hWndCapture, User32.WM.CANCELMODE, IntPtr.Zero, IntPtr.Zero);
                             User32.ReleaseCapture();
                         }
                         Visible = true; // NOTE: Do this AFTER creating handle and setting parent
@@ -2463,8 +2460,8 @@ namespace System.ComponentModel.Design
                     }
                     finally
                     {
+                        User32.SetWindowLong(this, User32.GWL.HWNDPARENT, IntPtr.Zero);
 
-                        UnsafeNativeMethods.SetWindowLong(new HandleRef(this, Handle), NativeMethods.GWL_HWNDPARENT, new HandleRef(null, IntPtr.Zero));
                         // sometimes activation goes to LALA land - if our parent control is still  around, remind it to take focus.
                         if (parent != null && parent.Visible)
                         {
@@ -2475,11 +2472,11 @@ namespace System.ComponentModel.Design
 
                 protected override void WndProc(ref Message m)
                 {
-                    if (m.Msg == WindowMessages.WM_ACTIVATE)
+                    if (m.Msg == (int)User32.WM.ACTIVATE)
                     {
-                        if (Visible && NativeMethods.Util.LOWORD(unchecked((int)(long)m.WParam)) == NativeMethods.WA_INACTIVE)
+                        if (Visible && PARAM.LOWORD(m.WParam) == (int)User32.WA.INACTIVE)
                         {
-                            if (!OwnsWindow((IntPtr)m.LParam))
+                            if (!OwnsWindow(m.LParam))
                             {
                                 Visible = false;
                                 if (m.LParam == IntPtr.Zero)
@@ -2502,38 +2499,6 @@ namespace System.ComponentModel.Design
                     base.WndProc(ref m);
                 }
             }
-
-            #region Interop definitions
-            private static class NativeMethods
-            {
-                public const int WA_INACTIVE = 0;
-                public const int WA_ACTIVE = 1;
-                public const int GWL_HWNDPARENT = (-8);
-
-                internal static class Util
-                {
-                    public static int LOWORD(int n) => n & 0xffff;
-                }
-            }
-
-            private static class SafeNativeMethods
-            {
-                [DllImport(ExternDll.Gdi32, SetLastError = true, ExactSpelling = true, CharSet = System.Runtime.InteropServices.CharSet.Auto)]
-                public static extern IntPtr SelectObject(HandleRef hDC, HandleRef hObject);
-            }
-
-            private static class UnsafeNativeMethods
-            {
-                [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-                public static extern IntPtr GetWindowLong(HandleRef hWnd, int nIndex);
-
-                [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-                public static extern IntPtr SetWindowLong(HandleRef hWnd, int nIndex, HandleRef dwNewLong);
-
-                [DllImport(ExternDll.User32, CharSet = CharSet.Auto)]
-                public static extern IntPtr SendMessage(HandleRef hWnd, int msg, int wParam, int lParam);
-            }
-            #endregion
 
             // Class that renders either the ellipsis or dropdown button
             internal sealed class EditorButton : Button
@@ -2594,6 +2559,7 @@ namespace System.ComponentModel.Design
                         {
                             buttonState = PushButtonState.Hot;
                         }
+
                         ButtonRenderer.DrawButton(g, new Rectangle(-1, -1, Width + 2, Height + 2), "…", Font, Focused, buttonState);
                     }
                     else

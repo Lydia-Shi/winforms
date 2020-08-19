@@ -8,5 +8,5 @@ namespace System.Windows.Forms
     ///  Describes a delegate for an event that has a MaskInputRejectedEventArgs as
     ///  a parameter.
     /// </summary>
-    public delegate void MaskInputRejectedEventHandler(object sender, MaskInputRejectedEventArgs e);
+    public delegate void MaskInputRejectedEventHandler(object? sender, MaskInputRejectedEventArgs e);
 }

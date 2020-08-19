@@ -1,4 +1,5 @@
-$DoNotAbortNativeToolsInstallationOnFailure = $true
-$DoNotDisplayNativeToolsInstallationWarnings = $true
+$script:DoNotAbortNativeToolsInstallationOnFailure = $true
+$script:DoNotDisplayNativeToolsInstallationWarnings = $true
 
-. $PsScriptRoot\common\init-tools-native.ps1 -InstallDirectory $PSScriptRoot\..\.tools\native -GlobalJsonFile $PSScriptRoot\..\global.json
+# Add CMake to path.
+$env:PATH = "$PSScriptRoot\..\.tools\bin;$env:PATH"

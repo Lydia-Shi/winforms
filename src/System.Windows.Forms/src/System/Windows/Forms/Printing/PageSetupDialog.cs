@@ -2,11 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing.Printing;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Text;
 using static Interop;
 
 namespace System.Windows.Forms
@@ -20,9 +21,9 @@ namespace System.Windows.Forms
     public sealed class PageSetupDialog : CommonDialog
     {
         // If PrintDocument != null, pageSettings == printDocument.PageSettings
-        private PrintDocument _printDocument = null;
-        private PageSettings _pageSettings = null;
-        private PrinterSettings _printerSettings = null;
+        private PrintDocument _printDocument;
+        private PageSettings _pageSettings;
+        private PrinterSettings _printerSettings;
 
         private Margins _minMargins;
 
@@ -180,7 +181,7 @@ namespace System.Windows.Forms
                 flags |= Comdlg32.PSD.DISABLEPAPER;
             }
 
-            if (!AllowPrinter || _printerSettings == null)
+            if (!AllowPrinter || _printerSettings is null)
             {
                 flags |= Comdlg32.PSD.DISABLEPRINTER;
             }
@@ -268,10 +269,10 @@ namespace System.Windows.Forms
             pageSettings.Margins = PrinterUnitConvert.Convert(newMargins, fromUnit, PrinterUnit.Display);
         }
 
-        protected override bool RunDialog(IntPtr hwndOwner)
+        protected unsafe override bool RunDialog(IntPtr hwndOwner)
         {
             var hookProcPtr = new User32.WNDPROCINT(HookProc);
-            if (_pageSettings == null)
+            if (_pageSettings is null)
             {
                 throw new ArgumentException(SR.PSDcantShowWithoutPage);
             }
@@ -288,10 +289,14 @@ namespace System.Windows.Forms
             if (EnableMetric)
             {
                 //take the Units of Measurement while determining the PrinterUnits...
-                var sb = new StringBuilder(2);
-                int result = UnsafeNativeMethods.GetLocaleInfo(NativeMethods.LOCALE_USER_DEFAULT, NativeMethods.LOCALE_IMEASURE, sb, sb.Capacity);
+                Span<char> buffer = stackalloc char[2];
+                int result;
+                fixed (char* pBuffer = buffer)
+                {
+                    result = Kernel32.GetLocaleInfoEx(Kernel32.LOCALE_NAME_USER_DEFAULT, Kernel32.LCTYPE.IMEASURE, pBuffer, 2);
+                }
 
-                if (result > 0 && int.Parse(sb.ToString(), CultureInfo.InvariantCulture) == 0)
+                if (result > 0 && int.Parse(buffer, NumberStyles.Integer, CultureInfo.InvariantCulture) == 0)
                 {
                     toUnit = PrinterUnit.HundredthsOfAMillimeter;
                 }

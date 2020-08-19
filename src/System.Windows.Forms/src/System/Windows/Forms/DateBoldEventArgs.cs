@@ -20,6 +20,6 @@ namespace System.Windows.Forms
 
         public int Size { get; }
 
-        public int[] DaysToBold { get; set; }
+        public int[]? DaysToBold { get; set; }
     }
 }

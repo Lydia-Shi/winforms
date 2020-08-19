@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using System.Windows.Forms.Layout;
 using System.Collections.Specialized;
@@ -13,17 +15,11 @@ namespace System.Windows.Forms
     internal abstract class ArrangedElement : Component, IArrangedElement
     {
         private Rectangle bounds = Rectangle.Empty;
-        private IArrangedElement parent = null;
-        private BitVector32 state = new BitVector32();
+        private IArrangedElement parent;
+        private BitVector32 state;
         private readonly PropertyStore propertyStore = new PropertyStore();  // Contains all properties that are not always set.
-        private readonly int suspendCount = 0;
 
         private static readonly int stateVisible = BitVector32.CreateMask();
-        private static readonly int stateDisposing = BitVector32.CreateMask(stateVisible);
-        private static readonly int stateLocked = BitVector32.CreateMask(stateDisposing);
-
-        private static readonly int PropControlsCollection = PropertyStore.CreateKey();
-        private readonly Control spacer = new Control();
 
         internal ArrangedElement()
         {
@@ -79,12 +75,10 @@ namespace System.Windows.Forms
             get { return CommonProperties.GetMargin(this); }
             set
             {
-
                 Debug.Assert((value.Right >= 0 && value.Left >= 0 && value.Top >= 0 && value.Bottom >= 0), "who's setting margin negative?");
                 value = LayoutUtils.ClampNegativePaddingToZero(value);
                 if (Margin != value)
                 { CommonProperties.SetMargin(this, value); }
-
             }
         }
 
@@ -168,10 +162,7 @@ namespace System.Windows.Forms
 
         public virtual void PerformLayout(IArrangedElement container, string propertyName)
         {
-            if (suspendCount <= 0)
-            {
-                OnLayout(new LayoutEventArgs(container, propertyName));
-            }
+            OnLayout(new LayoutEventArgs(container, propertyName));
         }
 
         protected virtual void OnLayout(LayoutEventArgs e)
@@ -201,9 +192,5 @@ namespace System.Windows.Forms
                 OnBoundsChanged(oldBounds, bounds);
             }
         }
-
     }
-
 }
-
-

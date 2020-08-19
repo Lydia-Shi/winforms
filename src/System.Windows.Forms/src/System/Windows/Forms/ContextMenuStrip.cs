@@ -2,28 +2,24 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.InteropServices;
 
 namespace System.Windows.Forms
 {
-    /// <devdoc/> this class is just a conceptual wrapper around ToolStripDropDownMenu. </summary>
-    [
-    ComVisible(true),
-    ClassInterface(ClassInterfaceType.AutoDispatch),
-    DefaultEvent(nameof(Opening)),
-    SRDescription(nameof(SR.DescriptionContextMenuStrip))
-    ]
+    /// <summary>
+    ///  This class is just a conceptual wrapper around ToolStripDropDownMenu.
+    /// </summary>
+    [DefaultEvent(nameof(Opening))]
+    [SRDescription(nameof(SR.DescriptionContextMenuStrip))]
     public class ContextMenuStrip : ToolStripDropDownMenu
     {
-        /// <summary>
-        ///  Summary of ContextMenuStrip.
-        /// </summary>
         public ContextMenuStrip(IContainer container) : base()
         {
             // this constructor ensures ContextMenuStrip is disposed properly since its not parented to the form.
-            if (container == null)
+            if (container is null)
             {
                 throw new ArgumentNullException(nameof(container));
             }
@@ -39,11 +35,9 @@ namespace System.Windows.Forms
             base.Dispose(disposing);
         }
 
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.ContextMenuStripSourceControlDescr))
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.ContextMenuStripSourceControlDescr))]
         public Control SourceControl
         {
             get
@@ -84,7 +78,6 @@ namespace System.Windows.Forms
                     ToolStripMenuItem menuItem = item as ToolStripMenuItem;
                     contextMenuStrip.Items.Add(menuItem.Clone());
                 }
-
             }
             return contextMenuStrip;
         }

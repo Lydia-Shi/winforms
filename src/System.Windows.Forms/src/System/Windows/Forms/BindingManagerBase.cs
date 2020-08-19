@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Reflection;
@@ -11,14 +13,14 @@ namespace System.Windows.Forms
     public abstract class BindingManagerBase
     {
         private BindingsCollection _bindings;
-        private bool _pullingData = false;
+        private bool _pullingData;
 
         protected EventHandler onCurrentChangedHandler; // Don't rename (breaking change)
 
         protected EventHandler onPositionChangedHandler; // Don't rename (breaking change)
 
         // Hook BindingComplete events on all owned Binding objects, and propagate those events through our own BindingComplete event
-        private BindingCompleteEventHandler _onBindingCompleteHandler = null;
+        private BindingCompleteEventHandler _onBindingCompleteHandler;
 
         // same deal about the new currentItemChanged event
         private protected EventHandler _onCurrentItemChangedHandler;
@@ -30,7 +32,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (_bindings == null)
+                if (_bindings is null)
                 {
                     _bindings = new ListManagerBindingsCollection(this);
 
@@ -134,7 +136,7 @@ namespace System.Windows.Forms
                     }
                 }
 
-                if (itemProps == null)
+                if (itemProps is null)
                 {
                     // Use the properties on the type of the first element in the list
                     // if offset == 0, then this means that the first dataSource did not have a strongly typed Item property.
@@ -165,7 +167,6 @@ namespace System.Windows.Forms
                         }
                     }
                 }
-
             }
             else
             {

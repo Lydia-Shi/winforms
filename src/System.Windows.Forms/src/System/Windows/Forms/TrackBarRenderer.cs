@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using System.Windows.Forms.VisualStyles;
 
@@ -10,29 +12,18 @@ namespace System.Windows.Forms
     /// <summary>
     ///  This is a rendering class for the TrackBar control.
     /// </summary>
-    public sealed class TrackBarRenderer
+    public static class TrackBarRenderer
     {
         //Make this per-thread, so that different threads can safely use these methods.
         [ThreadStatic]
         private static VisualStyleRenderer visualStyleRenderer = null;
         const int lineWidth = 2;
 
-        //cannot instantiate
-        private TrackBarRenderer()
-        {
-        }
-
         /// <summary>
         ///  Returns true if this class is supported for the current OS and user/application settings,
         ///  otherwise returns false.
         /// </summary>
-        public static bool IsSupported
-        {
-            get
-            {
-                return VisualStyleRenderer.IsSupported; // no downlevel support
-            }
-        }
+        public static bool IsSupported => VisualStyleRenderer.IsSupported; // no downlevel support
 
         /// <summary>
         ///  Renders a horizontal track.
@@ -119,7 +110,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawHorizontalTicks(Graphics g, Rectangle bounds, int numTicks, EdgeStyle edgeStyle)
         {
-            if (numTicks <= 0 || bounds.Height <= 0 || bounds.Width <= 0 || g == null)
+            if (numTicks <= 0 || bounds.Height <= 0 || bounds.Width <= 0 || g is null)
             {
                 return;
             }
@@ -149,7 +140,7 @@ namespace System.Windows.Forms
         /// </summary>
         public static void DrawVerticalTicks(Graphics g, Rectangle bounds, int numTicks, EdgeStyle edgeStyle)
         {
-            if (numTicks <= 0 || bounds.Height <= 0 || bounds.Width <= 0 || g == null)
+            if (numTicks <= 0 || bounds.Height <= 0 || bounds.Width <= 0 || g is null)
             {
                 return;
             }
@@ -216,7 +207,7 @@ namespace System.Windows.Forms
 
         private static void InitializeRenderer(VisualStyleElement element, int state)
         {
-            if (visualStyleRenderer == null)
+            if (visualStyleRenderer is null)
             {
                 visualStyleRenderer = new VisualStyleRenderer(element.ClassName, element.Part, state);
             }

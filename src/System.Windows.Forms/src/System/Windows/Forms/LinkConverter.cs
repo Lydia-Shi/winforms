@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.ComponentModel.Design.Serialization;
 using System.Globalization;
@@ -55,7 +57,7 @@ namespace System.Windows.Forms
                 }
 
                 // Parse 2 integer values.
-                if (culture == null)
+                if (culture is null)
                 {
                     culture = CultureInfo.CurrentCulture;
                 }
@@ -95,7 +97,7 @@ namespace System.Windows.Forms
             {
                 if (destinationType == typeof(string))
                 {
-                    if (culture == null)
+                    if (culture is null)
                     {
                         culture = CultureInfo.CurrentCulture;
                     }
@@ -112,7 +114,7 @@ namespace System.Windows.Forms
 
                 if (destinationType == typeof(InstanceDescriptor))
                 {
-                    if (link.LinkData == null)
+                    if (link.LinkData is null)
                     {
                         return new InstanceDescriptor(
                             typeof(LinkLabel.Link).GetConstructor(new Type[] { typeof(int), typeof(int) }),
@@ -133,4 +135,3 @@ namespace System.Windows.Forms
         }
     }
 }
-

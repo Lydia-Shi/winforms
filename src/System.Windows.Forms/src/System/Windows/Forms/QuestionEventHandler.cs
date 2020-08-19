@@ -8,5 +8,5 @@ namespace System.Windows.Forms
     ///  Describes a delegate for an event that has a QuestionEventArgs as
     ///  a parameter.
     /// </summary>
-    public delegate void QuestionEventHandler(object sender, QuestionEventArgs e);
+    public delegate void QuestionEventHandler(object? sender, QuestionEventArgs e);
 }

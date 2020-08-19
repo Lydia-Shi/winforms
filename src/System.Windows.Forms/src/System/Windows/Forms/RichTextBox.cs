@@ -2,6 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
+using System.Buffers;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -12,8 +15,8 @@ using System.Text;
 using System.Windows.Forms.Layout;
 using Microsoft.Win32;
 using static Interop;
+using static Interop.Richedit;
 using IComDataObject = System.Runtime.InteropServices.ComTypes.IDataObject;
-using Util = System.Windows.Forms.NativeMethods.Util;
 
 namespace System.Windows.Forms
 {
@@ -21,12 +24,9 @@ namespace System.Windows.Forms
     ///  Rich Text control. The RichTextBox is a control that contains formatted text.
     ///  It supports font selection, boldface, and other type attributes.
     /// </summary>
-    [ClassInterface(ClassInterfaceType.AutoDispatch),
-     ComVisible(true),
-     Docking(DockingBehavior.Ask),
-     Designer("System.Windows.Forms.Design.RichTextBoxDesigner, " + AssemblyRef.SystemDesign),
-     SRDescription(nameof(SR.DescriptionRichTextBox))
-   ]
+    [Docking(DockingBehavior.Ask)]
+    [Designer("System.Windows.Forms.Design.RichTextBoxDesigner, " + AssemblyRef.SystemDesign)]
+    [SRDescription(nameof(SR.DescriptionRichTextBox))]
     public class RichTextBox : TextBoxBase
     {
         static TraceSwitch richTextDbg;
@@ -34,7 +34,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (richTextDbg == null)
+                if (richTextDbg is null)
                 {
                     richTextDbg = new TraceSwitch("RichTextDbg", "Debug info about RichTextBox");
                 }
@@ -59,7 +59,7 @@ namespace System.Windows.Forms
         // This is where we store the reched library.
         private static IntPtr moduleHandle;
 
-        private static readonly string SZ_RTF_TAG = "{\\rtf";
+        private const string SZ_RTF_TAG = "{\\rtf";
         private const int CHAR_BUFFER_LEN = 512;
 
         // Event objects
@@ -85,7 +85,7 @@ namespace System.Windows.Forms
         //
         static int logPixelsX;
         static int logPixelsY;
-        Stream editStream = null;
+        Stream editStream;
         float zoomMultiplier = 1.0f;
 
         // used to decide when to fire the selectionChange event.
@@ -97,7 +97,7 @@ namespace System.Windows.Forms
         private static int[] shortcutsToDisable;
         private static int richEditMajorVersion = 3;
 
-        private BitVector32 richTextBoxFlags = new BitVector32();
+        private BitVector32 richTextBoxFlags;
         private static readonly BitVector32.Section autoWordSelectionSection = BitVector32.CreateSection(1);
         private static readonly BitVector32.Section showSelBarSection = BitVector32.CreateSection(1, autoWordSelectionSection);
         private static readonly BitVector32.Section autoUrlDetectSection = BitVector32.CreateSection(1, showSelBarSection);
@@ -167,32 +167,23 @@ namespace System.Windows.Forms
         ///  Note: this works differently than other Controls' AutoSize, so we're hiding
         ///  it to avoid confusion.
         /// </summary>
-        [
-        DefaultValue(false),
-        RefreshProperties(RefreshProperties.Repaint),
-        Browsable(false), EditorBrowsable(EditorBrowsableState.Never),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)
-        ]
+        [DefaultValue(false)]
+        [RefreshProperties(RefreshProperties.Repaint)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
         public override bool AutoSize
         {
-            get
-            {
-                return base.AutoSize;
-            }
-            set
-            {
-                base.AutoSize = value;
-            }
+            get => base.AutoSize;
+            set => base.AutoSize = value;
         }
 
         /// <summary>
         ///  Controls whether whether mouse selection snaps to whole words.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.RichTextBoxAutoWordSelection))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.RichTextBoxAutoWordSelection))]
         public bool AutoWordSelection
         {
             get { return richTextBoxFlags[autoWordSelectionSection] != 0; }
@@ -201,47 +192,41 @@ namespace System.Windows.Forms
                 richTextBoxFlags[autoWordSelectionSection] = value ? 1 : 0;
                 if (IsHandleCreated)
                 {
-                    SendMessage(RichEditMessages.EM_SETOPTIONS,
-                                value ? RichTextBoxConstants.ECOOP_OR : RichTextBoxConstants.ECOOP_XOR,
-                                RichTextBoxConstants.ECO_AUTOWORDSELECTION);
+                    User32.SendMessageW(
+                        this,
+                        (User32.WM)EM.SETOPTIONS,
+                        (IntPtr)(value ? ECOOP.OR : ECOOP.XOR),
+                        (IntPtr)ECO.AUTOWORDSELECTION);
                 }
             }
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override Image BackgroundImage
         {
-            get
-            {
-                return base.BackgroundImage;
-            }
-            set
-            {
-                base.BackgroundImage = value;
-            }
+            get => base.BackgroundImage;
+            set => base.BackgroundImage = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler BackgroundImageChanged
         {
             add => base.BackgroundImageChanged += value;
             remove => base.BackgroundImageChanged -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public override ImageLayout BackgroundImageLayout
         {
-            get
-            {
-                return base.BackgroundImageLayout;
-            }
-            set
-            {
-                base.BackgroundImageLayout = value;
-            }
+            get => base.BackgroundImageLayout;
+            set => base.BackgroundImageLayout = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler BackgroundImageLayoutChanged
         {
             add => base.BackgroundImageLayoutChanged += value;
@@ -252,12 +237,10 @@ namespace System.Windows.Forms
         ///  Returns the amount of indent used in a RichTextBox control when
         ///  SelectionBullet is set to true.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(0),
-        Localizable(true),
-        SRDescription(nameof(SR.RichTextBoxBulletIndent))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(0)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.RichTextBoxBulletIndent))]
         public int BulletIndent
         {
             get
@@ -267,7 +250,6 @@ namespace System.Windows.Forms
 
             set
             {
-
                 if (value < 0)
                 {
                     throw new ArgumentOutOfRangeException(nameof(value), value, string.Format(SR.InvalidArgument, nameof(BulletIndent), value));
@@ -300,21 +282,16 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Whether or not there are actions that can be Redone on the RichTextBox control.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxCanRedoDescr))
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxCanRedoDescr))]
         public bool CanRedo
         {
             get
             {
                 if (IsHandleCreated)
                 {
-                    bool b;
-                    b = unchecked((int)(long)SendMessage(RichEditMessages.EM_CANREDO, 0, 0)) != 0;
-
-                    return b;
+                    return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)EM.CANREDO)) != 0;
                 }
                 return false;
             }
@@ -356,7 +333,7 @@ namespace System.Windows.Forms
                 }
 
                 CreateParams cp = base.CreateParams;
-                cp.ClassName = RichTextBoxConstants.WC_RICHEDITW_41;
+                cp.ClassName = ComCtl32.WindowClasses.MSFTEDIT_CLASS;
 
                 if (Multiline)
                 {
@@ -366,7 +343,7 @@ namespace System.Windows.Forms
                         cp.Style |= (int)User32.WS.HSCROLL;
                         if (((int)ScrollBars & RichTextBoxConstants.RTB_FORCE) != 0)
                         {
-                            cp.Style |= RichTextBoxConstants.ES_DISABLENOSCROLL;
+                            cp.Style |= (int)ES.DISABLENOSCROLL;
                         }
                     }
 
@@ -375,7 +352,7 @@ namespace System.Windows.Forms
                         cp.Style |= (int)User32.WS.VSCROLL;
                         if (((int)ScrollBars & RichTextBoxConstants.RTB_FORCE) != 0)
                         {
-                            cp.Style |= RichTextBoxConstants.ES_DISABLENOSCROLL;
+                            cp.Style |= (int)ES.DISABLENOSCROLL;
                         }
                     }
                 }
@@ -400,11 +377,9 @@ namespace System.Windows.Forms
         ///  already present in the RichTextBox control; it only affects text which is entered after the
         ///  property is changed.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(true),
-        SRDescription(nameof(SR.RichTextBoxDetectURLs))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(true)]
+        [SRDescription(nameof(SR.RichTextBoxDetectURLs))]
         public bool DetectUrls
         {
             get
@@ -418,7 +393,7 @@ namespace System.Windows.Forms
                     richTextBoxFlags[autoUrlDetectSection] = value ? 1 : 0;
                     if (IsHandleCreated)
                     {
-                        SendMessage(RichEditMessages.EM_AUTOURLDETECT, value ? 1 : 0, 0);
+                        User32.SendMessageW(this, (User32.WM)EM.AUTOURLDETECT, PARAM.FromBool(value));
                         RecreateHandle();
                     }
                 }
@@ -437,11 +412,9 @@ namespace System.Windows.Forms
         ///  We can't just enable drag/drop of text by default: it's a breaking change.
         ///  Should be false by default.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.RichTextBoxEnableAutoDragDrop))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.RichTextBoxEnableAutoDragDrop))]
         public bool EnableAutoDragDrop
         {
             get
@@ -457,10 +430,7 @@ namespace System.Windows.Forms
 
         public override Color ForeColor
         {
-            get
-            {
-                return base.ForeColor;
-            }
+            get => base.ForeColor;
             set
             {
                 if (IsHandleCreated)
@@ -479,17 +449,14 @@ namespace System.Windows.Forms
 
         public override Font Font
         {
-            get
-            {
-                return base.Font;
-            }
+            get => base.Font;
             set
             {
                 if (IsHandleCreated)
                 {
                     if (User32.GetWindowTextLengthW(new HandleRef(this, Handle)) > 0)
                     {
-                        if (value == null)
+                        if (value is null)
                         {
                             base.Font = null;
                             SetCharFormatFont(false, Font);
@@ -499,7 +466,7 @@ namespace System.Windows.Forms
                             try
                             {
                                 Font f = GetCharFormatFont(false);
-                                if (f == null || !f.Equals(value))
+                                if (f is null || !f.Equals(value))
                                 {
                                     SetCharFormatFont(false, value);
                                     // update controlfont from "resolved" font from the attempt
@@ -560,24 +527,18 @@ namespace System.Windows.Forms
         ///  The IMF_AUTOFONT flag is set by default.
         ///  The IMF_AUTOKEYBOARD and IMF_IMECANCELCOMPLETE flags are cleared by default.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public RichTextBoxLanguageOptions LanguageOption
         {
             get
             {
-                RichTextBoxLanguageOptions opt;
                 if (IsHandleCreated)
                 {
-                    opt = (RichTextBoxLanguageOptions)UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETLANGOPTIONS, 0, 0);
+                    return (RichTextBoxLanguageOptions)User32.SendMessageW(this, (User32.WM)EM.GETLANGOPTIONS);
                 }
-                else
-                {
-                    opt = languageOption;
-                }
-                return opt;
+
+                return languageOption;
             }
             set
             {
@@ -586,7 +547,7 @@ namespace System.Windows.Forms
                     languageOption = value;
                     if (IsHandleCreated)
                     {
-                        UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETLANGOPTIONS, 0, (int)value);
+                        User32.SendMessageW(this, (User32.WM)EM.SETLANGOPTIONS, IntPtr.Zero, (IntPtr)value);
                     }
                 }
             }
@@ -598,31 +559,17 @@ namespace System.Windows.Forms
             set { richTextBoxFlags[linkcursorSection] = value ? 1 : 0; }
         }
 
-        [
-        DefaultValue(int.MaxValue),
-        ]
+        [DefaultValue(int.MaxValue)]
         public override int MaxLength
         {
-            get
-            {
-                return base.MaxLength;
-            }
-            set
-            {
-                base.MaxLength = value;
-            }
+            get => base.MaxLength;
+            set => base.MaxLength = value;
         }
         [DefaultValue(true)]
         public override bool Multiline
         {
-            get
-            {
-                return base.Multiline;
-            }
-            set
-            {
-                base.Multiline = value;
-            }
+            get => base.Multiline;
+            set => base.Multiline = value;
         }
 
         private bool ProtectedError
@@ -638,12 +585,10 @@ namespace System.Windows.Forms
         /// </summary>
         //NOTE: This is overridable, because we want people to be able to
         //      mess with the names if necessary...?
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxRedoActionNameDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxRedoActionNameDescr))]
         public string RedoActionName
         {
             get
@@ -653,24 +598,21 @@ namespace System.Windows.Forms
                     return "";
                 }
 
-                int n;
-                n = unchecked((int)(long)SendMessage(RichEditMessages.EM_GETREDONAME, 0, 0));
+                int n = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)EM.GETREDONAME));
                 return GetEditorActionName(n);
             }
         }
 
         //Description: Specifies whether rich text formatting keyboard shortcuts are enabled.
-        [
-        DefaultValue(true),
-        Browsable(false),
-        EditorBrowsable(EditorBrowsableState.Never)
-        ]
+        [DefaultValue(true)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool RichTextShortcutsEnabled
         {
             get { return richTextBoxFlags[richTextShortcutsEnabledSection] != 0; }
             set
             {
-                if (shortcutsToDisable == null)
+                if (shortcutsToDisable is null)
                 {
                     shortcutsToDisable = new int[] { (int)Shortcut.CtrlL, (int)Shortcut.CtrlR, (int)Shortcut.CtrlE, (int)Shortcut.CtrlJ };
                 }
@@ -681,12 +623,10 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The right margin of a RichTextBox control.  A nonzero margin implies WordWrap.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(0),
-        Localizable(true),
-        SRDescription(nameof(SR.RichTextBoxRightMargin))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(0)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.RichTextBoxRightMargin))]
         public int RightMargin
         {
             get
@@ -712,18 +652,8 @@ namespace System.Windows.Forms
                     }
                     else if (IsHandleCreated)
                     {
-                        IntPtr hDC = UnsafeNativeMethods.CreateIC("DISPLAY", null, null, new HandleRef(null, IntPtr.Zero));
-                        try
-                        {
-                            SendMessage(RichEditMessages.EM_SETTARGETDEVICE, hDC, (IntPtr)Pixel2Twip(hDC, value, true));
-                        }
-                        finally
-                        {
-                            if (hDC != IntPtr.Zero)
-                            {
-                                Gdi32.DeleteDC(hDC);
-                            }
-                        }
+                        using var hDC = new Gdi32.CreateDcScope("DISPLAY", null, null, IntPtr.Zero, informationOnly: true);
+                        User32.SendMessageW(this, (User32.WM)EM.SETTARGETDEVICE, (IntPtr)hDC, (IntPtr)Pixel2Twip(value, true));
                     }
                 }
             }
@@ -732,24 +662,22 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The text of a RichTextBox control, including all Rtf codes.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxRTF)),
-        RefreshProperties(RefreshProperties.All)
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxRTF))]
+        [RefreshProperties(RefreshProperties.All)]
         public string Rtf
         {
             get
             {
                 if (IsHandleCreated)
                 {
-                    return StreamOut(RichTextBoxConstants.SF_RTF);
+                    return StreamOut(SF.RTF);
                 }
                 else if (textPlain != null)
                 {
                     ForceHandleCreate();
-                    return StreamOut(RichTextBoxConstants.SF_RTF);
+                    return StreamOut(SF.RTF);
                 }
                 else
                 {
@@ -758,7 +686,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -770,7 +698,7 @@ namespace System.Windows.Forms
 
                 ForceHandleCreate();
                 textRtf = value;
-                StreamIn(value, RichTextBoxConstants.SF_RTF);
+                StreamIn(value, SF.RTF);
                 if (CanRaiseTextChangedEvent)
                 {
                     OnTextChanged(EventArgs.Empty);
@@ -782,12 +710,10 @@ namespace System.Windows.Forms
         ///  The current scrollbar settings for a multi-line rich edit control.
         ///  Possible return values are given by the RichTextBoxScrollBars enumeration.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(RichTextBoxScrollBars.Both),
-        Localizable(true),
-        SRDescription(nameof(SR.RichTextBoxScrollBars))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(RichTextBoxScrollBars.Both)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.RichTextBoxScrollBars))]
         public RichTextBoxScrollBars ScrollBars
         {
             get
@@ -808,7 +734,6 @@ namespace System.Windows.Forms
                     (int)RichTextBoxScrollBars.ForcedVertical,
                     (int)RichTextBoxScrollBars.ForcedBoth))
                 {
-
                     throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(RichTextBoxScrollBars));
                 }
 
@@ -826,41 +751,39 @@ namespace System.Windows.Forms
         /// <summary>
         ///  The alignment of the paragraphs in a RichTextBox control.
         /// </summary>
-        [
-        DefaultValue(HorizontalAlignment.Left),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelAlignment))
-        ]
-        public HorizontalAlignment SelectionAlignment
+        [DefaultValue(HorizontalAlignment.Left)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelAlignment))]
+        public unsafe HorizontalAlignment SelectionAlignment
         {
             get
             {
                 HorizontalAlignment selectionAlignment = HorizontalAlignment.Left;
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    rgxTabs = new int[RichTextBoxConstants.MAX_TAB_STOPS]
+                    cbSize = (uint)sizeof(PARAFORMAT)
                 };
 
                 // get the format for our currently selected paragraph
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
                 // check if alignment has been set yet
-                if ((RichTextBoxConstants.PFM_ALIGNMENT & pf.dwMask) != 0)
+                if ((PFM.ALIGNMENT & pf.dwMask) != 0)
                 {
                     switch (pf.wAlignment)
                     {
-                        case RichTextBoxConstants.PFA_LEFT:
+                        case PFA.LEFT:
                             selectionAlignment = HorizontalAlignment.Left;
                             break;
 
-                        case RichTextBoxConstants.PFA_RIGHT:
+                        case PFA.RIGHT:
                             selectionAlignment = HorizontalAlignment.Right;
                             break;
 
-                        case RichTextBoxConstants.PFA_CENTER:
+                        case PFA.CENTER:
                             selectionAlignment = HorizontalAlignment.Center;
                             break;
                     }
@@ -877,28 +800,28 @@ namespace System.Windows.Forms
                 }
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    dwMask = RichTextBoxConstants.PFM_ALIGNMENT
+                    cbSize = (uint)sizeof(PARAFORMAT),
+                    dwMask = PFM.ALIGNMENT
                 };
                 switch (value)
                 {
-
                     case HorizontalAlignment.Left:
-                        pf.wAlignment = RichTextBoxConstants.PFA_LEFT;
+                        pf.wAlignment = PFA.LEFT;
                         break;
 
                     case HorizontalAlignment.Right:
-                        pf.wAlignment = RichTextBoxConstants.PFA_RIGHT;
+                        pf.wAlignment = PFA.RIGHT;
                         break;
 
                     case HorizontalAlignment.Center:
-                        pf.wAlignment = RichTextBoxConstants.PFA_CENTER;
+                        pf.wAlignment = PFA.CENTER;
                         break;
                 }
 
                 // set the format for our current paragraph or selection
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.SETPARAFORMAT, IntPtr.Zero, ref pf);
             }
         }
 
@@ -906,31 +829,29 @@ namespace System.Windows.Forms
         ///  Determines if a paragraph in the RichTextBox control
         ///  contains the current selection or insertion point has the bullet style.
         /// </summary>
-        [
-        DefaultValue(false),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelBullet))
-        ]
-        public bool SelectionBullet
+        [DefaultValue(false)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelBullet))]
+        public unsafe bool SelectionBullet
         {
             get
             {
                 RichTextBoxSelectionAttribute selectionBullet = RichTextBoxSelectionAttribute.None;
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    rgxTabs = new int[RichTextBoxConstants.MAX_TAB_STOPS]
+                    cbSize = (uint)sizeof(PARAFORMAT)
                 };
 
                 // get the format for our currently selected paragraph
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
                 // check if alignment has been set yet
-                if ((RichTextBoxConstants.PFM_NUMBERING & pf.dwMask) != 0)
+                if ((PFM.NUMBERING & pf.dwMask) != 0)
                 {
-                    if (RichTextBoxConstants.PFN_BULLET == pf.wNumbering)
+                    if (pf.wNumbering == PFN.BULLET)
                     {
                         selectionBullet = RichTextBoxSelectionAttribute.All;
                     }
@@ -947,9 +868,10 @@ namespace System.Windows.Forms
             {
                 ForceHandleCreate();
 
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    dwMask = RichTextBoxConstants.PFM_NUMBERING | RichTextBoxConstants.PFM_OFFSET
+                    cbSize = (uint)sizeof(PARAFORMAT),
+                    dwMask = PFM.NUMBERING | PFM.OFFSET
                 };
 
                 if (!value)
@@ -959,11 +881,11 @@ namespace System.Windows.Forms
                 }
                 else
                 {
-                    pf.wNumbering = RichTextBoxConstants.PFN_BULLET;
-                    pf.dxOffset = Pixel2Twip(IntPtr.Zero, bulletIndent, true);
+                    pf.wNumbering = PFN.BULLET;
+                    pf.dxOffset = Pixel2Twip(bulletIndent, true);
                 }
                 // set the format for our current paragraph or selection
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.SETPARAFORMAT, IntPtr.Zero, ref pf);
             }
         }
 
@@ -972,33 +894,17 @@ namespace System.Windows.Forms
         ///  appears on the baseline (normal), as a superscript above the baseline,
         ///  or as a subscript below the baseline.
         /// </summary>
-        [
-        DefaultValue(0),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelCharOffset))
-        ]
-        public int SelectionCharOffset
+        [DefaultValue(0)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelCharOffset))]
+        public unsafe int SelectionCharOffset
         {
             get
             {
-                int selCharOffset = 0;
-
                 ForceHandleCreate();
-                NativeMethods.CHARFORMATA cf = GetCharFormat(true);
-                // if the effects member contains valid info
-                if ((cf.dwMask & RichTextBoxConstants.CFM_OFFSET) != 0)
-                {
-                    selCharOffset = cf.yOffset;
-                }
-                else
-                {
-                    // The selection contains characters of different offsets,
-                    // so we just return the offset of the first character.
-                    selCharOffset = cf.yOffset;
-                }
-
-                return Twip2Pixel(IntPtr.Zero, selCharOffset, false);
+                CHARFORMAT2W cf = GetCharFormat(true);
+                return Twip2Pixel(cf.yOffset, false);
             }
             set
             {
@@ -1008,18 +914,18 @@ namespace System.Windows.Forms
                 }
 
                 ForceHandleCreate();
-                NativeMethods.CHARFORMATA cf = new NativeMethods.CHARFORMATA
+                var cf = new CHARFORMAT2W
                 {
-                    dwMask = RichTextBoxConstants.CFM_OFFSET,
-                    yOffset = Pixel2Twip(IntPtr.Zero, value, false)
+                    cbSize = (uint)sizeof(CHARFORMAT2W),
+                    dwMask = CFM.OFFSET,
+                    yOffset = Pixel2Twip(value, false)
                 };
 
                 // Set the format information
                 // SendMessage will force the handle to be created if it hasn't already. Normally,
                 // we would cache property values until the handle is created - but for this property,
                 // it's far more simple to just create the handle.
-                //
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETCHARFORMAT, RichTextBoxConstants.SCF_SELECTION, cf);
+                User32.SendMessageW(this, (User32.WM)EM.SETCHARFORMAT, (IntPtr)SCF.SELECTION, ref cf);
             }
         }
 
@@ -1028,11 +934,9 @@ namespace System.Windows.Forms
         ///  RichTextBox control.
         ///  Returns Color.Empty if the selection has more than one color.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelColor))
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelColor))]
         public Color SelectionColor
         {
             get
@@ -1040,9 +944,9 @@ namespace System.Windows.Forms
                 Color selColor = Color.Empty;
 
                 ForceHandleCreate();
-                NativeMethods.CHARFORMATA cf = GetCharFormat(true);
+                CHARFORMAT2W cf = GetCharFormat(true);
                 // if the effects member contains valid info
-                if ((cf.dwMask & RichTextBoxConstants.CFM_COLOR) != 0)
+                if ((cf.dwMask & CFM.COLOR) != 0)
                 {
                     selColor = ColorTranslator.FromOle(cf.crTextColor);
                 }
@@ -1052,13 +956,13 @@ namespace System.Windows.Forms
             set
             {
                 ForceHandleCreate();
-                NativeMethods.CHARFORMATA cf = GetCharFormat(true);
-                cf.dwMask = RichTextBoxConstants.CFM_COLOR;
+                CHARFORMAT2W cf = GetCharFormat(true);
+                cf.dwMask = CFM.COLOR;
                 cf.dwEffects = 0;
                 cf.crTextColor = ColorTranslator.ToWin32(value);
 
                 // set the format information
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETCHARFORMAT, RichTextBoxConstants.SCF_SELECTION, cf);
+                User32.SendMessageW(this, (User32.WM)EM.SETCHARFORMAT, (IntPtr)SCF.SELECTION, ref cf);
             }
         }
 
@@ -1066,12 +970,10 @@ namespace System.Windows.Forms
         ///  The background color of the currently selected text in the RichTextBox control.
         ///  Returns Color.Empty if the selection has more than one color.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelBackColor))
-        ]
-        public Color SelectionBackColor
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelBackColor))]
+        public unsafe Color SelectionBackColor
         {
             get
             {
@@ -1079,13 +981,13 @@ namespace System.Windows.Forms
 
                 if (IsHandleCreated)
                 {
-                    NativeMethods.CHARFORMAT2A cf2 = GetCharFormat2(true);
+                    CHARFORMAT2W cf2 = GetCharFormat(true);
                     // If the effects member contains valid info
-                    if ((cf2.dwEffects & RichTextBoxConstants.CFE_AUTOBACKCOLOR) != 0)
+                    if ((cf2.dwEffects & CFE.AUTOBACKCOLOR) != 0)
                     {
                         selColor = BackColor;
                     }
-                    else if ((cf2.dwMask & RichTextBoxConstants.CFM_BACKCOLOR) != 0)
+                    else if ((cf2.dwMask & CFM.BACKCOLOR) != 0)
                     {
                         selColor = ColorTranslator.FromOle(cf2.crBackColor);
                     }
@@ -1103,18 +1005,21 @@ namespace System.Windows.Forms
                 selectionBackColorToSetOnHandleCreated = value;
                 if (IsHandleCreated)
                 {
-                    NativeMethods.CHARFORMAT2A cf2 = new NativeMethods.CHARFORMAT2A();
+                    var cf2 = new CHARFORMAT2W
+                    {
+                        cbSize = (uint)sizeof(CHARFORMAT2W)
+                    };
                     if (value == Color.Empty)
                     {
-                        cf2.dwEffects = RichTextBoxConstants.CFE_AUTOBACKCOLOR;
+                        cf2.dwEffects = CFE.AUTOBACKCOLOR;
                     }
                     else
                     {
-                        cf2.dwMask = RichTextBoxConstants.CFM_BACKCOLOR;
+                        cf2.dwMask = CFM.BACKCOLOR;
                         cf2.crBackColor = ColorTranslator.ToWin32(value);
                     }
 
-                    UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETCHARFORMAT, RichTextBoxConstants.SCF_SELECTION, cf2);
+                    User32.SendMessageW(this, (User32.WM)EM.SETCHARFORMAT, (IntPtr)SCF.SELECTION, ref cf2);
                 }
             }
         }
@@ -1124,11 +1029,9 @@ namespace System.Windows.Forms
         ///  or the characters(s) immediately following the insertion point in the
         ///  RichTextBox control.  Null if the selection has more than one font.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelFont))
-        ]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelFont))]
         public Font SelectionFont
         {
             get
@@ -1146,47 +1049,46 @@ namespace System.Windows.Forms
         ///  in the selected paragraph(s) (as specified by the SelectionIndent property)
         ///  and the left edge of subsequent lines of text in the same paragraph(s).
         /// </summary>
-        [
-        DefaultValue(0),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelHangingIndent))
-        ]
-        public int SelectionHangingIndent
+        [DefaultValue(0)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelHangingIndent))]
+        public unsafe int SelectionHangingIndent
         {
             get
             {
                 int selHangingIndent = 0;
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    rgxTabs = new int[RichTextBoxConstants.MAX_TAB_STOPS]
+                    cbSize = (uint)sizeof(PARAFORMAT)
                 };
 
                 // get the format for our currently selected paragraph
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
                 // check if alignment has been set yet
-                if ((RichTextBoxConstants.PFM_OFFSET & pf.dwMask) != 0)
+                if ((PFM.OFFSET & pf.dwMask) != 0)
                 {
                     selHangingIndent = pf.dxOffset;
                 }
 
-                return Twip2Pixel(IntPtr.Zero, selHangingIndent, true);
+                return Twip2Pixel(selHangingIndent, true);
             }
             set
             {
                 ForceHandleCreate();
 
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    dwMask = RichTextBoxConstants.PFM_OFFSET,
-                    dxOffset = Pixel2Twip(IntPtr.Zero, value, true)
+                    cbSize = (uint)sizeof(PARAFORMAT),
+                    dwMask = PFM.OFFSET,
+                    dxOffset = Pixel2Twip(value, true)
                 };
 
                 // set the format for our current paragraph or selection
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.SETPARAFORMAT, IntPtr.Zero, ref pf);
             }
         }
 
@@ -1195,47 +1097,46 @@ namespace System.Windows.Forms
         ///  the left edge of the text that is selected or added at the current
         ///  insertion point.
         /// </summary>
-        [
-        DefaultValue(0),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelIndent))
-        ]
-        public int SelectionIndent
+        [DefaultValue(0)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelIndent))]
+        public unsafe int SelectionIndent
         {
             get
             {
                 int selIndent = 0;
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    rgxTabs = new int[RichTextBoxConstants.MAX_TAB_STOPS]
+                    cbSize = (uint)sizeof(PARAFORMAT)
                 };
 
                 // get the format for our currently selected paragraph
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
                 // check if alignment has been set yet
-                if ((RichTextBoxConstants.PFM_STARTINDENT & pf.dwMask) != 0)
+                if ((PFM.STARTINDENT & pf.dwMask) != 0)
                 {
                     selIndent = pf.dxStartIndent;
                 }
 
-                return Twip2Pixel(IntPtr.Zero, selIndent, true);
+                return Twip2Pixel(selIndent, true);
             }
             set
             {
                 ForceHandleCreate();
 
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    dwMask = RichTextBoxConstants.PFM_STARTINDENT,
-                    dxStartIndent = Pixel2Twip(IntPtr.Zero, value, true)
+                    cbSize = (uint)sizeof(PARAFORMAT),
+                    dwMask = PFM.STARTINDENT,
+                    dxStartIndent = Pixel2Twip(value, true)
                 };
 
                 // set the format for our current paragraph or selection
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.SETPARAFORMAT, IntPtr.Zero, ref pf);
             }
         }
 
@@ -1243,17 +1144,14 @@ namespace System.Windows.Forms
         ///  Gets or sets the number of characters selected in the text
         ///  box.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.TextBoxSelectionLengthDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.TextBoxSelectionLengthDescr))]
         public override int SelectionLength
         {
             get
             {
-
                 if (!IsHandleCreated)
                 {
                     return base.SelectionLength;
@@ -1266,33 +1164,27 @@ namespace System.Windows.Forms
                 //
                 return SelectedText.Length;
             }
-
-            set
-            {
-                base.SelectionLength = value;
-            }
+            set => base.SelectionLength = value;
         }
 
         /// <summary>
         ///  true if the current selection prevents any changes to its contents.
         /// </summary>
-        [
-        DefaultValue(false),
-        SRDescription(nameof(SR.RichTextBoxSelProtected)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
-        ]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.RichTextBoxSelProtected))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SelectionProtected
         {
             get
             {
                 ForceHandleCreate();
-                return GetCharFormat(RichTextBoxConstants.CFM_PROTECTED, RichTextBoxConstants.CFM_PROTECTED) == RichTextBoxSelectionAttribute.All;
+                return GetCharFormat(CFM.PROTECTED, CFE.PROTECTED) == RichTextBoxSelectionAttribute.All;
             }
             set
             {
                 ForceHandleCreate();
-                SetCharFormat(RichTextBoxConstants.CFM_PROTECTED, value ? RichTextBoxConstants.CFE_PROTECTED : 0, RichTextBoxSelectionAttribute.All);
+                SetCharFormat(CFM.PROTECTED, value ? CFE.PROTECTED : 0, RichTextBoxSelectionAttribute.All);
             }
         }
 
@@ -1300,28 +1192,26 @@ namespace System.Windows.Forms
         ///  The currently selected text of a RichTextBox control, including
         ///  all Rtf codes.
         /// </summary>
-        [
-        DefaultValue(""),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelRTF))
-        ]
+        [DefaultValue("")]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelRTF))]
         public string SelectedRtf
         {
             get
             {
                 ForceHandleCreate();
-                return StreamOut(RichTextBoxConstants.SFF_SELECTION | RichTextBoxConstants.SF_RTF);
+                return StreamOut(SF.F_SELECTION | SF.RTF);
             }
             set
             {
                 ForceHandleCreate();
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
 
-                StreamIn(value, RichTextBoxConstants.SFF_SELECTION | RichTextBoxConstants.SF_RTF);
+                StreamIn(value, SF.F_SELECTION | SF.RTF);
             }
         }
 
@@ -1330,13 +1220,11 @@ namespace System.Windows.Forms
         ///  the right edge of the text that is selected or added at the current
         ///  insertion point.
         /// </summary>
-        [
-        DefaultValue(0),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelRightIndent))
-        ]
-        public int SelectionRightIndent
+        [DefaultValue(0)]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelRightIndent))]
+        public unsafe int SelectionRightIndent
         {
             get
             {
@@ -1344,21 +1232,21 @@ namespace System.Windows.Forms
 
                 ForceHandleCreate();
 
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    rgxTabs = new int[RichTextBoxConstants.MAX_TAB_STOPS]
+                    cbSize = (uint)sizeof(PARAFORMAT)
                 };
 
                 // get the format for our currently selected paragraph
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
                 // check if alignment has been set yet
-                if ((RichTextBoxConstants.PFM_RIGHTINDENT & pf.dwMask) != 0)
+                if ((PFM.RIGHTINDENT & pf.dwMask) != 0)
                 {
                     selRightIndent = pf.dxRightIndent;
                 }
 
-                return Twip2Pixel(IntPtr.Zero, selRightIndent, true);
+                return Twip2Pixel(selRightIndent, true);
             }
             set
             {
@@ -1368,47 +1256,46 @@ namespace System.Windows.Forms
                 }
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    dwMask = RichTextBoxConstants.PFM_RIGHTINDENT,
-                    dxRightIndent = Pixel2Twip(IntPtr.Zero, value, true)
+                    cbSize = (uint)sizeof(PARAFORMAT),
+                    dwMask = PFM.RIGHTINDENT,
+                    dxRightIndent = Pixel2Twip(value, true)
                 };
 
                 // set the format for our current paragraph or selection
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.SETPARAFORMAT, IntPtr.Zero, ref pf);
             }
         }
 
         /// <summary>
         ///  The absolute tab positions (in pixels) of text in a RichTextBox control.
         /// </summary>
-        [
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelTabs))
-        ]
-        public int[] SelectionTabs
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelTabs))]
+        public unsafe int[] SelectionTabs
         {
             get
             {
                 int[] selTabs = Array.Empty<int>();
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    rgxTabs = new int[RichTextBoxConstants.MAX_TAB_STOPS]
+                    cbSize = (uint)sizeof(PARAFORMAT)
                 };
 
                 // get the format for our currently selected paragraph
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
                 // check if alignment has been set yet
-                if ((RichTextBoxConstants.PFM_TABSTOPS & pf.dwMask) != 0)
+                if ((PFM.TABSTOPS & pf.dwMask) != 0)
                 {
                     selTabs = new int[pf.cTabCount];
                     for (int x = 0; x < pf.cTabCount; x++)
                     {
-                        selTabs[x] = Twip2Pixel(IntPtr.Zero, pf.rgxTabs[x], true);
+                        selTabs[x] = Twip2Pixel(pf.rgxTabs[x], true);
                     }
                 }
 
@@ -1417,30 +1304,30 @@ namespace System.Windows.Forms
             set
             {
                 // Verify the argument, and throw an error if is bad
-                if (value != null && value.Length > RichTextBoxConstants.MAX_TAB_STOPS)
+                if (value != null && value.Length > MAX_TAB_STOPS)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(SelectionTabs), SR.SelTabCountRange);
+                    throw new ArgumentOutOfRangeException(nameof(value), SR.SelTabCountRange);
                 }
 
                 ForceHandleCreate();
-                NativeMethods.PARAFORMAT pf = new NativeMethods.PARAFORMAT
+                var pf = new PARAFORMAT
                 {
-                    rgxTabs = new int[RichTextBoxConstants.MAX_TAB_STOPS]
+                    cbSize = (uint)sizeof(PARAFORMAT)
                 };
 
                 // get the format for our currently selected paragraph because
                 // we need to get the number of tabstops to copy
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.GETPARAFORMAT, IntPtr.Zero, ref pf);
 
-                pf.cTabCount = (short)((value == null) ? 0 : value.Length);
-                pf.dwMask = RichTextBoxConstants.PFM_TABSTOPS;
+                pf.cTabCount = (short)((value is null) ? 0 : value.Length);
+                pf.dwMask = PFM.TABSTOPS;
                 for (int x = 0; x < pf.cTabCount; x++)
                 {
-                    pf.rgxTabs[x] = Pixel2Twip(IntPtr.Zero, value[x], true);
+                    pf.rgxTabs[x] = Pixel2Twip(value[x], true);
                 }
 
                 // set the format for our current paragraph or selection
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETPARAFORMAT, 0, pf);
+                User32.SendMessageW(this, (User32.WM)EM.SETPARAFORMAT, IntPtr.Zero, ref pf);
             }
         }
 
@@ -1448,25 +1335,21 @@ namespace System.Windows.Forms
         ///  The currently selected text of a RichTextBox control; consists of a
         ///  zero length string if no characters are selected.
         /// </summary>
-        [
-        DefaultValue(""),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelText))
-        ]
+        [DefaultValue("")]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelText))]
         public override string SelectedText
         {
             get
             {
                 ForceHandleCreate();
-
-                string text = StreamOut(RichTextBoxConstants.SFF_SELECTION | RichTextBoxConstants.SF_TEXT | RichTextBoxConstants.SF_UNICODE);
-                return text;
+                return GetTextEx(GT.SELECTION);
             }
             set
             {
                 ForceHandleCreate();
-                StreamIn(value, RichTextBoxConstants.SFF_SELECTION | RichTextBoxConstants.SF_TEXT | RichTextBoxConstants.SF_UNICODE);
+                StreamIn(value, SF.F_SELECTION | SF.TEXT | SF.UNICODE);
             }
         }
 
@@ -1474,12 +1357,10 @@ namespace System.Windows.Forms
         ///  The type of the current selection. The returned value is one
         ///  of the values enumerated in RichTextBoxSelectionType.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxSelTypeDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxSelTypeDescr))]
         public RichTextBoxSelectionTypes SelectionType
         {
             get
@@ -1487,8 +1368,7 @@ namespace System.Windows.Forms
                 ForceHandleCreate();
                 if (SelectionLength > 0)
                 {
-                    int n;
-                    n = unchecked((int)(long)SendMessage(RichEditMessages.EM_SELECTIONTYPE, 0, 0));
+                    int n = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)EM.SELECTIONTYPE));
                     return (RichTextBoxSelectionTypes)n;
                 }
                 else
@@ -1502,11 +1382,9 @@ namespace System.Windows.Forms
         ///  Whether or not the left edge of the control will have a "selection margin" which
         ///  can be used to select entire lines
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.RichTextBoxSelMargin))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.RichTextBoxSelMargin))]
         public bool ShowSelectionMargin
         {
             get { return richTextBoxFlags[showSelBarSection] != 0; }
@@ -1517,19 +1395,18 @@ namespace System.Windows.Forms
                     richTextBoxFlags[showSelBarSection] = value ? 1 : 0;
                     if (IsHandleCreated)
                     {
-                        SendMessage(RichEditMessages.EM_SETOPTIONS,
-                            value ? RichTextBoxConstants.ECOOP_OR :
-                            RichTextBoxConstants.ECOOP_XOR,
-                            RichTextBoxConstants.ECO_SELECTIONBAR);
+                        User32.SendMessageW(
+                            this,
+                            (User32.WM)EM.SETOPTIONS,
+                            (IntPtr)(value ? ECOOP.OR : ECOOP.XOR),
+                            (IntPtr)ECO.SELECTIONBAR);
                     }
                 }
             }
         }
 
-        [
-        Localizable(true),
-        RefreshProperties(RefreshProperties.All)
-        ]
+        [Localizable(true)]
+        [RefreshProperties(RefreshProperties.All)]
         public override string Text
         {
             get
@@ -1545,7 +1422,7 @@ namespace System.Windows.Forms
                     return "";
                 }
 
-                if (!IsHandleCreated && textRtf == null)
+                if (!IsHandleCreated && textRtf is null)
                 {
                     if (textPlain != null)
                     {
@@ -1565,7 +1442,7 @@ namespace System.Windows.Forms
                     //
                     ForceHandleCreate();
 
-                    return StreamOut(RichTextBoxConstants.SF_TEXT | RichTextBoxConstants.SF_UNICODE);
+                    return GetTextEx();
                 }
             }
             set
@@ -1580,13 +1457,13 @@ namespace System.Windows.Forms
                     else
                     {
                         textPlain = null;
-                        if (value == null)
+                        if (value is null)
                         {
                             value = string.Empty;
                         }
-                        StreamIn(value, RichTextBoxConstants.SF_TEXT | RichTextBoxConstants.SF_UNICODE);
+                        StreamIn(value, SF.TEXT | SF.UNICODE);
                         // reset Modified
-                        SendMessage(EditMessages.EM_SETMODIFY, 0, 0);
+                        User32.SendMessageW(this, (User32.WM)User32.EM.SETMODIFY);
                     }
                 }
             }
@@ -1607,17 +1484,17 @@ namespace System.Windows.Forms
         }
 
         [Browsable(false)]
-        public override int TextLength
+        public unsafe override int TextLength
         {
             get
             {
-                NativeMethods.GETTEXTLENGTHEX gtl = new NativeMethods.GETTEXTLENGTHEX
+                var gtl = new GETTEXTLENGTHEX
                 {
-                    flags = RichTextBoxConstants.GTL_NUMCHARS,
-                    codepage = 1200 /* CP_UNICODE */
+                    flags = GTL.NUMCHARS,
+                    codepage = 1200u /* CP_UNICODE */
                 };
 
-                return unchecked((int)(long)UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETTEXTLENGTHEX, gtl, 0 /*ignored*/));
+                return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)EM.GETTEXTLENGTHEX, (IntPtr)(&gtl)));
             }
         }
 
@@ -1628,12 +1505,10 @@ namespace System.Windows.Forms
         /// </summary>
         //NOTE: This is overridable, because we want people to be able to
         //      mess with the names if necessary...?
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        Browsable(false),
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden),
-        SRDescription(nameof(SR.RichTextBoxUndoActionNameDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [SRDescription(nameof(SR.RichTextBoxUndoActionNameDescr))]
         public string UndoActionName
         {
             get
@@ -1643,8 +1518,7 @@ namespace System.Windows.Forms
                     return "";
                 }
 
-                int n;
-                n = unchecked((int)(long)SendMessage(RichEditMessages.EM_GETUNDONAME, 0, 0));
+                int n = unchecked((int)(long)User32.SendMessageW(this, (User32.WM)EM.GETUNDONAME));
                 return GetEditorActionName(n);
             }
         }
@@ -1676,13 +1550,11 @@ namespace System.Windows.Forms
         ///  no zoom (i.e. normal viewing).  Zoom works best with TrueType fonts;
         ///  for non-TrueType fonts, ZoomFactor will be treated as the nearest whole number.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(1.0f),
-        Localizable(true),
-        SRDescription(nameof(SR.RichTextBoxZoomFactor))
-        ]
-        public float ZoomFactor
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(1.0f)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.RichTextBoxZoomFactor))]
+        public unsafe float ZoomFactor
         {
             get
             {
@@ -1690,7 +1562,7 @@ namespace System.Windows.Forms
                 {
                     int numerator = 0;
                     int denominator = 0;
-                    SendMessage(RichEditMessages.EM_GETZOOM, ref numerator, ref denominator);
+                    User32.SendMessageW(this, (User32.WM)EM.GETZOOM, (IntPtr)(&numerator), ref denominator);
                     if ((numerator != 0) && (denominator != 0))
                     {
                         zoomMultiplier = ((float)numerator) / ((float)denominator);
@@ -1721,7 +1593,8 @@ namespace System.Windows.Forms
             }
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.RichTextBoxContentsResized))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RichTextBoxContentsResized))]
         public event ContentsResizedEventHandler ContentsResized
         {
             add => Events.AddHandler(EVENT_REQUESTRESIZE, value);
@@ -1750,70 +1623,80 @@ namespace System.Windows.Forms
             remove => base.DragEnter -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event EventHandler DragLeave
         {
             add => base.DragLeave += value;
             remove => base.DragLeave -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event DragEventHandler DragOver
         {
             add => base.DragOver += value;
             remove => base.DragOver -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event GiveFeedbackEventHandler GiveFeedback
         {
             add => base.GiveFeedback += value;
             remove => base.GiveFeedback -= value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public new event QueryContinueDragEventHandler QueryContinueDrag
         {
             add => base.QueryContinueDrag += value;
             remove => base.QueryContinueDrag -= value;
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.RichTextBoxHScroll))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RichTextBoxHScroll))]
         public event EventHandler HScroll
         {
             add => Events.AddHandler(EVENT_HSCROLL, value);
             remove => Events.RemoveHandler(EVENT_HSCROLL, value);
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.RichTextBoxLinkClick))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RichTextBoxLinkClick))]
         public event LinkClickedEventHandler LinkClicked
         {
             add => Events.AddHandler(EVENT_LINKACTIVATE, value);
             remove => Events.RemoveHandler(EVENT_LINKACTIVATE, value);
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.RichTextBoxIMEChange))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RichTextBoxIMEChange))]
         public event EventHandler ImeChange
         {
             add => Events.AddHandler(EVENT_IMECHANGE, value);
             remove => Events.RemoveHandler(EVENT_IMECHANGE, value);
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.RichTextBoxProtected))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RichTextBoxProtected))]
         public event EventHandler Protected
         {
             add => Events.AddHandler(EVENT_PROTECTED, value);
             remove => Events.RemoveHandler(EVENT_PROTECTED, value);
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.RichTextBoxSelChange))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RichTextBoxSelChange))]
         public event EventHandler SelectionChanged
         {
             add => Events.AddHandler(EVENT_SELCHANGE, value);
             remove => Events.RemoveHandler(EVENT_SELCHANGE, value);
         }
 
-        [SRCategory(nameof(SR.CatBehavior)), SRDescription(nameof(SR.RichTextBoxVScroll))]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [SRDescription(nameof(SR.RichTextBoxVScroll))]
         public event EventHandler VScroll
         {
             add => Events.AddHandler(EVENT_VSCROLL, value);
@@ -1826,10 +1709,7 @@ namespace System.Windows.Forms
         /// </summary>
         public bool CanPaste(DataFormats.Format clipFormat)
         {
-            bool b = false;
-            b = unchecked((int)(long)SendMessage(RichEditMessages.EM_CANPASTE, clipFormat.Id, 0)) != 0;
-
-            return b;
+            return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)EM.CANPASTE, (IntPtr)clipFormat.Id)) != 0;
         }
 
         //DrawToBitmap doesn't work for this control, so we should hide it.  We'll
@@ -1855,7 +1735,7 @@ namespace System.Windows.Forms
                 {
                     case RichTextBox.OUTPUT:
                         {
-                            if (editStream == null)
+                            if (editStream is null)
                             {
                                 editStream = new MemoryStream();
                             }
@@ -2008,28 +1888,23 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Searches the text in a RichTextBox control for a given string.
         /// </summary>
-        public int Find(string str, int start, int end, RichTextBoxFinds options)
+        public unsafe int Find(string str, int start, int end, RichTextBoxFinds options)
         {
+            if (str is null)
+            {
+                throw new ArgumentNullException(nameof(str));
+            }
+
             int textLen = TextLength;
             if (start < 0 || start > textLen)
             {
                 throw new ArgumentOutOfRangeException(nameof(start), start, string.Format(SR.InvalidBoundArgument, nameof(start), start, 0, textLen));
             }
-
             if (end < -1)
             {
                 throw new ArgumentOutOfRangeException(nameof(end), end, string.Format(SR.RichTextFindEndInvalid, end));
             }
 
-            bool selectWord = true;
-            NativeMethods.FINDTEXT ft = new NativeMethods.FINDTEXT
-            {
-                chrg = new Richedit.CHARRANGE(),
-
-                // set up the default values for the FINDTEXT structure, that is
-                // the given string and the whole range of the text stream
-                lpstrText = str ?? throw new ArgumentNullException(nameof(str))
-            };
             if (end == -1)
             {
                 end = textLen;
@@ -2040,17 +1915,16 @@ namespace System.Windows.Forms
                 throw new ArgumentException(string.Format(SR.RichTextFindEndInvalid, end));
             }
 
+            var ft = new FINDTEXTW();
             if ((options & RichTextBoxFinds.Reverse) != RichTextBoxFinds.Reverse)
             {
                 // normal
-                //
                 ft.chrg.cpMin = start;
                 ft.chrg.cpMax = end;
             }
             else
             {
                 // reverse
-                //
                 ft.chrg.cpMin = end;
                 ft.chrg.cpMax = start;
             }
@@ -2071,39 +1945,38 @@ namespace System.Windows.Forms
             }
 
             // set up the options for the search
-            int findOptions = 0;
+            Comdlg32.FR findOptions = 0;
             if ((options & RichTextBoxFinds.WholeWord) == RichTextBoxFinds.WholeWord)
             {
-                findOptions |= RichTextBoxConstants.FR_WHOLEWORD;
+                findOptions |= Comdlg32.FR.WHOLEWORD;
             }
 
             if ((options & RichTextBoxFinds.MatchCase) == RichTextBoxFinds.MatchCase)
             {
-                findOptions |= RichTextBoxConstants.FR_MATCHCASE;
-            }
-
-            if ((options & RichTextBoxFinds.NoHighlight) == RichTextBoxFinds.NoHighlight)
-            {
-                selectWord = false;
+                findOptions |= Comdlg32.FR.MATCHCASE;
             }
 
             if ((options & RichTextBoxFinds.Reverse) != RichTextBoxFinds.Reverse)
             {
                 // The default for RichEdit 2.0 is to search in reverse
-                findOptions |= RichTextBoxConstants.FR_DOWN;
+                findOptions |= Comdlg32.FR.DOWN;
             }
 
             // Perform the find, will return ubyte position
             int position;
-
-            position = (int)UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_FINDTEXT, findOptions, ft);
+            fixed (char* pText = str)
+            {
+                ft.lpstrText = pText;
+                position = (int)User32.SendMessageW(this, (User32.WM)EM.FINDTEXT, (IntPtr)findOptions, ref ft);
+            }
 
             // if we didn't find anything, or we don't have to select what was found,
             // we're done
+            bool selectWord = (options & RichTextBoxFinds.NoHighlight) != RichTextBoxFinds.NoHighlight;
             if (position != -1 && selectWord)
             {
                 // Select the string found, this is done in ubyte units
-                var chrg = new Richedit.CHARRANGE
+                var chrg = new CHARRANGE
                 {
                     cpMin = position
                 };
@@ -2136,9 +2009,8 @@ namespace System.Windows.Forms
                     chrg.cpMax = foundCursor;
                 }
 
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_EXSETSEL, 0, ref chrg);
-                SendMessage(EditMessages.EM_SCROLLCARET, 0, 0);
-
+                User32.SendMessageW(this, (User32.WM)EM.EXSETSEL, IntPtr.Zero, ref chrg);
+                User32.SendMessageW(this, (User32.WM)User32.EM.SCROLLCARET);
             }
 
             return position;
@@ -2173,7 +2045,7 @@ namespace System.Windows.Forms
 
             int textLength = TextLength;
 
-            if (characterSet == null)
+            if (characterSet is null)
             {
                 throw new ArgumentNullException(nameof(characterSet));
             }
@@ -2217,10 +2089,10 @@ namespace System.Windows.Forms
                     cpMin = chrg.cpMin,
                     cpMax = chrg.cpMax
                 }
-            }; // Characters we have slurped into memory in order to search
-            UnsafeNativeMethods.CharBuffer charBuffer;
-            charBuffer = UnsafeNativeMethods.CharBuffer.CreateBuffer(CHAR_BUFFER_LEN + 1);
+            };
 
+            // Characters we have slurped into memory in order to search
+            var charBuffer = new UnicodeCharBuffer(CHAR_BUFFER_LEN + 1);
             txrg.lpstrText = charBuffer.AllocCoTaskMem();
             if (txrg.lpstrText == IntPtr.Zero)
             {
@@ -2266,7 +2138,7 @@ namespace System.Windows.Forms
 
                     // go get the text in this range, if we didn't get any text then punt
                     int len;
-                    len = (int)User32.SendMessageW(this, (User32.WindowMessage)RichEditMessages.EM_GETTEXTRANGE, IntPtr.Zero, ref txrg);
+                    len = (int)User32.SendMessageW(this, (User32.WM)EM.GETTEXTRANGE, IntPtr.Zero, ref txrg);
                     if (len == 0)
                     {
                         chrg.cpMax = chrg.cpMin = -1; // Hit end of control without finding what we wanted
@@ -2280,7 +2152,7 @@ namespace System.Windows.Forms
                     // Loop through our text
                     if (forward)
                     {
-                        // Start at the begining of the buffer
+                        // Start at the beginning of the buffer
                         for (int x = 0; x < len; x++)
                         {
                             // Is it in char set?
@@ -2340,42 +2212,37 @@ namespace System.Windows.Forms
         // Sends set color message to HWND; doesn't call Control.SetForeColor
         private bool InternalSetForeColor(Color value)
         {
-            NativeMethods.CHARFORMATA cf = GetCharFormat(false);
-            if ((cf.dwMask & RichTextBoxConstants.CFM_COLOR) != 0
+            CHARFORMAT2W cf = GetCharFormat(false);
+            if ((cf.dwMask & CFM.COLOR) != 0
                 && ColorTranslator.ToWin32(value) == cf.crTextColor)
             {
-
                 return true;
             }
 
-            cf.dwMask = RichTextBoxConstants.CFM_COLOR;
+            cf.dwMask = CFM.COLOR;
             cf.dwEffects = 0;
             cf.crTextColor = ColorTranslator.ToWin32(value);
-            return SetCharFormat(RichTextBoxConstants.SCF_ALL, cf);
+            return SetCharFormat(SCF.ALL, cf);
         }
 
-        private NativeMethods.CHARFORMATA GetCharFormat(bool fSelection)
+        private unsafe CHARFORMAT2W GetCharFormat(bool fSelection)
         {
-            NativeMethods.CHARFORMATA cf = new NativeMethods.CHARFORMATA();
-            UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETCHARFORMAT, fSelection ? RichTextBoxConstants.SCF_SELECTION : RichTextBoxConstants.SCF_DEFAULT, cf);
+            var cf = new CHARFORMAT2W
+            {
+                cbSize = (uint)sizeof(CHARFORMAT2W)
+            };
+            User32.SendMessageW(this, (User32.WM)EM.GETCHARFORMAT, (IntPtr)(fSelection ? SCF.SELECTION : SCF.DEFAULT), ref cf);
             return cf;
         }
 
-        private NativeMethods.CHARFORMAT2A GetCharFormat2(bool fSelection)
-        {
-            NativeMethods.CHARFORMAT2A cf2 = new NativeMethods.CHARFORMAT2A();
-            UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_GETCHARFORMAT, fSelection ? RichTextBoxConstants.SCF_SELECTION : RichTextBoxConstants.SCF_DEFAULT, cf2);
-            return cf2;
-        }
-
-        private RichTextBoxSelectionAttribute GetCharFormat(int mask, int effect)
+        private RichTextBoxSelectionAttribute GetCharFormat(CFM mask, CFE effect)
         {
             RichTextBoxSelectionAttribute charFormat = RichTextBoxSelectionAttribute.None;
 
             // check to see if the control has been created
             if (IsHandleCreated)
             {
-                NativeMethods.CHARFORMATA cf = GetCharFormat(true);
+                CHARFORMAT2W cf = GetCharFormat(true);
                 // if the effects member contains valid info
                 if ((cf.dwMask & mask) != 0)
                 {
@@ -2394,21 +2261,14 @@ namespace System.Windows.Forms
         {
             ForceHandleCreate();
 
-            NativeMethods.CHARFORMATA cf = GetCharFormat(selectionOnly);
-            if ((cf.dwMask & RichTextBoxConstants.CFM_FACE) == 0)
+            CHARFORMAT2W cf = GetCharFormat(selectionOnly);
+            if ((cf.dwMask & CFM.FACE) == 0)
             {
                 return null;
             }
 
-            string fontName = Encoding.Default.GetString(cf.szFaceName);
-            int index = fontName.IndexOf('\0');
-            if (index != -1)
-            {
-                fontName = fontName.Substring(0, index);
-            }
-
             float fontSize = 13;
-            if ((cf.dwMask & RichTextBoxConstants.CFM_SIZE) != 0)
+            if ((cf.dwMask & CFM.SIZE) != 0)
             {
                 fontSize = (float)cf.yHeight / (float)20.0;
                 if (fontSize == 0 && cf.yHeight > 0)
@@ -2418,29 +2278,29 @@ namespace System.Windows.Forms
             }
 
             FontStyle style = FontStyle.Regular;
-            if ((cf.dwMask & RichTextBoxConstants.CFM_BOLD) != 0 && (cf.dwEffects & RichTextBoxConstants.CFE_BOLD) != 0)
+            if ((cf.dwMask & CFM.BOLD) != 0 && (cf.dwEffects & CFE.BOLD) != 0)
             {
                 style |= FontStyle.Bold;
             }
 
-            if ((cf.dwMask & RichTextBoxConstants.CFM_ITALIC) != 0 && (cf.dwEffects & RichTextBoxConstants.CFE_ITALIC) != 0)
+            if ((cf.dwMask & CFM.ITALIC) != 0 && (cf.dwEffects & CFE.ITALIC) != 0)
             {
                 style |= FontStyle.Italic;
             }
 
-            if ((cf.dwMask & RichTextBoxConstants.CFM_STRIKEOUT) != 0 && (cf.dwEffects & RichTextBoxConstants.CFE_STRIKEOUT) != 0)
+            if ((cf.dwMask & CFM.STRIKEOUT) != 0 && (cf.dwEffects & CFE.STRIKEOUT) != 0)
             {
                 style |= FontStyle.Strikeout;
             }
 
-            if ((cf.dwMask & RichTextBoxConstants.CFM_UNDERLINE) != 0 && (cf.dwEffects & RichTextBoxConstants.CFE_UNDERLINE) != 0)
+            if ((cf.dwMask & CFM.UNDERLINE) != 0 && (cf.dwEffects & CFE.UNDERLINE) != 0)
             {
                 style |= FontStyle.Underline;
             }
 
             try
             {
-                return new Font(fontName, fontSize, style, GraphicsUnit.Point, cf.bCharSet);
+                return new Font(cf.FaceName.ToString(), fontSize, style, GraphicsUnit.Point, cf.bCharSet);
             }
             catch
             {
@@ -2455,7 +2315,7 @@ namespace System.Windows.Forms
         public override int GetCharIndexFromPosition(Point pt)
         {
             var wpt = new Point(pt.X, pt.Y);
-            int index = (int)UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), EditMessages.EM_CHARFROMPOS, 0, ref wpt);
+            int index = (int)User32.SendMessageW(this, (User32.WM)User32.EM.CHARFROMPOS, IntPtr.Zero, ref wpt);
 
             string t = Text;
             // EM_CHARFROMPOS will return an invalid number if the last character in the RichEdit
@@ -2492,13 +2352,13 @@ namespace System.Windows.Forms
         /// </summary>
         public override int GetLineFromCharIndex(int index)
         {
-            return unchecked((int)(long)SendMessage(RichEditMessages.EM_EXLINEFROMCHAR, 0, index));
+            return unchecked((int)(long)User32.SendMessageW(this, (User32.WM)EM.EXLINEFROMCHAR, IntPtr.Zero, (IntPtr)index));
         }
 
         /// <summary>
         ///  Returns the location of the character at the given index.
         /// </summary>
-        public override Point GetPositionFromCharIndex(int index)
+        public unsafe override Point GetPositionFromCharIndex(int index)
         {
             if (richEditMajorVersion == 2)
             {
@@ -2511,7 +2371,7 @@ namespace System.Windows.Forms
             }
 
             var pt = new Point();
-            UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), EditMessages.EM_POSFROMCHAR, ref pt, index);
+            User32.SendMessageW(this, (User32.WM)User32.EM.POSFROMCHAR, (IntPtr)(&pt), (IntPtr)index);
             return pt;
         }
 
@@ -2561,24 +2421,27 @@ namespace System.Windows.Forms
         /// </summary>
         public void LoadFile(Stream data, RichTextBoxStreamType fileType)
         {
-            //valid values are 0x0 to 0x4
+            if (data is null)
+            {
+                throw new ArgumentNullException(nameof(data));
+            }
             if (!ClientUtils.IsEnumValid(fileType, (int)fileType, (int)RichTextBoxStreamType.RichText, (int)RichTextBoxStreamType.UnicodePlainText))
             {
                 throw new InvalidEnumArgumentException(nameof(fileType), (int)fileType, typeof(RichTextBoxStreamType));
             }
 
-            int flags;
+            SF flags;
             switch (fileType)
             {
                 case RichTextBoxStreamType.RichText:
-                    flags = RichTextBoxConstants.SF_RTF;
+                    flags = SF.RTF;
                     break;
                 case RichTextBoxStreamType.PlainText:
                     Rtf = string.Empty;
-                    flags = RichTextBoxConstants.SF_TEXT;
+                    flags = SF.TEXT;
                     break;
                 case RichTextBoxStreamType.UnicodePlainText:
-                    flags = RichTextBoxConstants.SF_UNICODE | RichTextBoxConstants.SF_TEXT;
+                    flags = SF.UNICODE | SF.TEXT;
                     break;
                 default:
                     throw new ArgumentException(SR.InvalidFileType);
@@ -2591,8 +2454,9 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                SendMessage(RichEditMessages.EM_SETBKGNDCOLOR, 0, ColorTranslator.ToWin32(BackColor));
+                User32.SendMessageW(this, (User32.WM)EM.SETBKGNDCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
             }
+
             base.OnBackColorChanged(e);
         }
 
@@ -2655,23 +2519,22 @@ namespace System.Windows.Forms
 
             // This is needed so that the control will fire change and update events
             // even if it is hidden
-            //
-            SendMessage(RichEditMessages.EM_SETEVENTMASK,
-                        0,
-                        RichTextBoxConstants.ENM_PROTECTED | RichTextBoxConstants.ENM_SELCHANGE |
-                        RichTextBoxConstants.ENM_DROPFILES | RichTextBoxConstants.ENM_REQUESTRESIZE |
-                        RichTextBoxConstants.ENM_IMECHANGE | RichTextBoxConstants.ENM_CHANGE |
-                        RichTextBoxConstants.ENM_UPDATE | RichTextBoxConstants.ENM_SCROLL |
-                        RichTextBoxConstants.ENM_KEYEVENTS | RichTextBoxConstants.ENM_MOUSEEVENTS |
-                        RichTextBoxConstants.ENM_SCROLLEVENTS | RichTextBoxConstants.ENM_LINK);
+            User32.SendMessageW(
+                this,
+                (User32.WM)EM.SETEVENTMASK,
+                IntPtr.Zero,
+                (IntPtr)(ENM.PROTECTED | ENM.SELCHANGE |
+                         ENM.DROPFILES | ENM.REQUESTRESIZE |
+                         ENM.IMECHANGE | ENM.CHANGE |
+                         ENM.UPDATE | ENM.SCROLL |
+                         ENM.KEYEVENTS | ENM.MOUSEEVENTS |
+                         ENM.SCROLLEVENTS | ENM.LINK));
 
             int rm = rightMargin;
             rightMargin = 0;
             RightMargin = rm;
 
-            //
-
-            SendMessage(RichEditMessages.EM_AUTOURLDETECT, DetectUrls ? 1 : 0, 0);
+            User32.SendMessageW(this, (User32.WM)EM.AUTOURLDETECT, DetectUrls ? (IntPtr)1 : IntPtr.Zero, IntPtr.Zero);
             if (selectionBackColorToSetOnHandleCreated != Color.Empty)
             {
                 SelectionBackColor = selectionBackColorToSetOnHandleCreated;
@@ -2680,7 +2543,7 @@ namespace System.Windows.Forms
             // Initialize colors before initializing RTF, otherwise CFE_AUTOCOLOR will be in effect
             // and our text will all be Color.WindowText.
             AutoWordSelection = AutoWordSelection;
-            SendMessage(RichEditMessages.EM_SETBKGNDCOLOR, 0, ColorTranslator.ToWin32(BackColor));
+            User32.SendMessageW(this, (User32.WM)EM.SETBKGNDCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
             InternalSetForeColor(ForeColor);
 
             // base sets the Text property.  It's important to do this *after* setting EM_AUTOUrlDETECT.
@@ -2721,8 +2584,11 @@ namespace System.Windows.Forms
             {
                 // If you call SendMessage instead of PostMessage, the control
                 // will resize itself to the size of the parent's client area.  Don't know why...
-                UnsafeNativeMethods.PostMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETOPTIONS, (IntPtr)RichTextBoxConstants.ECOOP_OR,
-                                                (IntPtr)RichTextBoxConstants.ECO_SELECTIONBAR);
+                User32.PostMessageW(
+                    this,
+                    (User32.WM)EM.SETOPTIONS,
+                    (IntPtr)ECOOP.OR,
+                    (IntPtr)ECO.SELECTIONBAR);
             }
 
             if (languageOption != LanguageOption)
@@ -2813,7 +2679,7 @@ namespace System.Windows.Forms
         /// </summary>
         public void Paste(DataFormats.Format clipFormat)
         {
-            UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_PASTESPECIAL, clipFormat.Id, 0);
+            User32.SendMessageW(this, (User32.WM)EM.PASTESPECIAL, (IntPtr)clipFormat.Id);
         }
 
         protected override bool ProcessCmdKey(ref Message m, Keys keyData)
@@ -2834,10 +2700,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Redoes the last undone editing operation.
         /// </summary>
-        public void Redo()
-        {
-            SendMessage(RichEditMessages.EM_REDO, 0, 0);
-        }
+        public void Redo() => User32.SendMessageW(this, (User32.WM)EM.REDO);
 
         //NOTE: Undo is implemented on TextBox
 
@@ -2876,23 +2739,23 @@ namespace System.Windows.Forms
         /// </summary>
         public void SaveFile(Stream data, RichTextBoxStreamType fileType)
         {
-            int flags;
+            SF flags;
             switch (fileType)
             {
                 case RichTextBoxStreamType.RichText:
-                    flags = RichTextBoxConstants.SF_RTF;
+                    flags = SF.RTF;
                     break;
                 case RichTextBoxStreamType.PlainText:
-                    flags = RichTextBoxConstants.SF_TEXT;
+                    flags = SF.TEXT;
                     break;
                 case RichTextBoxStreamType.UnicodePlainText:
-                    flags = RichTextBoxConstants.SF_UNICODE | RichTextBoxConstants.SF_TEXT;
+                    flags = SF.UNICODE | SF.TEXT;
                     break;
                 case RichTextBoxStreamType.RichNoOleObjs:
-                    flags = RichTextBoxConstants.SF_RTFNOOBJS;
+                    flags = SF.RTFNOOBJS;
                     break;
                 case RichTextBoxStreamType.TextTextOleObjs:
-                    flags = RichTextBoxConstants.SF_TEXTIZED;
+                    flags = SF.TEXTIZED;
                     break;
                 default:
                     throw new InvalidEnumArgumentException(nameof(fileType), (int)fileType, typeof(RichTextBoxStreamType));
@@ -2927,16 +2790,7 @@ namespace System.Windows.Forms
 
             if (IsHandleCreated)
             {
-                SendMessage(RichEditMessages.EM_SETZOOM, numerator, denominator);
-
-#if DEBUG
-
-                // DEBUG CODE: Verify that EM_SETZOOM actually set the zoom
-                int n = 0, d = 0;
-                SendMessage(RichEditMessages.EM_GETZOOM, ref n, ref d);
-                Debug.Assert(n == numerator && d == denominator, "EM_SETZOOM failed");
-                // END DEBUG CODE
-#endif
+                User32.SendMessageW(this, (User32.WM)EM.SETZOOM, (IntPtr)numerator, (IntPtr)denominator);
             }
 
             if (numerator != 0)
@@ -2949,13 +2803,14 @@ namespace System.Windows.Forms
             }
         }
 
-        private bool SetCharFormat(int mask, int effect, RichTextBoxSelectionAttribute charFormat)
+        private unsafe bool SetCharFormat(CFM mask, CFE effect, RichTextBoxSelectionAttribute charFormat)
         {
             // check to see if the control has been created
             if (IsHandleCreated)
             {
-                NativeMethods.CHARFORMATA cf = new NativeMethods.CHARFORMATA
+                var cf = new CHARFORMAT2W
                 {
+                    cbSize = (uint)sizeof(CHARFORMAT2W),
                     dwMask = mask
                 };
 
@@ -2972,49 +2827,50 @@ namespace System.Windows.Forms
                 }
 
                 // set the format information
-                return IntPtr.Zero != UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETCHARFORMAT, RichTextBoxConstants.SCF_SELECTION, cf);
+                return User32.SendMessageW(this, (User32.WM)EM.SETCHARFORMAT, (IntPtr)SCF.SELECTION, ref cf) != IntPtr.Zero;
             }
+
             return false;
         }
 
-        private bool SetCharFormat(int charRange, NativeMethods.CHARFORMATA cf)
+        private bool SetCharFormat(SCF charRange, CHARFORMAT2W cf)
         {
-            return IntPtr.Zero != UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETCHARFORMAT, charRange, cf);
+            return User32.SendMessageW(this, (User32.WM)EM.SETCHARFORMAT, (IntPtr)charRange, ref cf) != IntPtr.Zero;
         }
 
         private unsafe void SetCharFormatFont(bool selectionOnly, Font value)
         {
             ForceHandleCreate();
 
-            int dwMask = RichTextBoxConstants.CFM_FACE | RichTextBoxConstants.CFM_SIZE | RichTextBoxConstants.CFM_BOLD |
-                RichTextBoxConstants.CFM_ITALIC | RichTextBoxConstants.CFM_STRIKEOUT | RichTextBoxConstants.CFM_UNDERLINE |
-                RichTextBoxConstants.CFM_CHARSET;
+            CFM dwMask = CFM.FACE | CFM.SIZE | CFM.BOLD |
+                CFM.ITALIC | CFM.STRIKEOUT | CFM.UNDERLINE |
+                CFM.CHARSET;
 
-            int dwEffects = 0;
+            CFE dwEffects = 0;
             if (value.Bold)
             {
-                dwEffects |= RichTextBoxConstants.CFE_BOLD;
+                dwEffects |= CFE.BOLD;
             }
 
             if (value.Italic)
             {
-                dwEffects |= RichTextBoxConstants.CFE_ITALIC;
+                dwEffects |= CFE.ITALIC;
             }
 
             if (value.Strikeout)
             {
-                dwEffects |= RichTextBoxConstants.CFE_STRIKEOUT;
+                dwEffects |= CFE.STRIKEOUT;
             }
 
             if (value.Underline)
             {
-                dwEffects |= RichTextBoxConstants.CFE_UNDERLINE;
+                dwEffects |= CFE.UNDERLINE;
             }
 
             User32.LOGFONTW logFont = User32.LOGFONTW.FromFont(value);
-            NativeMethods.CHARFORMATW charFormat = new NativeMethods.CHARFORMATW
+            var charFormat = new CHARFORMAT2W
             {
-                cbSize = sizeof(NativeMethods.CHARFORMATW),
+                cbSize = (uint)sizeof(CHARFORMAT2W),
                 dwMask = dwMask,
                 dwEffects = dwEffects,
                 yHeight = (int)(value.SizeInPoints * 20),
@@ -3023,50 +2879,48 @@ namespace System.Windows.Forms
                 FaceName = logFont.FaceName
             };
 
-            UnsafeNativeMethods.SendMessage(
-                new HandleRef(this, Handle),
-                RichEditMessages.EM_SETCHARFORMAT,
-                selectionOnly ? RichTextBoxConstants.SCF_SELECTION : RichTextBoxConstants.SCF_ALL,
+            User32.SendMessageW(
+                this,
+                (User32.WM)EM.SETCHARFORMAT,
+                (IntPtr)(selectionOnly ? SCF.SELECTION : SCF.ALL),
                 ref charFormat);
         }
 
-        private static void SetupLogPixels(IntPtr hDC)
+        private static void SetupLogPixels()
         {
-            using ScreenDC dc = ScreenDC.Create();
+            using var dc = User32.GetDcScope.ScreenDC;
             logPixelsX = Gdi32.GetDeviceCaps(dc, Gdi32.DeviceCapability.LOGPIXELSX);
             logPixelsY = Gdi32.GetDeviceCaps(dc, Gdi32.DeviceCapability.LOGPIXELSY);
         }
 
-        private static int Pixel2Twip(IntPtr hDC, int v, bool xDirection)
+        private static int Pixel2Twip(int v, bool xDirection)
         {
-            SetupLogPixels(hDC);
+            SetupLogPixels();
             int logP = xDirection ? logPixelsX : logPixelsY;
             return (int)((((double)v) / logP) * 72.0 * 20.0);
         }
 
-        private static int Twip2Pixel(IntPtr hDC, int v, bool xDirection)
+        private static int Twip2Pixel(int v, bool xDirection)
         {
-            SetupLogPixels(hDC);
+            SetupLogPixels();
             int logP = xDirection ? logPixelsX : logPixelsY;
             return (int)(((((double)v) / 20.0) / 72.0) * logP);
         }
 
-        private void StreamIn(string str, int flags)
+        private void StreamIn(string str, SF flags)
         {
             if (str.Length == 0)
             {
-                // Destroy the selection if callers was setting
-                // selection text
-                //
-                if ((RichTextBoxConstants.SFF_SELECTION & flags) != 0)
+                // Destroy the selection if callers was setting selection text
+                if ((SF.F_SELECTION & flags) != 0)
                 {
-                    SendMessage(WindowMessages.WM_CLEAR, 0, 0);
+                    User32.SendMessageW(this, User32.WM.CLEAR);
                     ProtectedError = false;
                     return;
                 }
+
                 // WM_SETTEXT is allowed even if we have protected text
-                //
-                SendMessage(WindowMessages.WM_SETTEXT, 0, "");
+                User32.SendMessageW(this, User32.WM.SETTEXT, IntPtr.Zero, string.Empty);
                 return;
             }
 
@@ -3078,30 +2932,31 @@ namespace System.Windows.Forms
                 str = str.Substring(0, nullTerminatedLength);
             }
 
-            // get the string into a byte array
+            // Get the string into a byte array
             byte[] encodedBytes;
-            if ((flags & RichTextBoxConstants.SF_UNICODE) != 0)
+            if ((flags & SF.UNICODE) != 0)
             {
                 encodedBytes = Encoding.Unicode.GetBytes(str);
             }
             else
             {
-                encodedBytes = Encoding.Default.GetBytes(str);
+                // Encode using the default code page.
+                encodedBytes = (CodePagesEncodingProvider.Instance.GetEncoding(0) ?? Encoding.UTF8).GetBytes(str);
             }
+
             editStream = new MemoryStream(encodedBytes.Length);
             editStream.Write(encodedBytes, 0, encodedBytes.Length);
             editStream.Position = 0;
             StreamIn(editStream, flags);
         }
 
-        private void StreamIn(Stream data, int flags)
+        private void StreamIn(Stream data, SF flags)
         {
             // clear out the selection only if we are replacing all the text
-            //
-            if ((flags & RichTextBoxConstants.SFF_SELECTION) == 0)
+            if ((flags & SF.F_SELECTION) == 0)
             {
-                var cr = new Richedit.CHARRANGE();
-                UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_EXSETSEL, 0, ref cr);
+                var cr = new CHARRANGE();
+                User32.SendMessageW(this, (User32.WM)EM.EXSETSEL, IntPtr.Zero, ref cr);
             }
 
             try
@@ -3110,14 +2965,16 @@ namespace System.Windows.Forms
                 Debug.Assert(data != null, "StreamIn passed a null stream");
 
                 // If SF_RTF is requested then check for the RTF tag at the start
-                // of the file.  We don't load if the tag is not there
-                //
-                if ((flags & RichTextBoxConstants.SF_RTF) != 0)
+                // of the file.  We don't load if the tag is not there.
+
+                if ((flags & SF.RTF) != 0)
                 {
                     long streamStart = editStream.Position;
                     byte[] bytes = new byte[SZ_RTF_TAG.Length];
                     editStream.Read(bytes, (int)streamStart, SZ_RTF_TAG.Length);
-                    string str = Encoding.Default.GetString(bytes);
+
+                    // Encode using the default encoding.
+                    string str = (CodePagesEncodingProvider.Instance.GetEncoding(0) ?? Encoding.UTF8).GetString(bytes);
                     if (!SZ_RTF_TAG.Equals(str))
                     {
                         throw new ArgumentException(SR.InvalidFileFormat);
@@ -3128,9 +2985,11 @@ namespace System.Windows.Forms
                 }
 
                 int cookieVal = 0;
+
                 // set up structure to do stream operation
-                NativeMethods.EDITSTREAM es = new NativeMethods.EDITSTREAM();
-                if ((flags & RichTextBoxConstants.SF_UNICODE) != 0)
+                var es = new EDITSTREAM();
+
+                if ((flags & SF.UNICODE) != 0)
                 {
                     cookieVal = INPUT | UNICODE;
                 }
@@ -3138,7 +2997,8 @@ namespace System.Windows.Forms
                 {
                     cookieVal = INPUT | ANSI;
                 }
-                if ((flags & RichTextBoxConstants.SF_RTF) != 0)
+
+                if ((flags & SF.RTF) != 0)
                 {
                     cookieVal |= RTF;
                 }
@@ -3146,28 +3006,18 @@ namespace System.Windows.Forms
                 {
                     cookieVal |= TEXTLF;
                 }
-                es.dwCookie = (IntPtr)cookieVal;
-                es.pfnCallback = new NativeMethods.EditStreamCallback(EditStreamProc);
+
+                es.dwCookie = (UIntPtr)cookieVal;
+                var callback = new EDITSTREAMCALLBACK(EditStreamProc);
+                es.pfnCallback = Marshal.GetFunctionPointerForDelegate(callback);
 
                 // gives us TextBox compatible behavior, programatic text change shouldn't
                 // be limited...
-                //
-                SendMessage(RichEditMessages.EM_EXLIMITTEXT, 0, int.MaxValue);
+                User32.SendMessageW(this, (User32.WM)EM.EXLIMITTEXT, IntPtr.Zero, (IntPtr)int.MaxValue);
 
                 // go get the text for the control
-                // Needed for 64-bit
-                if (IntPtr.Size == 8)
-                {
-                    NativeMethods.EDITSTREAM64 es64 = ConvertToEDITSTREAM64(es);
-                    UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_STREAMIN, flags, es64);
-
-                    //Assign back dwError value
-                    es.dwError = GetErrorValue64(es64);
-                }
-                else
-                {
-                    UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_STREAMIN, flags, es);
-                }
+                User32.SendMessageW(this, (User32.WM)EM.STREAMIN, (IntPtr)flags, ref es);
+                GC.KeepAlive(callback);
 
                 UpdateMaxLength();
 
@@ -3185,11 +3035,10 @@ namespace System.Windows.Forms
                 }
 
                 // set the modify tag on the control
-                SendMessage(EditMessages.EM_SETMODIFY, -1, 0);
+                User32.SendMessageW(this, (User32.WM)User32.EM.SETMODIFY, (IntPtr)(-1));
 
                 // EM_GETLINECOUNT will cause the RichTextBox to recalculate its line indexes
-                SendMessage(EditMessages.EM_GETLINECOUNT, 0, 0);
-
+                User32.SendMessageW(this, (User32.WM)User32.EM.GETLINECOUNT);
             }
             finally
             {
@@ -3198,7 +3047,7 @@ namespace System.Windows.Forms
             }
         }
 
-        private string StreamOut(int flags)
+        private string StreamOut(SF flags)
         {
             Stream stream = new MemoryStream();
             StreamOut(stream, flags, false);
@@ -3211,15 +3060,19 @@ namespace System.Windows.Forms
                 byte[] bytes = new byte[streamLength];
                 stream.Read(bytes, 0, streamLength);
 
-                if ((flags & RichTextBoxConstants.SF_UNICODE) != 0)
+                if ((flags & SF.UNICODE) != 0)
                 {
                     result = Encoding.Unicode.GetString(bytes, 0, bytes.Length);
                 }
                 else
                 {
-                    result = Encoding.Default.GetString(bytes, 0, bytes.Length);
+                    // Convert from the current code page
+                    result = (CodePagesEncodingProvider.Instance.GetEncoding(0) ?? Encoding.UTF8).GetString(bytes, 0, bytes.Length);
                 }
-                // workaround ??? for
+
+                // Trimming off a null char is usually a sign of incorrect marshalling.
+                // We should consider removing this in the future, but it would need to
+                // be checked against input strings with a trailing null.
 
                 if (!string.IsNullOrEmpty(result) && (result[result.Length - 1] == '\0'))
                 {
@@ -3230,17 +3083,16 @@ namespace System.Windows.Forms
             return result;
         }
 
-        private void StreamOut(Stream data, int flags, bool includeCrLfs)
+        private void StreamOut(Stream data, SF flags, bool includeCrLfs)
         {
             // set up the EDITSTREAM structure for the callback.
-            Debug.Assert(data != null, "StreamOut passed a null stream");
             editStream = data;
 
             try
             {
                 int cookieVal = 0;
-                NativeMethods.EDITSTREAM es = new NativeMethods.EDITSTREAM();
-                if ((flags & RichTextBoxConstants.SF_UNICODE) != 0)
+                var es = new EDITSTREAM();
+                if ((flags & SF.UNICODE) != 0)
                 {
                     cookieVal = OUTPUT | UNICODE;
                 }
@@ -3248,7 +3100,7 @@ namespace System.Windows.Forms
                 {
                     cookieVal = OUTPUT | ANSI;
                 }
-                if ((flags & RichTextBoxConstants.SF_RTF) != 0)
+                if ((flags & SF.RTF) != 0)
                 {
                     cookieVal |= RTF;
                 }
@@ -3263,23 +3115,13 @@ namespace System.Windows.Forms
                         cookieVal |= TEXTLF;
                     }
                 }
-                es.dwCookie = (IntPtr)cookieVal;
-                es.pfnCallback = new NativeMethods.EditStreamCallback(EditStreamProc);
+                es.dwCookie = (UIntPtr)cookieVal;
+                var callback = new EDITSTREAMCALLBACK(EditStreamProc);
+                es.pfnCallback = Marshal.GetFunctionPointerForDelegate(callback);
 
                 // Get Text
-                // Needed for 64-bit
-                if (IntPtr.Size == 8)
-                {
-                    NativeMethods.EDITSTREAM64 es64 = ConvertToEDITSTREAM64(es);
-                    UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_STREAMOUT, flags, es64);
-
-                    //Assign back dwError value
-                    es.dwError = GetErrorValue64(es64);
-                }
-                else
-                {
-                    UnsafeNativeMethods.SendMessage(new HandleRef(this, Handle), RichEditMessages.EM_STREAMOUT, flags, es);
-                }
+                User32.SendMessageW(this, (User32.WM)EM.STREAMOUT, (IntPtr)flags, ref es);
+                GC.KeepAlive(callback);
 
                 // check to make sure things went well
                 if (es.dwError != 0)
@@ -3294,83 +3136,56 @@ namespace System.Windows.Forms
             }
         }
 
-        private unsafe NativeMethods.EDITSTREAM64 ConvertToEDITSTREAM64(NativeMethods.EDITSTREAM es)
+        private unsafe string GetTextEx(GT flags = GT.DEFAULT)
         {
-            NativeMethods.EDITSTREAM64 es64 = new NativeMethods.EDITSTREAM64();
+            Debug.Assert(IsHandleCreated);
 
-            fixed (byte* es64p = &es64.contents[0])
+            // Unicode UTF-16, little endian byte order (BMP of ISO 10646); available only to managed applications
+            // https://docs.microsoft.com/windows/win32/intl/code-page-identifiers
+            const int UNICODE = 1200;
+
+            GETTEXTLENGTHEX gtl = new GETTEXTLENGTHEX
             {
-                byte* bp;
-                long l;
+                codepage = UNICODE,
+                flags = GTL.DEFAULT
+            };
 
-                /*
-                l = (long) es.dwCookie;
-                bp = (byte *) &l;
-                for (int i=0; i < sizeof(long); i++) {
-                    es64.contents[i] = bp[i];
-                }*/
-                *((long*)es64p) = (long)es.dwCookie;
-                /*
-                int il = es.dwError;
-                bp = (byte *) &il;
-                for (int i=0; i < sizeof(int); i++) {
-                    es64.contents[i+8] = bp[i];
-                }*/
-                *((int*)(es64p + 8)) = es.dwError;
+            GETTEXTLENGTHEX* pGtl = &gtl;
+            int expectedLength = PARAM.ToInt(User32.SendMessageW(Handle, (User32.WM)User32.EM.GETTEXTLENGTHEX, (IntPtr)pGtl));
+            if (expectedLength == (int)HRESULT.E_INVALIDARG)
+                throw new Win32Exception(expectedLength);
 
-                l = (long)Marshal.GetFunctionPointerForDelegate(es.pfnCallback);
-                bp = (byte*)&l;
-                for (int i = 0; i < sizeof(long); i++)
-                {
-                    es64.contents[i + 12] = bp[i];
-                }
-                //*((long *)(es64p + 12)) = (long) Marshal.GetFunctionPointerForDelegate(es.pfnCallback);
+            // buffer has to have enough space for final \0. Without this, the last character is missing!
+            // in case flags contains GT_SELECTION we'll allocate too much memory (for the whole text and not just the selection),
+            // but there's no appropriate flag for EM_GETTEXTLENGTHEX
+            int maxLength = (expectedLength + 1) * sizeof(char);
+
+            GETTEXTEX gt = new GETTEXTEX
+            {
+                cb = (uint)maxLength,
+                flags = flags,
+                codepage = UNICODE,
+            };
+
+            char[] text = ArrayPool<char>.Shared.Rent(maxLength);
+            string result;
+            GETTEXTEX* pGt = &gt;
+            fixed (char* pText = text)
+            {
+                int actualLength = PARAM.ToInt(User32.SendMessageW(Handle, (User32.WM)User32.EM.GETTEXTEX, (IntPtr)pGt, (IntPtr)pText));
+                result = new string(pText, 0, actualLength);
             }
 
-            return es64;
+            ArrayPool<char>.Shared.Return(text);
+            return result;
         }
-
-        private unsafe int GetErrorValue64(NativeMethods.EDITSTREAM64 es64)
-        {
-            int errorVal;
-
-            fixed (byte* es64p = &es64.contents[0])
-            {
-                errorVal = *((int*)(es64p + 8));
-            }
-
-            return errorVal;
-        }
-
-        /* FOR 64 BIT DEBUGGING
-                private unsafe string PrintBytes(NativeMethods.EDITSTREAM es) {
-                    StringBuilder sb = new StringBuilder();
-                    fixed (IntPtr *ip = &es.dwCookie) {
-                        byte *bytep = (byte *) ip;
-                        for (int i=0; i < Marshal.SizeOf(es); i++) {
-                            sb.Append(bytep[i].ToString() + " ");
-                        }
-                    }
-                    return sb.ToString();
-                }
-
-                private unsafe string PrintBytes(NativeMethods.EDITSTREAM64 es64) {
-                    StringBuilder sb = new StringBuilder();
-                    fixed (byte *bytep = &es64.contents[0]) {
-                        for (int i=0; i < Marshal.SizeOf(es64); i++) {
-                            sb.Append(bytep[i].ToString() + " ");
-                        }
-                    }
-                    return sb.ToString();
-                }
-        */
 
         private void UpdateOleCallback()
         {
             Debug.WriteLineIf(RichTextDbg.TraceVerbose, "update ole callback (" + AllowDrop + ")");
             if (IsHandleCreated)
             {
-                if (oleCallback == null)
+                if (oleCallback is null)
                 {
                     Debug.WriteLineIf(RichTextDbg.TraceVerbose, "binding ole callback");
 
@@ -3384,11 +3199,11 @@ namespace System.Windows.Forms
                     IntPtr punk = Marshal.GetIUnknownForObject(oleCallback);
                     try
                     {
-                        Guid iidRichEditOleCallback = typeof(Richedit.IRichEditOleCallback).GUID;
+                        Guid iidRichEditOleCallback = typeof(IRichEditOleCallback).GUID;
                         Marshal.QueryInterface(punk, ref iidRichEditOleCallback, out IntPtr pRichEditOleCallback);
                         try
                         {
-                            UnsafeNativeMethods.SendCallbackMessage(new HandleRef(this, Handle), RichEditMessages.EM_SETOLECALLBACK, IntPtr.Zero, pRichEditOleCallback);
+                            User32.SendMessageW(this, (User32.WM)EM.SETOLECALLBACK, IntPtr.Zero, pRichEditOleCallback);
                         }
                         finally
                         {
@@ -3400,7 +3215,8 @@ namespace System.Windows.Forms
                         Marshal.Release(punk);
                     }
                 }
-                UnsafeNativeMethods.DragAcceptFiles(new HandleRef(this, Handle), false);
+
+                Shell32.DragAcceptFiles(this, BOOL.FALSE);
             }
         }
 
@@ -3412,7 +3228,7 @@ namespace System.Windows.Forms
             {
                 if (BackColor.IsSystemColor)
                 {
-                    SendMessage(RichEditMessages.EM_SETBKGNDCOLOR, 0, ColorTranslator.ToWin32(BackColor));
+                    User32.SendMessageW(this, (User32.WM)EM.SETBKGNDCOLOR, IntPtr.Zero, PARAM.FromColor(BackColor));
                 }
                 if (ForeColor.IsSystemColor)
                 {
@@ -3448,14 +3264,14 @@ namespace System.Windows.Forms
                 enlink = (NativeMethods.ENLINK)m.GetLParam(typeof(NativeMethods.ENLINK));
             }
 
-            switch (enlink.msg)
+            switch ((User32.WM)enlink.msg)
             {
-                case WindowMessages.WM_SETCURSOR:
+                case User32.WM.SETCURSOR:
                     LinkCursor = true;
                     m.Result = (IntPtr)1;
                     return;
                 // Mouse-down triggers Url; this matches Outlook 2000's behavior.
-                case WindowMessages.WM_LBUTTONDOWN:
+                case User32.WM.LBUTTONDOWN:
                     string linktext = CharRangeToString(enlink.charrange);
                     if (!string.IsNullOrEmpty(linktext))
                     {
@@ -3472,7 +3288,7 @@ namespace System.Windows.Forms
         ///  Converts a CHARRANGE to a string.
         /// </summary>
         /// <remarks>
-        ///  The behavior of this is dependent on the current window class name being used. 
+        ///  The behavior of this is dependent on the current window class name being used.
         ///  We have to create a CharBuffer of the type of RichTextBox DLL we're using,
         ///  not based on the SystemCharWidth.
         /// </remarks>
@@ -3490,7 +3306,7 @@ namespace System.Windows.Forms
             }
 
             int characters = (c.cpMax - c.cpMin) + 1; // +1 for null termination
-            UnsafeNativeMethods.CharBuffer charBuffer = UnsafeNativeMethods.CharBuffer.CreateBuffer(characters);
+            var charBuffer = new UnicodeCharBuffer(characters);
             IntPtr unmanagedBuffer = charBuffer.AllocCoTaskMem();
             if (unmanagedBuffer == IntPtr.Zero)
             {
@@ -3498,7 +3314,7 @@ namespace System.Windows.Forms
             }
 
             txrg.lpstrText = unmanagedBuffer;
-            int len = (int)User32.SendMessageW(this, (User32.WindowMessage)RichEditMessages.EM_GETTEXTRANGE, IntPtr.Zero, ref txrg);
+            int len = (int)User32.SendMessageW(this, (User32.WM)EM.GETTEXTRANGE, IntPtr.Zero, ref txrg);
             Debug.Assert(len != 0, "CHARRANGE from RichTextBox was bad! - impossible?");
             charBuffer.PutCoTaskMem(unmanagedBuffer);
             if (txrg.lpstrText != IntPtr.Zero)
@@ -3514,7 +3330,7 @@ namespace System.Windows.Forms
         {
             if (IsHandleCreated)
             {
-                SendMessage(RichEditMessages.EM_EXLIMITTEXT, 0, MaxLength);
+                User32.SendMessageW(this, (User32.WM)EM.EXLIMITTEXT, IntPtr.Zero, (IntPtr)MaxLength);
             }
         }
 
@@ -3525,17 +3341,14 @@ namespace System.Windows.Forms
             //
             if (m.LParam == Handle && !GetState(States.CreatingHandle))
             {
-                switch (Util.HIWORD(m.WParam))
+                switch ((User32.EN)PARAM.HIWORD(m.WParam))
                 {
-
-                    case NativeMethods.EN_HSCROLL:
+                    case User32.EN.HSCROLL:
                         OnHScroll(EventArgs.Empty);
                         break;
-
-                    case NativeMethods.EN_VSCROLL:
+                    case User32.EN.VSCROLL:
                         OnVScroll(EventArgs.Empty);
                         break;
-
                     default:
                         base.WndProc(ref m);
                         break;
@@ -3552,17 +3365,17 @@ namespace System.Windows.Forms
             if (m.HWnd == Handle)
             {
                 User32.NMHDR* nmhdr = (User32.NMHDR*)m.LParam;
-                switch (nmhdr->code)
+                switch ((EN)nmhdr->code)
                 {
-                    case RichTextBoxConstants.EN_LINK:
+                    case EN.LINK:
                         EnLinkMsgHandler(ref m);
                         break;
-                    case RichTextBoxConstants.EN_DROPFILES:
-                        NativeMethods.ENDROPFILES endropfiles = (NativeMethods.ENDROPFILES)m.GetLParam(typeof(NativeMethods.ENDROPFILES));
+                    case EN.DROPFILES:
+                        ENDROPFILES* endropfiles = (ENDROPFILES*)m.LParam;
 
                         // Only look at the first file.
-                        StringBuilder path = new StringBuilder(Kernel32.MAX_PATH);
-                        if (UnsafeNativeMethods.DragQueryFileLongPath(new HandleRef(endropfiles, endropfiles.hDrop), 0, path) != 0)
+                        var path = new StringBuilder(Kernel32.MAX_PATH);
+                        if (Shell32.DragQueryFileW(endropfiles->hDrop, 0, path) != 0)
                         {
                             // Try to load the file as an RTF
                             try
@@ -3585,11 +3398,11 @@ namespace System.Windows.Forms
                         m.Result = (IntPtr)1;   // tell them we did the drop
                         break;
 
-                    case RichTextBoxConstants.EN_REQUESTRESIZE:
+                    case EN.REQUESTRESIZE:
                         if (!CallOnContentsResized)
                         {
-                            Richedit.REQRESIZE* reqResize = (Richedit.REQRESIZE*)m.LParam;
-                            if (BorderStyle == System.Windows.Forms.BorderStyle.Fixed3D)
+                            REQRESIZE* reqResize = (REQRESIZE*)m.LParam;
+                            if (BorderStyle == BorderStyle.Fixed3D)
                             {
                                 reqResize->rc.bottom++;
                             }
@@ -3597,12 +3410,12 @@ namespace System.Windows.Forms
                         }
                         break;
 
-                    case RichTextBoxConstants.EN_SELCHANGE:
-                        Richedit.SELCHANGE* selChange = (Richedit.SELCHANGE*)m.LParam;
+                    case EN.SELCHANGE:
+                        SELCHANGE* selChange = (SELCHANGE*)m.LParam;
                         WmSelectionChange(*selChange);
                         break;
 
-                    case RichTextBoxConstants.EN_PROTECTED:
+                    case EN.PROTECTED:
                         {
                             NativeMethods.ENPROTECTED enprotected;
 
@@ -3619,11 +3432,10 @@ namespace System.Windows.Forms
 
                             switch (enprotected.msg)
                             {
-                                case RichEditMessages.EM_SETCHARFORMAT:
+                                case (int)EM.SETCHARFORMAT:
                                     // Allow change of protected style
-                                    //
-                                    NativeMethods.CHARFORMATA charFormat = Marshal.PtrToStructure<NativeMethods.CHARFORMATA>(enprotected.lParam);
-                                    if ((charFormat.dwMask & RichTextBoxConstants.CFM_PROTECTED) != 0)
+                                    CHARFORMAT2W* charFormat = (CHARFORMAT2W*)enprotected.lParam;
+                                    if ((charFormat->dwMask & CFM.PROTECTED) != 0)
                                     {
                                         m.Result = IntPtr.Zero;
                                         return;
@@ -3632,14 +3444,13 @@ namespace System.Windows.Forms
 
                                 // Throw an exception for the following
                                 //
-                                case RichEditMessages.EM_SETPARAFORMAT:
-                                case EditMessages.EM_REPLACESEL:
+                                case (int)EM.SETPARAFORMAT:
+                                case (int)User32.EM.REPLACESEL:
                                     break;
 
-                                case RichEditMessages.EM_STREAMIN:
+                                case (int)EM.STREAMIN:
                                     // Don't allow STREAMIN to replace protected selection
-                                    //
-                                    if ((unchecked((int)(long)enprotected.wParam) & RichTextBoxConstants.SFF_SELECTION) != 0)
+                                    if ((unchecked((SF)(long)enprotected.wParam) & SF.F_SELECTION) != 0)
                                     {
                                         break;
                                     }
@@ -3649,16 +3460,15 @@ namespace System.Windows.Forms
 
                                 // Allow the following
                                 //
-                                case WindowMessages.WM_COPY:
-                                case WindowMessages.WM_SETTEXT:
-                                case RichEditMessages.EM_EXLIMITTEXT:
+                                case (int)User32.WM.COPY:
+                                case (int)User32.WM.SETTEXT:
+                                case (int)EM.EXLIMITTEXT:
                                     m.Result = IntPtr.Zero;
                                     return;
 
                                 // Beep and disallow change for all other messages
-                                //
                                 default:
-                                    SafeNativeMethods.MessageBeep(0);
+                                    User32.MessageBeep(User32.MB.OK);
                                     break;
                             }
 
@@ -3745,19 +3555,16 @@ namespace System.Windows.Forms
             // Is either the Hangul or HangulFull IME currently in use?
             if (ImeMode == ImeMode.Hangul || ImeMode == ImeMode.HangulFull)
             {
-
                 // Is the IME CompositionWindow open?
-                int compMode = unchecked((int)(long)SendMessage(RichEditMessages.EM_GETIMECOMPMODE, 0, 0));
-                if (RichTextBoxConstants.ICM_NOTOPEN != compMode)
+                ICM compMode = unchecked((ICM)(long)User32.SendMessageW(this, (User32.WM)EM.GETIMECOMPMODE));
+                if (compMode != ICM.NOTOPEN)
                 {
-
                     int textLength = User32.GetWindowTextLengthW(new HandleRef(this, Handle));
                     if (selStart == selEnd && textLength == MaxLength)
                     {
-
-                        SendMessage(WindowMessages.WM_KILLFOCUS, 0, 0);
-                        SendMessage(WindowMessages.WM_SETFOCUS, 0, 0);
-                        UnsafeNativeMethods.PostMessage(new HandleRef(this, Handle), EditMessages.EM_SETSEL, selEnd - 1, selEnd);
+                        User32.SendMessageW(this, User32.WM.KILLFOCUS);
+                        User32.SendMessageW(this, User32.WM.SETFOCUS);
+                        User32.PostMessageW(this, (User32.WM)User32.EM.SETSEL, (IntPtr)(selEnd - 1), (IntPtr)selEnd);
                     }
                 }
             }
@@ -3790,22 +3597,19 @@ namespace System.Windows.Forms
             InternalSetForeColor(ForeColor);
         }
 
-        //
-        // </doc>
-        //
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_NOTIFY:
+                case User32.WM.REFLECT_NOTIFY:
                     WmReflectNotify(ref m);
                     break;
 
-                case WindowMessages.WM_REFLECT + WindowMessages.WM_COMMAND:
+                case User32.WM.REFLECT_COMMAND:
                     WmReflectCommand(ref m);
                     break;
 
-                case WindowMessages.WM_SETCURSOR:
+                case User32.WM.SETCURSOR:
                     //NOTE: RichTextBox uses the WM_SETCURSOR message over links to allow us to
                     //      change the cursor to a hand. It does this through a synchronous notification
                     //      message. So we have to pass the message to the DefWndProc first, and
@@ -3828,21 +3632,21 @@ namespace System.Windows.Forms
                     }
                     break;
 
-                case WindowMessages.WM_SETFONT:
+                case User32.WM.SETFONT:
                     WmSetFont(ref m);
                     break;
 
-                case WindowMessages.WM_IME_NOTIFY:
+                case User32.WM.IME_NOTIFY:
                     OnImeChange(EventArgs.Empty);
                     base.WndProc(ref m);
                     break;
 
-                case WindowMessages.WM_GETDLGCODE:
+                case User32.WM.GETDLGCODE:
                     base.WndProc(ref m);
-                    m.Result = (IntPtr)((AcceptsTab) ? unchecked((int)(long)m.Result) | NativeMethods.DLGC_WANTTAB : unchecked((int)(long)m.Result) & ~NativeMethods.DLGC_WANTTAB);
+                    m.Result = (IntPtr)(AcceptsTab ? unchecked((int)(long)m.Result) | (int)User32.DLGC.WANTTAB : unchecked((int)(long)m.Result) & ~(int)User32.DLGC.WANTTAB);
                     break;
 
-                case WindowMessages.WM_GETOBJECT:
+                case User32.WM.GETOBJECT:
                     base.WndProc(ref m);
 
                     // OLEACC.DLL uses window class names to identify standard control types. But WinForm controls use app-specific window
@@ -3855,7 +3659,7 @@ namespace System.Windows.Forms
                     }
                     break;
 
-                case WindowMessages.WM_RBUTTONUP:
+                case User32.WM.RBUTTONUP:
                     //since RichEdit eats up the WM_CONTEXTMENU message, we need to force DefWndProc
                     //to spit out this message again on receiving WM_RBUTTONUP message. By setting UserMouse
                     //style to true, we effectily let the WmMouseUp method in Control.cs to generate
@@ -3866,34 +3670,34 @@ namespace System.Windows.Forms
                     SetStyle(ControlStyles.UserMouse, oldStyle);
                     break;
 
-                case WindowMessages.WM_VSCROLL:
-                {
-                    base.WndProc(ref m);
-                    User32.SBV loWord = (User32.SBV)Util.LOWORD(m.WParam);
-                    if (loWord == User32.SBV.THUMBTRACK)
+                case User32.WM.VSCROLL:
                     {
-                        OnVScroll(EventArgs.Empty);
+                        base.WndProc(ref m);
+                        User32.SBV loWord = (User32.SBV)PARAM.LOWORD(m.WParam);
+                        if (loWord == User32.SBV.THUMBTRACK)
+                        {
+                            OnVScroll(EventArgs.Empty);
+                        }
+                        else if (loWord == User32.SBV.THUMBPOSITION)
+                        {
+                            OnVScroll(EventArgs.Empty);
+                        }
+                        break;
                     }
-                    else if (loWord == User32.SBV.THUMBPOSITION)
+                case User32.WM.HSCROLL:
                     {
-                        OnVScroll(EventArgs.Empty);
+                        base.WndProc(ref m);
+                        User32.SBH loWord = (User32.SBH)PARAM.LOWORD(m.WParam);
+                        if (loWord == User32.SBH.THUMBTRACK)
+                        {
+                            OnHScroll(EventArgs.Empty);
+                        }
+                        else if (loWord == User32.SBH.THUMBPOSITION)
+                        {
+                            OnHScroll(EventArgs.Empty);
+                        }
+                        break;
                     }
-                    break;
-                }
-                case WindowMessages.WM_HSCROLL:
-                {
-                    base.WndProc(ref m);
-                    User32.SBH loWord = (User32.SBH)Util.LOWORD(m.WParam);
-                    if (loWord == User32.SBH.THUMBTRACK)
-                    {
-                        OnHScroll(EventArgs.Empty);
-                    }
-                    else if (loWord == User32.SBH.THUMBPOSITION)
-                    {
-                        OnHScroll(EventArgs.Empty);
-                    }
-                    break;
-                }
                 default:
                     base.WndProc(ref m);
                     break;
@@ -3921,12 +3725,12 @@ namespace System.Windows.Forms
                     return HRESULT.E_FAIL;
                 }
 
-                Ole32.ILockBytes pLockBytes = Ole32.CreateILockBytesOnHGlobal(IntPtr.Zero, true);
+                Ole32.ILockBytes pLockBytes = Ole32.CreateILockBytesOnHGlobal(IntPtr.Zero, BOOL.TRUE);
                 Debug.Assert(pLockBytes != null, "pLockBytes is NULL!");
 
                 storage = Ole32.StgCreateDocfileOnILockBytes(
                     pLockBytes,
-                    Ole32.STGM.STGM_SHARE_EXCLUSIVE | Ole32.STGM.STGM_CREATE | Ole32.STGM.STGM_READWRITE,
+                    Ole32.STGM.SHARE_EXCLUSIVE | Ole32.STGM.CREATE | Ole32.STGM.READWRITE,
                     0);
                 Debug.Assert(storage != null, "storage is NULL!");
 
@@ -3961,16 +3765,14 @@ namespace System.Windows.Forms
                 return HRESULT.S_OK;
             }
 
-            public HRESULT QueryAcceptData(IComDataObject lpdataobj, IntPtr lpcfFormat, uint reco, BOOL fReally, IntPtr hMetaPict)
+            public HRESULT QueryAcceptData(IComDataObject lpdataobj, IntPtr lpcfFormat, RECO reco, BOOL fReally, IntPtr hMetaPict)
             {
-
                 Debug.WriteLineIf(RichTextDbg.TraceVerbose, "IRichEditOleCallback::QueryAcceptData(reco=" + reco + ")");
 
-                if (reco == NativeMethods.RECO_DROP)
+                if (reco == RECO.DROP)
                 {
                     if (owner.AllowDrop || owner.EnableAutoDragDrop)
                     {
-
                         MouseButtons b = Control.MouseButtons;
                         Keys k = Control.ModifierKeys;
 
@@ -4069,7 +3871,7 @@ namespace System.Windows.Forms
                 return HRESULT.E_NOTIMPL;
             }
 
-            public HRESULT GetClipboardData(ref Richedit.CHARRANGE lpchrg, uint reco, IntPtr lplpdataobj)
+            public HRESULT GetClipboardData(ref Richedit.CHARRANGE lpchrg, RECO reco, IntPtr lplpdataobj)
             {
                 Debug.WriteLineIf(RichTextDbg.TraceVerbose, "IRichEditOleCallback::GetClipboardData");
                 return HRESULT.E_NOTIMPL;
@@ -4077,7 +3879,7 @@ namespace System.Windows.Forms
 
             public unsafe HRESULT GetDragDropEffect(BOOL fDrag, User32.MK grfKeyState, Ole32.DROPEFFECT* pdwEffect)
             {
-                if (pdwEffect == null)
+                if (pdwEffect is null)
                 {
                     return HRESULT.E_POINTER;
                 }
@@ -4157,4 +3959,3 @@ namespace System.Windows.Forms
         }
     }
 }
-

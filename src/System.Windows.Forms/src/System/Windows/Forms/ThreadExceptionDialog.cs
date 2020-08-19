@@ -2,12 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace System.Windows.Forms
@@ -16,9 +17,6 @@ namespace System.Windows.Forms
     ///  Implements a dialog box that is displayed when an unhandled exception occurs in
     ///  a thread.
     /// </summary>
-    [
-        ComVisible(true),
-        ClassInterface(ClassInterfaceType.AutoDispatch)]
     public class ThreadExceptionDialog : Form
     {
         private const string DownBitmapName = "down";
@@ -71,9 +69,9 @@ namespace System.Windows.Forms
         private readonly Button detailsButton = new Button();
         private readonly Button helpButton = new Button();
         private readonly TextBox details = new TextBox();
-        private Bitmap expandImage = null;
-        private Bitmap collapseImage = null;
-        private bool detailsVisible = false;
+        private Bitmap expandImage;
+        private Bitmap collapseImage;
+        private bool detailsVisible;
 
         /// <summary>
         ///  Initializes a new instance of the <see cref='ThreadExceptionDialog'/> class.
@@ -112,7 +110,7 @@ namespace System.Windows.Forms
             {
                 messageFormat = SR.ExDlgWarningText;
                 messageText = w.Message;
-                if (w.HelpUrl == null)
+                if (w.HelpUrl is null)
                 {
                     buttons = new Button[] { continueButton };
                 }
@@ -254,7 +252,7 @@ namespace System.Windows.Forms
             int buttonTop = Math.Max(textSize.Height, scaledMaxTextHeight) + scaledPaddingHeight;
 
             Form activeForm = Form.ActiveForm;
-            if (activeForm == null || activeForm.Text.Length == 0)
+            if (activeForm is null || activeForm.Text.Length == 0)
             {
                 Text = SR.ExDlgCaption;
             }
@@ -389,7 +387,8 @@ namespace System.Windows.Forms
             set => base.AutoSize = value;
         }
 
-        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         new public event EventHandler AutoSizeChanged
         {
             add => base.AutoSizeChanged += value;
@@ -415,7 +414,7 @@ namespace System.Windows.Forms
 
         private static string Trim(string s)
         {
-            if (s == null)
+            if (s is null)
             {
                 return s;
             }

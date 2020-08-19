@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 using Microsoft.Win32;
 using System.Globalization;
@@ -11,15 +13,15 @@ namespace System.Windows.Forms
     internal class LinkUtilities
     {
         // IE fonts and colors
-        static Color ielinkColor = Color.Empty;
-        static Color ieactiveLinkColor = Color.Empty;
-        static Color ievisitedLinkColor = Color.Empty;
+        private static Color s_ielinkColor = Color.Empty;
+        private static Color s_ieactiveLinkColor = Color.Empty;
+        private static Color s_ievisitedLinkColor = Color.Empty;
 
-        const string IESettingsRegPath = "Software\\Microsoft\\Internet Explorer\\Settings";
+        private const string IESettingsRegPath = "Software\\Microsoft\\Internet Explorer\\Settings";
         public const string IEMainRegPath = "Software\\Microsoft\\Internet Explorer\\Main";
-        const string IEAnchorColor = "Anchor Color";
-        const string IEAnchorColorVisited = "Anchor Color Visited";
-        const string IEAnchorColorHover = "Anchor Color Hover";
+        private const string IEAnchorColor = "Anchor Color";
+        private const string IEAnchorColorVisited = "Anchor Color Visited";
+        private const string IEAnchorColorHover = "Anchor Color Hover";
 
         /// <summary>
         ///  Retrieves a named IE color from the registry. There are constants at the top
@@ -31,7 +33,6 @@ namespace System.Windows.Forms
 
             if (key != null)
             {
-
                 // Since this comes from the registry, be very careful about its contents.
                 //
                 string s = (string)key.GetValue(name);
@@ -70,18 +71,17 @@ namespace System.Windows.Forms
             {
                 return Color.Red;
             }
-
         }
 
         public static Color IELinkColor
         {
             get
             {
-                if (ielinkColor.IsEmpty)
+                if (s_ielinkColor.IsEmpty)
                 {
-                    ielinkColor = GetIEColor(IEAnchorColor);
+                    s_ielinkColor = GetIEColor(IEAnchorColor);
                 }
-                return ielinkColor;
+                return s_ielinkColor;
             }
         }
 
@@ -89,22 +89,22 @@ namespace System.Windows.Forms
         {
             get
             {
-                if (ieactiveLinkColor.IsEmpty)
+                if (s_ieactiveLinkColor.IsEmpty)
                 {
-                    ieactiveLinkColor = GetIEColor(IEAnchorColorHover);
+                    s_ieactiveLinkColor = GetIEColor(IEAnchorColorHover);
                 }
-                return ieactiveLinkColor;
+                return s_ieactiveLinkColor;
             }
         }
         public static Color IEVisitedLinkColor
         {
             get
             {
-                if (ievisitedLinkColor.IsEmpty)
+                if (s_ievisitedLinkColor.IsEmpty)
                 {
-                    ievisitedLinkColor = GetIEColor(IEAnchorColorVisited);
+                    s_ievisitedLinkColor = GetIEColor(IEAnchorColorVisited);
                 }
-                return ievisitedLinkColor;
+                return s_ievisitedLinkColor;
             }
         }
 

@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
 
 namespace System.Windows.Forms
@@ -12,14 +14,14 @@ namespace System.Windows.Forms
     public class ToolStripItemTextRenderEventArgs : ToolStripItemRenderEventArgs
     {
         private Color _textColor = SystemColors.ControlText;
-        private bool _textColorChanged = false;
+        private bool _textColorChanged;
 
         /// <summary>
         ///  This class represents all the information to render the ToolStrip
         /// </summary>
         public ToolStripItemTextRenderEventArgs(Graphics g, ToolStripItem item, string text, Rectangle textRectangle, Color textColor, Font textFont, TextFormatFlags format) : base(g, item)
         {
-            if (item == null)
+            if (item is null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
@@ -37,7 +39,7 @@ namespace System.Windows.Forms
         /// </summary>
         public ToolStripItemTextRenderEventArgs(Graphics g, ToolStripItem item, string text, Rectangle textRectangle, Color textColor, Font textFont, ContentAlignment textAlign) : base(g, item)
         {
-            if (item == null)
+            if (item is null)
             {
                 throw new ArgumentNullException(nameof(item));
             }
@@ -46,7 +48,7 @@ namespace System.Windows.Forms
             TextRectangle = textRectangle;
             DefaultTextColor = textColor;
             TextFont = textFont;
-            TextFormat = ToolStripItemInternalLayout.ContentAlignToTextFormat(textAlign, item.RightToLeft == RightToLeft.Yes);
+            TextFormat = ToolStripItem.ToolStripItemInternalLayout.ContentAlignToTextFormat(textAlign, item.RightToLeft == RightToLeft.Yes);
             TextFormat = (item.ShowKeyboardCues) ? TextFormat : TextFormat | TextFormatFlags.HidePrefix;
             TextDirection = item.TextDirection;
         }

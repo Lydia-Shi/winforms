@@ -192,6 +192,11 @@
         <target state="translated">Daralt</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="new">Double Click</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">Genişlet</target>
@@ -230,11 +235,6 @@
       <trans-unit id="ApplyCaption">
         <source>&amp;Apply</source>
         <target state="translated">&amp;Uygula</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ArraysNotSameSize">
-        <source>Arrays '{0}' and '{1}' must be the same size.</source>
-        <target state="translated">'{0}' ve '{1}' dizilerinin aynı boyutta olması gerekir.</target>
         <note />
       </trans-unit>
       <trans-unit id="AutoCompleteFailure">
@@ -690,16 +690,6 @@
       <trans-unit id="CannotChangePrintedDocument">
         <source>You cannot alter the document or add to it once you have printed it.</source>
         <target state="translated">Belgeyi yazdırdıktan sonra belgeyi değiştiremez ya ek yapamazsınız.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertDoubleToDate">
-        <source>Double cannot be converted to a date.</source>
-        <target state="translated">Double tarihe dönüştürülemez.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertIntToFloat">
-        <source>Integer cannot be converted to a float.</source>
-        <target state="translated">Tam sayı kayan noktalıya dönüştürülemez.</target>
         <note />
       </trans-unit>
       <trans-unit id="CantNestMessageLoops">
@@ -1182,6 +1172,11 @@
         <target state="translated">İşlenmemiş {0} türü.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConstructorArgumentInvalidValueType">
+        <source>Argument '{0}' cannot be converted to type '{1}'.</source>
+        <target state="translated">'{0}' bağımsız değişkeni '{1}' türüne dönüştürülemez.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
         <source>The currently active control.</source>
         <target state="translated">Şu anda etkin denetim.</target>
@@ -1189,7 +1184,7 @@
       </trans-unit>
       <trans-unit id="ContainerControlAutoScaleModeDescr">
         <source>Determines how the form or control will scale when screen resolution or fonts change.</source>
-        <target state="translated">Ekran çözünürlüğü veya yazı tipi değiştiğinde formun veya denetimin nasıl ölçekleneceğini belirler.</target>
+        <target state="translated">Ekran çözünürlüğü veya yazı tipi değiştiğinde formun veya denetimin nasıl ölçeklendirileceğini belirler.</target>
         <note />
       </trans-unit>
       <trans-unit id="ContainerControlAutoValidate">
@@ -1219,7 +1214,7 @@
       </trans-unit>
       <trans-unit id="ContextMenuStripSourceControlDescr">
         <source>The last control that caused this context menu strip to be displayed.</source>
-        <target state="new">The last control that caused this context menu strip to be displayed.</target>
+        <target state="translated">Bu içerik menüsü şeridinin görüntülenmesine neden olan en son denetim.</target>
         <note />
       </trans-unit>
       <trans-unit id="ControlAccessibileObjectInvalid">
@@ -4224,6 +4219,16 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
         <target state="translated">Düzenle</target>
         <note />
       </trans-unit>
+      <trans-unit id="DefaultNumericUpDownAccessibleName">
+        <source>NumericUpDown</source>
+        <target state="translated">NumericUpDown</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DefaultUpDownButtonsAccessibleName">
+        <source>UpDown</source>
+        <target state="translated">UpDown</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DescriptionBindingNavigator">
         <source>Provides a user interface for navigation and manipulation of data bound to controls on a form.</source>
         <target state="translated">Bir formdaki denetimlere bağlı verilere gitmek veya değiştirmek için bir kullanıcı arabirimi sağlar.</target>
@@ -4577,6 +4582,11 @@ Bu varsayılan iletişim kutusunu değiştirmek için, lütfen DataError olayın
       <trans-unit id="ErrorProviderDataSourceDescr">
         <source>Indicates the source of data to bind errors against.</source>
         <target state="translated">Karşılık gelen hataları ilişkilendirmek için veri kaynağını gösterir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ErrorProviderDefaultAccessibleName">
+        <source>Error provider</source>
+        <target state="translated">Hata sağlayıcısı</target>
         <note />
       </trans-unit>
       <trans-unit id="ErrorProviderErrorDescr">
@@ -5059,7 +5069,7 @@ Bunu değiştirmek istiyor musunuz?</target>
       </trans-unit>
       <trans-unit id="FormAutoScaleDescr">
         <source>If set to true, the form will automatically scale with the screen font.</source>
-        <target state="translated">True değeri atanmışsa, form ekran yazı tipine göre otomatik olarak ölçeklenecektir.</target>
+        <target state="translated">True değeri atanmışsa, form ekran yazı tipine göre otomatik olarak ölçeklendirilecektir.</target>
         <note />
       </trans-unit>
       <trans-unit id="FormAutoScrollDescr">
@@ -5417,6 +5427,11 @@ Bunu değiştirmek istiyor musunuz?</target>
         <target state="translated">Tablodaki satır sayısı.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HScrollBarDefaultAccessibleName">
+        <source>Horizontal</source>
+        <target state="translated">Yatay</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HandleAlreadyExists">
         <source>Window handle already exists.</source>
         <target state="translated">Pencere işleyicisi zaten var.</target>
@@ -5536,6 +5551,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">ImageList işleyicisi oluşturulamadı.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ImageListDuplicateFailed">
+        <source>Duplication of the ImageList handle did not succeed.</source>
+        <target state="translated">ImageList işleyicisi çoğaltılamadı.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ImageListEntryType">
         <source>Image added to an ImageList must either derive from Image or be an Icon.</source>
         <target state="translated">ImageList'e eklenen resim Image'den türetilmeli veya Icon olmalıdır.</target>
@@ -5621,6 +5641,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">{0} dizini aralığın dışında.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InputLanguageCultureNotFound">
+        <source>Could not find an InputLanguage for culture '{0}'.</source>
+        <target state="translated">'{0}' kültürü için InputLanguage bulunamadı.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidArgument">
         <source>InvalidArgument=Value of '{1}' is not valid for '{0}'.</source>
         <target state="translated">InvalidArgument='{1}' değeri '{0}' için geçerli değil.</target>
@@ -5654,6 +5679,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">{0} öğesine geçirilen Win32 işleyicisi geçerli değil veya yanlış türde.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="new">Invalid HDC type: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -6336,6 +6366,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">Öğelerin ve SubItem'ların etrafında kılavuz çizgileri görüntüler. Yalnızca Ayrıntı görünümünde gösterilir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupCollapsedStateChangedDescr">
+        <source>Event raised when the CollapsedState property of a ListViewGroup changes.</source>
+        <target state="translated">ListViewGroup öğesinin CollapsedState özelliği değiştiğinde tetiklenen olay.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupCollectionBadListViewGroup">
         <source>Parameter must be of type ListViewGroup.</source>
         <target state="translated">Parametre ListViewGroup türünde olmalıdır.</target>
@@ -6351,9 +6386,19 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">ListViewGroup</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupImageListDescr">
+        <source>The ImageList control used by the ListView for ListViewGroup images in all views.</source>
+        <target state="translated">Tüm görünümlerdeki ListViewGroup görüntüleri için ListView tarafından kullanılan ImageList denetimi.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupNameDescr">
         <source>The name of this group.</source>
         <target state="translated">Bu grubun adı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupTaskLinkClickDescr">
+        <source>Event raised when the TaskLink property of a ListViewGroup is clicked.</source>
+        <target state="translated">ListViewGroup öğesinin TaskLink özelliği değiştiğinde tetiklenen olay.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupsDescr">
@@ -6808,12 +6853,12 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="MenuItemShortCutDescr">
         <source>The shortcut key associated with the menu item. </source>
-        <target state="new">The shortcut key associated with the menu item. </target>
+        <target state="translated">Menü öğesiyle ilişkili kısayol tuşu. </target>
         <note />
       </trans-unit>
       <trans-unit id="MenuItemShowShortCutDescr">
         <source>Indicates whether the shorcut key for the menu item is displayed on the item. </source>
-        <target state="new">Indicates whether the shorcut key for the menu item is displayed on the item. </target>
+        <target state="translated">Menü öğesinin kısayolunun öğede görüntülenip görüntülenmeyeceğini gösterir. </target>
         <note />
       </trans-unit>
       <trans-unit id="MenuStripMdiWindowListItem">
@@ -6838,7 +6883,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="MonthCalendarBodyAccessibleName">
         <source>Calendar body</source>
-        <target state="new">Calendar body</target>
+        <target state="translated">Takvim gövdesi</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarDimensionsDescr">
@@ -6893,7 +6938,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="MonthCalendarNextButtonAccessibleName">
         <source>Next</source>
-        <target state="new">Next</target>
+        <target state="translated">İleri</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarOnDateChangedDescr">
@@ -6908,7 +6953,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="MonthCalendarPreviousButtonAccessibleName">
         <source>Previous</source>
-        <target state="new">Previous</target>
+        <target state="translated">Önceki</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarRange">
@@ -6988,7 +7033,7 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       </trans-unit>
       <trans-unit id="MonthCalendarTodayButtonAccessibleName">
         <source>Today: {0}</source>
-        <target state="new">Today: {0}</target>
+        <target state="translated">Bugün: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarTodayDateDescr">
@@ -7891,6 +7936,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">ToolStripPanel'de kullanılan geçişin bitiş rengi.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ProgressBarDefaultAccessibleName">
+        <source>ProgressBar</source>
+        <target state="translated">İlerlemeÇubuğu</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProgressBarIncrementMarqueeException">
         <source>Increment should not be called if the style is Marquee.</source>
         <target state="translated">Stil Marquee ise Increment çağrılmamalıdır.</target>
@@ -8076,6 +8126,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">Aç</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridEntryValuesListDefaultAccessibleName">
+        <source>Available values</source>
+        <target state="translated">Kullanılabilir değerler</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridExceptionInfo">
         <source>Error Information</source>
         <target state="translated">Hata Bilgileri</target>
@@ -8159,11 +8214,6 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="PropertyGridPropertyValueSelectedFormat">
         <source>{0} selected.</source>
         <target state="translated">{0} seçildi.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PropertyGridRemotedObject">
-        <source>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</source>
-        <target state="translated">{0} nesnesi arabirim keşfini desteklemeyen bir ara sunucu tarafından uzaktan çalıştırılıyor. Bu tür uzak nesne haline getirilmiş nesneler desteklenmez.</target>
         <note />
       </trans-unit>
       <trans-unit id="PropertyGridRemoveStaticTabs">
@@ -8696,11 +8746,6 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">Azalan düzende sıralı.</target>
         <note />
       </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">Değer Değiştirici</target>
-        <note />
-      </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
         <source>Indicates that a particular SplitContainer's Panel should remain fixed in size during resize events.</source>
         <target state="translated">Yeniden boyutlandırma olayları sırasında belirli bir SplitContainer'ın Bölmesinin boyutunun sabit kalması gerektiğini gösterir.</target>
@@ -8821,91 +8866,6 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">{0} IID için sıralayıcı alınamadı.</target>
         <note />
       </trans-unit>
-      <trans-unit id="StatusBarAddFailed">
-        <source>Adding the panel to the native status bar control has not succeeded.</source>
-        <target state="translated">Yerel durum çubuğu denetimine bölme eklenemedi.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarBadStatusBarPanel">
-        <source>Parameter must be of type StatusBarPanel.</source>
-        <target state="translated">Parametrenin StatusBarPanel türünde olması gerekir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarDrawItem">
-        <source>Occurs whenever a panel in the StatusBar needs to be painted.</source>
-        <target state="translated">Durum Çubuğu'ndaki bir bölmenin her boyanması gerektiğinde gerçekleşir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarOnPanelClickDescr">
-        <source>Occurs when a panel within the status bar is clicked.</source>
-        <target state="translated">Durum çubuğundaki bir bölme tıklatıldığında gerçekleşir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelAlignmentDescr">
-        <source>The alignment of the panel's text.</source>
-        <target state="translated">Bölme metninin hizalaması.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelAutoSizeDescr">
-        <source>Determines how a panel will resize when the parent changes size.</source>
-        <target state="translated">Üstünün boyutu değiştiğinde bölmenin nasıl yeniden boyutlandırılacağını belirler.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelBorderStyleDescr">
-        <source>Determines what type of border a panel has.</source>
-        <target state="translated">Bölmenin ne tür kenarlığı olduğunu belirler.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelIconDescr">
-        <source>Determines what icon is displayed in the panel.</source>
-        <target state="translated">Bölmede hangi simgenin görüntüleneceğini belirler.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelMinWidthDescr">
-        <source>The minimum width of the panel.</source>
-        <target state="translated">Bölmenin en küçük genişliği.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelNameDescr">
-        <source>The name of the panel.</source>
-        <target state="translated">Bölmenin adı.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelStyleDescr">
-        <source>The style of the panel.</source>
-        <target state="translated">Bölmenin stili.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelTextDescr">
-        <source>The text displayed in the panel.</source>
-        <target state="translated">Bölmede görüntülenen metin.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelToolTipTextDescr">
-        <source>The panel's ToolTip text.</source>
-        <target state="translated">Bölmenin ToolTip metni.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelWidthDescr">
-        <source>The width of the panel.</source>
-        <target state="translated">Bölmenin genişliği.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelsDescr">
-        <source>The panels in the status bar.</source>
-        <target state="translated">Durum çubuğundaki bölmeler.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarShowPanelsDescr">
-        <source>Determines if a status bar displays panels, or if it displays a single line of text.</source>
-        <target state="translated">Durum Çubuğu'nun bölmeleri mi yoksa tek satırlık bir metin mi görüntüleyeceğini belirler.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarSizingGripDescr">
-        <source>Determines whether a status bar has a sizing grip.</source>
-        <target state="translated">Durum çubuğunun boyutlandırma tutamacı olup olmadığını belirler.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StatusStripPanelBorderSidesDescr">
         <source>Specifies the sides of the panel that should display borders.</source>
         <target state="translated">Bölmenin kenarlıkları görüntüleyecek taraflarını belirtir.</target>
@@ -8924,6 +8884,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="SystemInformationFeatureNotSupported">
         <source>Feature not supported with this operating system.</source>
         <target state="translated">Özellik bu işletim sistemiyle desteklenmiyor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TabControlBadControl">
+        <source>Parameter must be of type TabPage.</source>
+        <target state="translated">Parametrenin TabPage türünde olması gerekir.</target>
         <note />
       </trans-unit>
       <trans-unit id="TabControlTabPageNotOnTabControl">
@@ -9101,6 +9066,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">TableLayoutSettings'i doğrudan ayarlama desteklenmiyor. Yerine özellikleri ayrı ayrı kullanın.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TableLayoutSettingsConverterNoName">
+        <source>Cannot convert TableLayoutSettings to string: could not find a 'Name' string property on a control.</source>
+        <target state="translated">TableLayoutSettings dizeye dönüştürülemiyor: Bir denetimde 'Name' dize özelliği bulunamadı.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TableLayoutSettingsGetCellPositionDescr">
         <source>Indicates the row and column of the cell.</source>
         <target state="translated">Hücrenin satır ve sütununu gösterir.</target>
@@ -9114,6 +9084,151 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="TablePrintLayoutFromDifferentDocument">
         <source>TablePrintLayout instance specified was constructed for a different document.</source>
         <target state="translated">Belirtilen TablePrintLayout örneği faklı bir belge için oluşturuldu.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogButtonTextMustNotBeNull">
+        <source>The text of a custom button must not be null or an empty string.</source>
+        <target state="translated">Özel düğmenin metni null veya boş bir dize olmamalıdır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCanUpdateStateOnlyWhenShown">
+        <source>Can only update the state of a task dialog while it is shown.</source>
+        <target state="translated">Görev iletişim kutusunun durumu yalnızca görüntülendiği sırada güncelleştirilebilir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateClosedDialog">
+        <source>Cannot navigate the dialog when it has already closed.</source>
+        <target state="translated">Kapatıldıktan sonra iletişim kutusuna gidilemez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithinNavigationEventHandler">
+        <source>Cannot navigate the dialog from an event handler that is called from within navigation.</source>
+        <target state="translated">Gezintide çağrılan bir olay işleyiciden iletişim kutusuna gidilemez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithinRadioButtonCheckedChanged">
+        <source>Cannot navigate the dialog from within the {0} event of one of the radio buttons of the current task dialog.</source>
+        <target state="translated">Geçerli görev iletişim kutusunun radyo düğmelerinden birinin {0} olayından iletişim kutusuna gidilemez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithoutDialog">
+        <source>Cannot navigate from a page not bound to a dialog.</source>
+        <target state="translated">İletişim kutusuna bağlı olmayan bir sayfada gezinilemez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotRemoveProgressBarWhileDialogIsShown">
+        <source>Cannot remove the progress bar while the task dialog is shown.</source>
+        <target state="translated">Görev iletişim kutusu gösterilirken ilerleme çubuğu kaldırılamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetPropertyOfBoundPage">
+        <source>Cannot set this property or call this method while the page is bound to a task dialog.</source>
+        <target state="translated">Sayfa, görev iletişim kutusuna bağlıyken bu özellik ayarlanamaz veya bu yöntem çağrılamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetPropertyOfShownDialog">
+        <source>Cannot set this property while the task dialog is shown.</source>
+        <target state="translated">Görev iletişim kutusu gösterilirken bu özellik ayarlanamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetRadioButtonCheckedWithinCheckedChangedEvent">
+        <source>Cannot set the {0} property from within the {1} event of one of the radio buttons of the current task dialog.</source>
+        <target state="translated">Geçerli görev iletişim kutusunun radyo düğmelerinden birinin {1} olayından {0} özelliği ayarlanamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetTextForStandardButton">
+        <source>Cannot set the text for a standard button.</source>
+        <target state="translated">Standart bir düğme için metin ayarlanamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotShowCustomButtonsAndCommandLinks">
+        <source>Cannot show both custom buttons and command links at the same time.</source>
+        <target state="translated">Aynı anda hem özel düğmeler hem de komut bağlantıları gösterilemez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUncheckRadioButtonWhileBound">
+        <source>Cannot uncheck a radio button while it is bound to a task dialog.</source>
+        <target state="translated">Görev iletişim kutusu ile ilişkiliyken radyo düğmesinin seçimi kaldırılamaz.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUpdateAfterNavigation">
+        <source>Cannot manipulate the task dialog immediately after navigating it. Please wait for the {0} event of the next page to occur.</source>
+        <target state="translated">Görev iletişim kutusu gezinti yapıldıktan hemen sonra değiştirilemez. Lütfen sonraki sayfanın {0} olayının gerçekleşmesini bekleyin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUpdateIconType">
+        <source>Cannot update the icon from a handle icon type to a non-handle icon type, and vice versa.</source>
+        <target state="translated">Simge, tutamaç simge türünden tutamaç olmayan simge türüne (veya tam tersi) güncelleştirilemez.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCollectionAlreadyBound">
+        <source>One of the collections of this {0} is already bound to a {1} instance.</source>
+        <target state="translated">Bu {0} koleksiyonlarından biri zaten bir {1} örneğine bağlı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlAlreadyAddedToCollection">
+        <source>This control has already been added to the collection.</source>
+        <target state="translated">Bu denetim koleksiyona zaten eklendi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlAlreadyBound">
+        <source>One of the controls of this {0} is already bound to a {1} instance.</source>
+        <target state="translated">Bu {0} denetimlerinden biri zaten bir {1} örneğine bağlı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlIsPartOfOtherCollection">
+        <source>This control is already part of a different collection.</source>
+        <target state="translated">Bu denetim zaten farklı bir koleksiyonda var.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlNotBound">
+        <source>This control is not currently bound to a task dialog.</source>
+        <target state="translated">Bu denetim, şu anda bir görev iletişim kutusuna bağlı değil.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlNotCreated">
+        <source>The control has not been created.</source>
+        <target state="translated">Denetim oluşturulmadı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogDefaultButtonMustExistInCollection">
+        <source>The default button must exist in the buttons collection.</source>
+        <target state="translated">Varsayılan düğme, düğmeler koleksiyonunda bulunmalıdır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogInstanceAlreadyShown">
+        <source>This {0} instance is already being shown.</source>
+        <target state="translated">Bu {0} örneği zaten gösteriliyor.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogNavigationNotCompleted">
+        <source>Navigation of the task dialog did not complete yet. Please wait for the {0} event to occur.</source>
+        <target state="translated">Görev iletişim kutusunun gezintisi henüz tamamlanmadı. Lütfen {0} olayının gerçekleşmesini bekleyin.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogOnlySingleRadioButtonCanBeChecked">
+        <source>Only a single radio button can be set as checked.</source>
+        <target state="translated">Yalnızca tek bir radyo düğmesi işaretlendi olarak ayarlanabilir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogPageIsAlreadyBound">
+        <source>This {0} instance is already bound to a {1} instance.</source>
+        <target state="translated">Bu {0} örneği zaten bir {1} örneğine bağlı.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogRadioButtonTextMustNotBeNull">
+        <source>The text of a radio button must not be null or an empty string.</source>
+        <target state="translated">Radyo düğmesinin metni null veya boş bir dize olmamalıdır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogTooManyButtonsAdded">
+        <source>Too many custom buttons or radio buttons have been added.</source>
+        <target state="translated">Çok fazla özel düğme veya radyo düğmesi eklendi.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogVisualStylesNotEnabled">
+        <source>Visual styles are not enabled. Please call {0} before showing the task dialog.</source>
+        <target state="translated">Görsel stiller etkin değil. Görev iletişim kutusunu görüntülemeden önce lütfen {0} çağırın.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextBoxAcceptsReturnDescr">
@@ -9284,6 +9399,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
         <target state="translated">Çok satırlı düzenleme denetimlerinde satırlarda otomatik olarak sözcük kaydırılıp kaydırılmayacağını gösterir.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="new">TextFormatFlags.ModifyString is not allowed.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10681,6 +10801,11 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">Kullanıcı denetimi her yüklendiğinde gerçekleşir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="VScrollBarDefaultAccessibleName">
+        <source>Vertical</source>
+        <target state="translated">Dikey</target>
+        <note />
+      </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">
         <source>Visual Style handle creation operation did not succeed.</source>
         <target state="translated">Görsel Stil işleyicisi oluşturma işlemi başarısız oldu.</target>
@@ -10764,11 +10889,6 @@ Geçersiz işlemin gerçekleştiği yığın izi:
       <trans-unit id="WebBrowserFileDownloadDescr">
         <source>Occurs when a file download occurs.</source>
         <target state="translated">Dosya indirme oluştuğunda gerçekleşir.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WebBrowserInIENotSupported">
-        <source>Adding a WebBrowser control in Internet Explorer is not supported.</source>
-        <target state="translated">Internet Explorer'a WebBrowser denetimi eklenmesi desteklenmiyor.</target>
         <note />
       </trans-unit>
       <trans-unit id="WebBrowserIsOfflineDescr">
@@ -10866,9 +10986,19 @@ Geçersiz işlemin gerçekleştiği yığın izi:
         <target state="translated">Width değeri MinWidth değerinden büyük olmalı.</target>
         <note />
       </trans-unit>
+      <trans-unit id="Win32SetParentFailed">
+        <source>Failed to set Win32 parent window of the Control.</source>
+        <target state="translated">Denetimin Win32 üst penceresi ayarlanamadı.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Win32WindowAlreadyCreated">
         <source>SetCompatibleTextRenderingDefault must be called before the first IWin32Window object is created in the application.</source>
         <target state="translated">Uygulamada ilk IWin32Window nesnesi oluşturulmadan önce SetCompatibleTextRenderingDefault çağrılmalıdır.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WindowSubclassHandlerWndProcIsNotExceptedOne">
+        <source>The current window procedure is not the expected one.</source>
+        <target state="translated">Geçerli pencere yordamı beklenen bir yordam değil.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowsFormsSetEvent">

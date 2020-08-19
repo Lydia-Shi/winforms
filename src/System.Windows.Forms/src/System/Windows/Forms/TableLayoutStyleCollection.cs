@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Collections;
 using System.ComponentModel;
 using System.Drawing.Design;
@@ -26,7 +28,7 @@ namespace System.Windows.Forms
 
         int IList.Add(object style)
         {
-            if (style == null)
+            if (style is null)
             {
                 throw new ArgumentNullException(nameof(style));
             }
@@ -45,7 +47,7 @@ namespace System.Windows.Forms
 
         void IList.Insert(int index, object style)
         {
-            if (style == null)
+            if (style is null)
             {
                 throw new ArgumentNullException(nameof(style));
             }
@@ -61,7 +63,7 @@ namespace System.Windows.Forms
             get => _innerList[index];
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     throw new ArgumentNullException(nameof(value));
                 }
@@ -82,7 +84,7 @@ namespace System.Windows.Forms
 
         void IList.Remove(object style)
         {
-            if (style == null)
+            if (style is null)
             {
                 return;
             }

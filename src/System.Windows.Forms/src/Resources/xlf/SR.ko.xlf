@@ -99,7 +99,7 @@
       </trans-unit>
       <trans-unit id="AXOcxStateLoaded">
         <source>ActiveX control cannot be reloaded with an OcxState of a different storage type.</source>
-        <target state="translated">저장소 형식이 다른 OcxState를 사용하여 ActiveX 컨트롤을 다시 로드할 수 없습니다.</target>
+        <target state="translated">스토리지 형식이 다른 OcxState를 사용하여 ActiveX 컨트롤을 다시 로드할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AXProperties">
@@ -192,6 +192,11 @@
         <target state="translated">축소</target>
         <note />
       </trans-unit>
+      <trans-unit id="AccessibleActionDoubleClick">
+        <source>Double Click</source>
+        <target state="new">Double Click</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AccessibleActionExpand">
         <source>Expand</source>
         <target state="translated">확장</target>
@@ -219,7 +224,7 @@
       </trans-unit>
       <trans-unit id="ApplicationCannotChangeApplicationExceptionMode">
         <source>Application exception mode cannot be changed once any Controls are created in the application.</source>
-        <target state="translated">응용 프로그램에서 컨트롤이 만들어진 이후에는 응용 프로그램 예외 모드를 변경할 수 없습니다.</target>
+        <target state="translated">애플리케이션에서 컨트롤이 만들어진 이후에는 애플리케이션 예외 모드를 변경할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ApplicationCannotChangeThreadExceptionMode">
@@ -230,11 +235,6 @@
       <trans-unit id="ApplyCaption">
         <source>&amp;Apply</source>
         <target state="translated">적용(&amp;A)</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ArraysNotSameSize">
-        <source>Arrays '{0}' and '{1}' must be the same size.</source>
-        <target state="translated">'{0}' 배열과 '{1}' 배열은 크기가 같아야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AutoCompleteFailure">
@@ -692,16 +692,6 @@
         <target state="translated">문서를 인쇄한 후에는 문서를 변경하거나 문서에 추가할 수 없습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="CannotConvertDoubleToDate">
-        <source>Double cannot be converted to a date.</source>
-        <target state="translated">double 형식을 date 형식으로 변환할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CannotConvertIntToFloat">
-        <source>Integer cannot be converted to a float.</source>
-        <target state="translated">integer 형식을 float 형식으로 변환할 수 없습니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="CantNestMessageLoops">
         <source>Starting a second message loop on a single thread is not a valid operation. Use Form.ShowDialog instead.</source>
         <target state="translated">단일 스레드에서 두 번째 메시지 루프를 시작할 수 없습니다. 대신 Form.ShowDialog를 사용하십시오.</target>
@@ -719,7 +709,7 @@
       </trans-unit>
       <trans-unit id="CantShowModalOnNonInteractive">
         <source>Showing a modal dialog box or form when the application is not running in UserInteractive mode is not a valid operation. Specify the ServiceNotification or DefaultDesktopOnly style to display a notification from a service application.</source>
-        <target state="translated">응용 프로그램이 UserInteractive 모드에서 실행되지 않을 때에는 모달 대화 상자나 폼을 표시할 수 없습니다. 서비스 응용 프로그램에서 알림을 표시하려면 ServiceNotification 또는 DefaultDesktopOnly 스타일을 지정하십시오.</target>
+        <target state="translated">애플리케이션이 UserInteractive 모드에서 실행되지 않을 때에는 모달 대화 상자나 폼을 표시할 수 없습니다. 서비스 애플리케이션에서 알림을 표시하려면 ServiceNotification 또는 DefaultDesktopOnly 스타일을 지정하십시오.</target>
         <note />
       </trans-unit>
       <trans-unit id="CatAccessibility">
@@ -959,7 +949,7 @@
       </trans-unit>
       <trans-unit id="CombinationOfAccessibilitySwitchesNotSupported">
         <source>Desktop applications are required to opt in to all earlier accessibility improvements to get the later improvements. To do this, ensure that if the AppContext switch 'Switch.UseLegacyAccessibilityFeatures.N' is set to 'false', then 'Switch.UseLegacyAccessibilityFeatures' and all 'Switch.UseLegacyAccessibilityFeatures.M' switches, when M &lt; N, evaluate to false as well. Note that, if a switch for a particular set of accessibility improvements is not present, its value is determined by the target framework version. You can remedy this by adding these switches and setting their value to false.</source>
-        <target state="translated">데스크톱 응용 프로그램은 이전의 모든 접근성 개선 사항을 옵트인하여 이후의 개선 사항을 받아야 합니다. 이렇게 하려면 AppContext 스위치 'Switch.UseLegacyAccessibilityFeatures.N'이 'false'로 설정되어 있는지 확인한 다음 M &lt; N일 때 'Switch.UseLegacyAccessibilityFeatures' 및 모든 'Switch.UseLegacyAccessibilityFeatures.M' 스위치도 false로 계산되는지 확인합니다. 특정 접근성 개선 사항 집합에 대한 스위치가 없는 경우 해당 값은 대상 프레임워크 버전에 따라 결정됩니다. 이러한 스위치를 추가하고 값을 false로 설정하여 이 문제를 해결할 수 있습니다.</target>
+        <target state="translated">데스크톱 애플리케이션은 이전의 모든 접근성 개선 사항을 옵트인하여 이후의 개선 사항을 받아야 합니다. 이렇게 하려면 AppContext 스위치 'Switch.UseLegacyAccessibilityFeatures.N'이 'false'로 설정되어 있는지 확인한 다음 M &lt; N일 때 'Switch.UseLegacyAccessibilityFeatures' 및 모든 'Switch.UseLegacyAccessibilityFeatures.M' 스위치도 false로 계산되는지 확인합니다. 특정 접근성 개선 사항 집합에 대한 스위치가 없는 경우 해당 값은 대상 프레임워크 버전에 따라 결정됩니다. 이러한 스위치를 추가하고 값을 false로 설정하여 이 문제를 해결할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ComboBoxAutoCompleteCustomSourceDescr">
@@ -1182,6 +1172,11 @@
         <target state="translated">처리되지 않은 {0} 형식입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ConstructorArgumentInvalidValueType">
+        <source>Argument '{0}' cannot be converted to type '{1}'.</source>
+        <target state="translated">'{0}' 인수를 '{1}' 형식으로 변환할 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ContainerControlActiveControlDescr">
         <source>The currently active control.</source>
         <target state="translated">현재 활성 컨트롤입니다.</target>
@@ -1219,7 +1214,7 @@
       </trans-unit>
       <trans-unit id="ContextMenuStripSourceControlDescr">
         <source>The last control that caused this context menu strip to be displayed.</source>
-        <target state="new">The last control that caused this context menu strip to be displayed.</target>
+        <target state="translated">상황에 맞는 메뉴 스트립을 표시한 마지막 컨트롤입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ControlAccessibileObjectInvalid">
@@ -1514,7 +1509,7 @@
       </trans-unit>
       <trans-unit id="ControlIsAccessibleDescr">
         <source>Indicates whether the control is visible to accessibility applications.</source>
-        <target state="translated">컨트롤이 내게 필요한 옵션 지원 응용 프로그램에 나타나는지 여부를 나타냅니다.</target>
+        <target state="translated">컨트롤이 내게 필요한 옵션 지원 애플리케이션에 나타나는지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ControlIsKeyLockedNumCapsScrollLockKeysSupportedOnly">
@@ -3109,7 +3104,7 @@
       </trans-unit>
       <trans-unit id="DataGridView_CellValuePushedDescr">
         <source>Occurs when the DataGridView.VirtualMode property of the DataGridView control is true, and a cell value has changed and requires storage in the underlying data source.</source>
-        <target state="translated">DataGridView 컨트롤의 DataGridView.VirtualMode 속성이 true이고 셀 값이 변경되어 내부 데이터 소스에 저장소가 필요할 때 발생합니다.</target>
+        <target state="translated">DataGridView 컨트롤의 DataGridView.VirtualMode 속성이 true이고 셀 값이 변경되어 내부 데이터 소스에 스토리지가 필요할 때 발생합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_CheckBoxColumnFalseValueDescr">
@@ -3479,7 +3474,7 @@
       </trans-unit>
       <trans-unit id="DataGridView_EnableHeadersVisualStylesDescr">
         <source>Indicates whether row and column headers use the visual styles of the user's current theme if visual styles are enabled for the application.</source>
-        <target state="translated">응용 프로그램에서 비주얼 스타일을 사용하는 경우, 행 및 열 머리글에 사용자 현재 테마의 비주얼 스타일을 사용하는지 여부를 나타냅니다.</target>
+        <target state="translated">애플리케이션에서 비주얼 스타일을 사용하는 경우, 행 및 열 머리글에 사용자 현재 테마의 비주얼 스타일을 사용하는지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataGridView_ErrorMessageCaption">
@@ -4061,7 +4056,7 @@ To replace this default dialog please handle the DataError event.</source>
       </trans-unit>
       <trans-unit id="DataObjectDibNotSupported">
         <source>Bitmap object does not directly support the device-independent bitmap format.  Either specify auto-conversion or perform a SetData with the Bitmap data format.</source>
-        <target state="translated">Bitmap 개체는 장치 독립적 비트맵 형식을 직접 지원하지 않습니다. 자동 변환을 지정하거나 Bitmap 데이터 형식으로 SetData를 수행하십시오.</target>
+        <target state="translated">Bitmap 개체는 디바이스 독립적 비트맵 형식을 직접 지원하지 않습니다. 자동 변환을 지정하거나 Bitmap 데이터 형식으로 SetData를 수행하십시오.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataObjectWhitespaceEmptyFormatNotAllowed">
@@ -4224,6 +4219,16 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">편집</target>
         <note />
       </trans-unit>
+      <trans-unit id="DefaultNumericUpDownAccessibleName">
+        <source>NumericUpDown</source>
+        <target state="translated">NumericUpDown</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DefaultUpDownButtonsAccessibleName">
+        <source>UpDown</source>
+        <target state="translated">위쪽/아래쪽</target>
+        <note />
+      </trans-unit>
       <trans-unit id="DescriptionBindingNavigator">
         <source>Provides a user interface for navigation and manipulation of data bound to controls on a form.</source>
         <target state="translated">폼의 컨트롤에 바인딩된 데이터의 탐색과 조작에 필요한 사용자 인터페이스를 제공합니다.</target>
@@ -4346,7 +4351,7 @@ To replace this default dialog please handle the DataError event.</source>
       </trans-unit>
       <trans-unit id="DescriptionMenuStrip">
         <source>Displays application commands and options grouped by functionality.</source>
-        <target state="translated">기능별로 그룹화된 응용 프로그램 명령과 옵션을 표시합니다.</target>
+        <target state="translated">기능별로 그룹화된 애플리케이션 명령과 옵션을 표시합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DescriptionMonthCalendar">
@@ -4521,7 +4526,7 @@ To replace this default dialog please handle the DataError event.</source>
       </trans-unit>
       <trans-unit id="DomainUpDownWrapDescr">
         <source>Indicates whether values wrap around at either end of the item list.</source>
-        <target state="translated">항목 목록의 한쪽 끝에서 값을 줄 바꿈할지 여부를 나타냅니다.</target>
+        <target state="translated">항목 목록의 한쪽 끝에서 값을 래핑할지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DragDropRegFailed">
@@ -4579,6 +4584,11 @@ To replace this default dialog please handle the DataError event.</source>
         <target state="translated">오류를 바인딩할 데이터 소스를 나타냅니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ErrorProviderDefaultAccessibleName">
+        <source>Error provider</source>
+        <target state="translated">오류 공급자</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ErrorProviderErrorDescr">
         <source>The error description for a control.</source>
         <target state="translated">컨트롤에 대한 오류 설명입니다.</target>
@@ -4633,7 +4643,7 @@ To replace this default dialog please handle the DataError event.</source>
         <source>Unhandled exception has occurred in a component in your application. If you click Continue, the application will ignore this error and attempt to continue.
 
 {0}.</source>
-        <target state="translated">응용 프로그램의 구성 요소에서 처리되지 않은 예외가 발생했습니다. [계속]을 클릭하면 응용 프로그램에서 이 오류를 무시하고 계속합니다.
+        <target state="translated">애플리케이션의 구성 요소에서 처리되지 않은 예외가 발생했습니다. [계속]을 클릭하면 애플리케이션에서 이 오류를 무시하고 계속합니다.
 
 {0}</target>
         <note />
@@ -4647,7 +4657,7 @@ To replace this default dialog please handle the DataError event.</source>
         <source>Unhandled exception has occurred in your application. If you click Continue, the application will ignore this error and attempt to continue. If you click Quit, the application will close immediately.
 
 {0}.</source>
-        <target state="translated">응용 프로그램에서 처리되지 않은 예외가 발생했습니다. [계속]을 클릭하면 응용 프로그램에서 이 오류를 무시하고 계속합니다. [끝내기]를 클릭하면 응용 프로그램이 즉시 닫힙니다.
+        <target state="translated">애플리케이션에서 처리되지 않은 예외가 발생했습니다. [계속]을 클릭하면 애플리케이션에서 이 오류를 무시하고 계속합니다. [끝내기]를 클릭하면 애플리케이션이 즉시 닫힙니다.
 
 {0}</target>
         <note />
@@ -4667,8 +4677,8 @@ To replace this default dialog please handle the DataError event.</source>
 debugging. Contact the application author for more
 information.
 </source>
-        <target state="translated">응용 프로그램에서는 Windows JIT(Just In Time) 디버깅을 지원하지
-않습니다. 자세한 내용은 응용 프로그램 작성자에게 
+        <target state="translated">애플리케이션에서는 Windows JIT(Just In Time) 디버깅을 지원하지
+않습니다. 자세한 내용은 애플리케이션 작성자에게 
 문의하십시오.
 </target>
         <note />
@@ -4677,7 +4687,7 @@ information.
         <source>Application does not support just-in-time (JIT)
 debugging. See the end of this message for details.
 </source>
-        <target state="translated">응용 프로그램에서 Windows JIT(Just In Time) 디버깅을 지원하지
+        <target state="translated">애플리케이션에서 Windows JIT(Just In Time) 디버깅을 지원하지
 않습니다. 자세한 내용은 이 메시지의 뒷부분을 참조하십시오.
 </target>
         <note />
@@ -5417,6 +5427,11 @@ Do you want to replace it?</source>
         <target state="translated">테이블의 행 개수입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="HScrollBarDefaultAccessibleName">
+        <source>Horizontal</source>
+        <target state="translated">가로</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HandleAlreadyExists">
         <source>Window handle already exists.</source>
         <target state="translated">창 핸들이 이미 있습니다.</target>
@@ -5536,6 +5551,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">ImageList 핸들을 만들지 못했습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ImageListDuplicateFailed">
+        <source>Duplication of the ImageList handle did not succeed.</source>
+        <target state="translated">ImageList 핸들을 복제하지 못했습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ImageListEntryType">
         <source>Image added to an ImageList must either derive from Image or be an Icon.</source>
         <target state="translated">ImageList에 추가하는 이미지는 이미지에서 파생되거나 아이콘이어야 합니다.</target>
@@ -5621,6 +5641,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">{0} 인덱스가 범위를 벗어났습니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="InputLanguageCultureNotFound">
+        <source>Could not find an InputLanguage for culture '{0}'.</source>
+        <target state="translated">'{0}' 문화의 InputLanguage를 찾을 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidArgument">
         <source>InvalidArgument=Value of '{1}' is not valid for '{0}'.</source>
         <target state="translated">'{1}'의 InvalidArgument=Value는 '{0}'에 사용할 수 없습니다.</target>
@@ -5654,6 +5679,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="InvalidGDIHandle">
         <source>Win32 handle passed to {0} is not valid or is the wrong type.</source>
         <target state="translated">{0}에 전달한 Win32 핸들이 잘못되었거나 핸들 종류가 올바르지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidHdcType">
+        <source>Invalid HDC type: {0}</source>
+        <target state="new">Invalid HDC type: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidHighBoundArgument">
@@ -5783,7 +5813,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="LabelAutoSizeDescr">
         <source>Enables automatic resizing based on font size. Note that this is only valid for label controls that do not wrap text.</source>
-        <target state="translated">글꼴 크기에 따른 자동 크기 조정 기능을 사용합니다. 이 기능은 텍스트 줄 바꿈을 하지 않는 레이블 컨트롤에만 사용할 수 있습니다.</target>
+        <target state="translated">글꼴 크기에 따른 자동 크기 조정 기능을 사용합니다. 이 기능은 텍스트 래핑을 하지 않는 레이블 컨트롤에만 사용할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="LabelBackgroundImageDescr">
@@ -6336,6 +6366,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">항목과 하위 항목 주위에 모눈선을 표시합니다. 자세히 보기에서만 표시됩니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupCollapsedStateChangedDescr">
+        <source>Event raised when the CollapsedState property of a ListViewGroup changes.</source>
+        <target state="translated">ListViewGroup의 CollapsedState 속성이 변경되면 이벤트가 발생합니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupCollectionBadListViewGroup">
         <source>Parameter must be of type ListViewGroup.</source>
         <target state="translated">매개 변수는 ListViewGroup 형식이어야 합니다.</target>
@@ -6351,9 +6386,19 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">ListViewGroup</target>
         <note />
       </trans-unit>
+      <trans-unit id="ListViewGroupImageListDescr">
+        <source>The ImageList control used by the ListView for ListViewGroup images in all views.</source>
+        <target state="translated">ListView에서 모든 보기의 ListViewGroup 이미지로 사용하는 ImageList 컨트롤입니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ListViewGroupNameDescr">
         <source>The name of this group.</source>
         <target state="translated">이 그룹의 이름입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ListViewGroupTaskLinkClickDescr">
+        <source>Event raised when the TaskLink property of a ListViewGroup is clicked.</source>
+        <target state="translated">ListViewGroup의 TaskLink 속성이 클릭되면 이벤트가 발생합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewGroupsDescr">
@@ -6468,7 +6513,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="ListViewLabelWrapDescr">
         <source>Determines whether label text can wrap to a new line.</source>
-        <target state="translated">레이블 텍스트를 줄 바꿈할 수 있는지 여부를 결정합니다.</target>
+        <target state="translated">레이블 텍스트를 래핑할 수 있는지 여부를 결정합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ListViewLargeImageListDescr">
@@ -6808,12 +6853,12 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MenuItemShortCutDescr">
         <source>The shortcut key associated with the menu item. </source>
-        <target state="new">The shortcut key associated with the menu item. </target>
+        <target state="translated">메뉴 항목에 연결된 바로 가기 키입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MenuItemShowShortCutDescr">
         <source>Indicates whether the shorcut key for the menu item is displayed on the item. </source>
-        <target state="new">Indicates whether the shorcut key for the menu item is displayed on the item. </target>
+        <target state="translated">메뉴 항목의 바로 가기 키가 항목에 표시되는지 여부를 나타냅니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="MenuStripMdiWindowListItem">
@@ -6838,7 +6883,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MonthCalendarBodyAccessibleName">
         <source>Calendar body</source>
-        <target state="new">Calendar body</target>
+        <target state="translated">일정 본문</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarDimensionsDescr">
@@ -6893,7 +6938,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MonthCalendarNextButtonAccessibleName">
         <source>Next</source>
-        <target state="new">Next</target>
+        <target state="translated">다음</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarOnDateChangedDescr">
@@ -6908,7 +6953,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MonthCalendarPreviousButtonAccessibleName">
         <source>Previous</source>
-        <target state="new">Previous</target>
+        <target state="translated">이전</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarRange">
@@ -6988,7 +7033,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="MonthCalendarTodayButtonAccessibleName">
         <source>Today: {0}</source>
-        <target state="new">Today: {0}</target>
+        <target state="translated">오늘: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="MonthCalendarTodayDateDescr">
@@ -7891,6 +7936,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">ToolStripPanel에 사용하는 그라데이션의 끝 색입니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ProgressBarDefaultAccessibleName">
+        <source>ProgressBar</source>
+        <target state="translated">ProgressBar</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProgressBarIncrementMarqueeException">
         <source>Increment should not be called if the style is Marquee.</source>
         <target state="translated">스타일이 움직이는 텍스트인 경우 Increment를 호출하면 안 됩니다.</target>
@@ -8076,6 +8126,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">열기</target>
         <note />
       </trans-unit>
+      <trans-unit id="PropertyGridEntryValuesListDefaultAccessibleName">
+        <source>Available values</source>
+        <target state="translated">사용 가능한 값</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PropertyGridExceptionInfo">
         <source>Error Information</source>
         <target state="translated">오류 정보</target>
@@ -8159,11 +8214,6 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="PropertyGridPropertyValueSelectedFormat">
         <source>{0} selected.</source>
         <target state="translated">{0}이(가) 선택되었습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PropertyGridRemotedObject">
-        <source>Object {0} is being remoted by a proxy that does not support interface discovery.  This type of remoted object is not supported.</source>
-        <target state="translated">{0} 개체는 인터페이스 검색을 지원하지 않는 프록시에서 원격으로 처리되고 있습니다. 이러한 형식의 원격 개체는 지원되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PropertyGridRemoveStaticTabs">
@@ -8338,7 +8388,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="RestartNotSupported">
         <source>Restart method is not supported for this application type.</source>
-        <target state="translated">Restart 메서드는 이 응용 프로그램 종류에서 지원되지 않습니다.</target>
+        <target state="translated">Restart 메서드는 이 애플리케이션 종류에서 지원되지 않습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="RichControlLresult">
@@ -8653,7 +8703,7 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="SendKeysNoMessageLoop">
         <source>SendKeys cannot run inside this application because the application is not handling Windows messages.  Either change the application to handle messages, or use the SendKeys.SendWait method.</source>
-        <target state="translated">이 응용 프로그램에서 Windows 메시지를 처리할 수 없으므로 응용 프로그램 안에서 SendKeys를 실행할 수 없습니다. 메시지를 처리하는 응용 프로그램으로 변경하거나 SendKeys.SendWait 메서드를 사용하십시오.</target>
+        <target state="translated">이 애플리케이션에서 Windows 메시지를 처리할 수 없으므로 애플리케이션 안에서 SendKeys를 실행할 수 없습니다. 메시지를 처리하는 애플리케이션으로 변경하거나 SendKeys.SendWait 메서드를 사용하십시오.</target>
         <note />
       </trans-unit>
       <trans-unit id="SerializationException">
@@ -8694,11 +8744,6 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="SortedDescendingAccessibleStatus">
         <source>Sorted descending.</source>
         <target state="translated">내림차순으로 정렬했습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="SpinnerAccessibleName">
-        <source>Spinner</source>
-        <target state="translated">회전자</target>
         <note />
       </trans-unit>
       <trans-unit id="SplitContainerFixedPanelDescr">
@@ -8821,91 +8866,6 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">IID {0}의 마샬러를 가져오지 못했습니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="StatusBarAddFailed">
-        <source>Adding the panel to the native status bar control has not succeeded.</source>
-        <target state="translated">기본 상태 표시줄 컨트롤에 패널을 추가하지 못했습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarBadStatusBarPanel">
-        <source>Parameter must be of type StatusBarPanel.</source>
-        <target state="translated">매개 변수는 StatusBarPanel 형식이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarDrawItem">
-        <source>Occurs whenever a panel in the StatusBar needs to be painted.</source>
-        <target state="translated">StatusBar의 패널을 그려야 할 때마다 발생합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarOnPanelClickDescr">
-        <source>Occurs when a panel within the status bar is clicked.</source>
-        <target state="translated">상태 표시줄의 패널을 클릭할 때 발생합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelAlignmentDescr">
-        <source>The alignment of the panel's text.</source>
-        <target state="translated">패널 텍스트를 맞춥니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelAutoSizeDescr">
-        <source>Determines how a panel will resize when the parent changes size.</source>
-        <target state="translated">부모의 크기가 변경될 때 패널의 크기를 조정하는 방법을 결정합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelBorderStyleDescr">
-        <source>Determines what type of border a panel has.</source>
-        <target state="translated">패널의 테두리 형식을 결정합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelIconDescr">
-        <source>Determines what icon is displayed in the panel.</source>
-        <target state="translated">패널에 표시되는 아이콘 종류를 결정합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelMinWidthDescr">
-        <source>The minimum width of the panel.</source>
-        <target state="translated">패널의 최소 너비입니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelNameDescr">
-        <source>The name of the panel.</source>
-        <target state="translated">패널의 이름입니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelStyleDescr">
-        <source>The style of the panel.</source>
-        <target state="translated">패널의 스타일입니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelTextDescr">
-        <source>The text displayed in the panel.</source>
-        <target state="translated">패널에 표시되는 텍스트입니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelToolTipTextDescr">
-        <source>The panel's ToolTip text.</source>
-        <target state="translated">패널의 도구 설명 텍스트입니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelWidthDescr">
-        <source>The width of the panel.</source>
-        <target state="translated">패널의 너비입니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarPanelsDescr">
-        <source>The panels in the status bar.</source>
-        <target state="translated">상태 표시줄의 패널입니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarShowPanelsDescr">
-        <source>Determines if a status bar displays panels, or if it displays a single line of text.</source>
-        <target state="translated">상태 표시줄에서 패널을 표시할지 아니면 한 줄 텍스트를 표시할지 결정합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="StatusBarSizingGripDescr">
-        <source>Determines whether a status bar has a sizing grip.</source>
-        <target state="translated">상태 표시줄에 크기 조정 그립을 포함할지 여부를 결정합니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="StatusStripPanelBorderSidesDescr">
         <source>Specifies the sides of the panel that should display borders.</source>
         <target state="translated">테두리를 표시할 패널 면을 지정합니다.</target>
@@ -8924,6 +8884,11 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="SystemInformationFeatureNotSupported">
         <source>Feature not supported with this operating system.</source>
         <target state="translated">이 운영 시스템에서 지원되지 않는 기능입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TabControlBadControl">
+        <source>Parameter must be of type TabPage.</source>
+        <target state="translated">매개 변수는 TabPage 형식이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TabControlTabPageNotOnTabControl">
@@ -9101,6 +9066,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">TableLayoutSettings를 직접 설정할 수 없습니다. 대신 개별 속성을 사용하십시오.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TableLayoutSettingsConverterNoName">
+        <source>Cannot convert TableLayoutSettings to string: could not find a 'Name' string property on a control.</source>
+        <target state="translated">TableLayoutSettings를 문자열로 변환할 수 없음: 컨트롤에서 'Name' 문자열 속성을 찾을 수 없습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TableLayoutSettingsGetCellPositionDescr">
         <source>Indicates the row and column of the cell.</source>
         <target state="translated">셀의 행과 열을 나타냅니다.</target>
@@ -9114,6 +9084,151 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="TablePrintLayoutFromDifferentDocument">
         <source>TablePrintLayout instance specified was constructed for a different document.</source>
         <target state="translated">지정된 TablePrintLayout 인스턴스가 다른 문서에 대해 생성되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogButtonTextMustNotBeNull">
+        <source>The text of a custom button must not be null or an empty string.</source>
+        <target state="translated">사용자 지정 단추의 텍스트는 null 또는 빈 문자열이 아니어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCanUpdateStateOnlyWhenShown">
+        <source>Can only update the state of a task dialog while it is shown.</source>
+        <target state="translated">작업 대화 상자가 표시되어 있는 동안에만 상태를 업데이트할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateClosedDialog">
+        <source>Cannot navigate the dialog when it has already closed.</source>
+        <target state="translated">이미 닫힌 대화 상자는 탐색할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithinNavigationEventHandler">
+        <source>Cannot navigate the dialog from an event handler that is called from within navigation.</source>
+        <target state="translated">탐색 내에서 호출되는 이벤트 처리기에서 대화 상자를 탐색할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithinRadioButtonCheckedChanged">
+        <source>Cannot navigate the dialog from within the {0} event of one of the radio buttons of the current task dialog.</source>
+        <target state="translated">현재 작업 대화 상자의 라디오 단추 중 하나에 대한 {0} 이벤트 내에서 대화 상자를 탐색할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotNavigateWithoutDialog">
+        <source>Cannot navigate from a page not bound to a dialog.</source>
+        <target state="translated">대화 상자에 바인딩되어 있지 않은 페이지에서 탐색할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotRemoveProgressBarWhileDialogIsShown">
+        <source>Cannot remove the progress bar while the task dialog is shown.</source>
+        <target state="translated">작업 대화 상자가 표시되어 있는 동안에는 진행률 표시줄을 제거할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetPropertyOfBoundPage">
+        <source>Cannot set this property or call this method while the page is bound to a task dialog.</source>
+        <target state="translated">페이지가 작업 대화 상자에 바인딩되어 있는 동안에는 이 속성을 설정하거나 이 메서드를 호출할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetPropertyOfShownDialog">
+        <source>Cannot set this property while the task dialog is shown.</source>
+        <target state="translated">작업 대화 상자가 표시되어 있는 동안에는 이 속성을 설정할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetRadioButtonCheckedWithinCheckedChangedEvent">
+        <source>Cannot set the {0} property from within the {1} event of one of the radio buttons of the current task dialog.</source>
+        <target state="translated">현재 작업 대화 상자의 라디오 단추 중 하나에 대한 {1} 이벤트 내에서 {0} 속성을 설정할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotSetTextForStandardButton">
+        <source>Cannot set the text for a standard button.</source>
+        <target state="translated">표준 단추에 대한 텍스트를 설정할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotShowCustomButtonsAndCommandLinks">
+        <source>Cannot show both custom buttons and command links at the same time.</source>
+        <target state="translated">사용자 지정 단추와 명령 링크를 동시에 표시할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUncheckRadioButtonWhileBound">
+        <source>Cannot uncheck a radio button while it is bound to a task dialog.</source>
+        <target state="translated">작업 대화 상자에 바인딩되어 있는 동안에는 라디오 단추를 선택 취소할 수 없습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUpdateAfterNavigation">
+        <source>Cannot manipulate the task dialog immediately after navigating it. Please wait for the {0} event of the next page to occur.</source>
+        <target state="translated">작업 대화 상자를 탐색한 후 바로 조작할 수 없습니다. 다음 페이지의 {0} 이벤트가 발생할 때까지 기다려 주세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCannotUpdateIconType">
+        <source>Cannot update the icon from a handle icon type to a non-handle icon type, and vice versa.</source>
+        <target state="translated">핸들 아이콘 형식에서 비 핸들 아이콘 형식으로 아이콘을 업데이트할 수 없으며 반대의 경우도 마찬가지입니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogCollectionAlreadyBound">
+        <source>One of the collections of this {0} is already bound to a {1} instance.</source>
+        <target state="translated">이 {0}의 컬렉션 중 하나가 이미 {1} 인스턴스에 바인딩되어 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlAlreadyAddedToCollection">
+        <source>This control has already been added to the collection.</source>
+        <target state="translated">이 컨트롤은 이미 컬렉션에 추가되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlAlreadyBound">
+        <source>One of the controls of this {0} is already bound to a {1} instance.</source>
+        <target state="translated">이 {0}의 컨트롤 중 하나가 이미 {1} 인스턴스에 바인딩되어 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlIsPartOfOtherCollection">
+        <source>This control is already part of a different collection.</source>
+        <target state="translated">이 컨트롤은 이미 다른 컬렉션에 속해 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlNotBound">
+        <source>This control is not currently bound to a task dialog.</source>
+        <target state="translated">이 컨트롤은 현재 작업 대화 상자에 바인딩되어 있지 않습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogControlNotCreated">
+        <source>The control has not been created.</source>
+        <target state="translated">컨트롤이 생성되지 않았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogDefaultButtonMustExistInCollection">
+        <source>The default button must exist in the buttons collection.</source>
+        <target state="translated">기본 단추는 단추 컬렉션에 있어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogInstanceAlreadyShown">
+        <source>This {0} instance is already being shown.</source>
+        <target state="translated">이 {0} 인스턴스는 이미 표시되어 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogNavigationNotCompleted">
+        <source>Navigation of the task dialog did not complete yet. Please wait for the {0} event to occur.</source>
+        <target state="translated">작업 대화 상자 탐색이 아직 완료되지 않았습니다. {0} 이벤트가 발생하는 동안 기다려 주세요.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogOnlySingleRadioButtonCanBeChecked">
+        <source>Only a single radio button can be set as checked.</source>
+        <target state="translated">라디오 단추는 하나만 선택된 것으로 설정할 수 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogPageIsAlreadyBound">
+        <source>This {0} instance is already bound to a {1} instance.</source>
+        <target state="translated">이 {0} 인스턴스는 이미 {1} 인스턴스에 바인딩되어 있습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogRadioButtonTextMustNotBeNull">
+        <source>The text of a radio button must not be null or an empty string.</source>
+        <target state="translated">라디오 단추의 텍스트는 null 또는 빈 문자열이 아니어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogTooManyButtonsAdded">
+        <source>Too many custom buttons or radio buttons have been added.</source>
+        <target state="translated">사용자 지정 단추 또는 라디오 단추를 너무 많이 추가했습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TaskDialogVisualStylesNotEnabled">
+        <source>Visual styles are not enabled. Please call {0} before showing the task dialog.</source>
+        <target state="translated">시각적 개체 스타일을 사용할 수 없습니다. 작업 대화 상자를 표시하기 전에 {0}을(를) 호출하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextBoxAcceptsReturnDescr">
@@ -9283,7 +9398,12 @@ Stack trace where the illegal operation occurred was:
       </trans-unit>
       <trans-unit id="TextBoxWordWrapDescr">
         <source>Indicates if lines are automatically word-wrapped for multiline edit controls.</source>
-        <target state="translated">다중 행 편집 컨트롤의 자동 줄 바꿈 여부를 나타냅니다.</target>
+        <target state="translated">다중 행 편집 컨트롤의 자동 래핑 여부를 나타냅니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TextFormatFlagsModifyStringNotAllowed">
+        <source>TextFormatFlags.ModifyString is not allowed.</source>
+        <target state="new">TextFormatFlags.ModifyString is not allowed.</target>
         <note />
       </trans-unit>
       <trans-unit id="TextParseFailedFormat">
@@ -10681,6 +10801,11 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">사용자 정의 컨트롤이 로드될 때마다 발생합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="VScrollBarDefaultAccessibleName">
+        <source>Vertical</source>
+        <target state="translated">세로</target>
+        <note />
+      </trans-unit>
       <trans-unit id="VisualStyleHandleCreationFailed">
         <source>Visual Style handle creation operation did not succeed.</source>
         <target state="translated">비주얼 스타일 핸들을 만들지 못했습니다.</target>
@@ -10764,11 +10889,6 @@ Stack trace where the illegal operation occurred was:
       <trans-unit id="WebBrowserFileDownloadDescr">
         <source>Occurs when a file download occurs.</source>
         <target state="translated">파일을 다운로드할 때 발생합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="WebBrowserInIENotSupported">
-        <source>Adding a WebBrowser control in Internet Explorer is not supported.</source>
-        <target state="translated">Internet Explorer에서는 WebBrowser 컨트롤을 추가할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="WebBrowserIsOfflineDescr">
@@ -10866,9 +10986,19 @@ Stack trace where the illegal operation occurred was:
         <target state="translated">Width는 MinWidth보다 커야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="Win32SetParentFailed">
+        <source>Failed to set Win32 parent window of the Control.</source>
+        <target state="translated">컨트롤의 Win32 부모 창을 설정하지 못했습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Win32WindowAlreadyCreated">
         <source>SetCompatibleTextRenderingDefault must be called before the first IWin32Window object is created in the application.</source>
-        <target state="translated">SetCompatibleTextRenderingDefault는 응용 프로그램에 첫 번째 IWin32Window 개체가 만들어지기 전에 호출해야 합니다.</target>
+        <target state="translated">SetCompatibleTextRenderingDefault는 애플리케이션에 첫 번째 IWin32Window 개체가 만들어지기 전에 호출해야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WindowSubclassHandlerWndProcIsNotExceptedOne">
+        <source>The current window procedure is not the expected one.</source>
+        <target state="translated">현재 창 프로시저가 예상한 창 프로시저가 아닙니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="WindowsFormsSetEvent">

@@ -2,26 +2,23 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Drawing;
-using System.Runtime.InteropServices;
 using static Interop;
 
 namespace System.Windows.Forms
 {
-    [
-        ComVisible(true),
-        ClassInterface(ClassInterfaceType.AutoDispatch)
-    ]
-    public class DataGridViewTextBoxEditingControl : TextBox, IDataGridViewEditingControl
+    public partial class DataGridViewTextBoxEditingControl : TextBox, IDataGridViewEditingControl
     {
-        private static readonly DataGridViewContentAlignment anyTop = DataGridViewContentAlignment.TopLeft | DataGridViewContentAlignment.TopCenter | DataGridViewContentAlignment.TopRight;
-        private static readonly DataGridViewContentAlignment anyRight = DataGridViewContentAlignment.TopRight | DataGridViewContentAlignment.MiddleRight | DataGridViewContentAlignment.BottomRight;
-        private static readonly DataGridViewContentAlignment anyCenter = DataGridViewContentAlignment.TopCenter | DataGridViewContentAlignment.MiddleCenter | DataGridViewContentAlignment.BottomCenter;
+        private const DataGridViewContentAlignment AnyTop = DataGridViewContentAlignment.TopLeft | DataGridViewContentAlignment.TopCenter | DataGridViewContentAlignment.TopRight;
+        private const DataGridViewContentAlignment AnyRight = DataGridViewContentAlignment.TopRight | DataGridViewContentAlignment.MiddleRight | DataGridViewContentAlignment.BottomRight;
+        private const DataGridViewContentAlignment AnyCenter = DataGridViewContentAlignment.TopCenter | DataGridViewContentAlignment.MiddleCenter | DataGridViewContentAlignment.BottomCenter;
 
-        private DataGridView dataGridView;
-        private bool valueChanged;
-        private bool repositionOnValueChange;
-        private int rowIndex;
+        private DataGridView _dataGridView;
+        private bool _valueChanged;
+        private bool _repositionOnValueChange;
+        private int _rowIndex;
 
         public DataGridViewTextBoxEditingControl() : base()
         {
@@ -37,11 +34,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return dataGridView;
+                return _dataGridView;
             }
             set
             {
-                dataGridView = value;
+                _dataGridView = value;
             }
         }
 
@@ -61,11 +58,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return rowIndex;
+                return _rowIndex;
             }
             set
             {
-                rowIndex = value;
+                _rowIndex = value;
             }
         }
 
@@ -73,11 +70,11 @@ namespace System.Windows.Forms
         {
             get
             {
-                return valueChanged;
+                return _valueChanged;
             }
             set
             {
-                valueChanged = value;
+                _valueChanged = value;
             }
         }
 
@@ -93,7 +90,7 @@ namespace System.Windows.Forms
         {
             get
             {
-                return repositionOnValueChange;
+                return _repositionOnValueChange;
             }
         }
 
@@ -101,13 +98,22 @@ namespace System.Windows.Forms
 
         public virtual void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle)
         {
+            if (dataGridViewCellStyle is null)
+            {
+                throw new ArgumentNullException(nameof(dataGridViewCellStyle));
+            }
+
             Font = dataGridViewCellStyle.Font;
             if (dataGridViewCellStyle.BackColor.A < 255)
             {
                 // Our TextBox does not support transparent back colors
                 Color opaqueBackColor = Color.FromArgb(255, dataGridViewCellStyle.BackColor);
                 BackColor = opaqueBackColor;
-                dataGridView.EditingPanel.BackColor = opaqueBackColor;
+
+                if (_dataGridView != null)
+                {
+                    _dataGridView.EditingPanel.BackColor = opaqueBackColor;
+                }
             }
             else
             {
@@ -119,7 +125,7 @@ namespace System.Windows.Forms
                 WordWrap = true;
             }
             TextAlign = TranslateAlignment(dataGridViewCellStyle.Alignment);
-            repositionOnValueChange = (dataGridViewCellStyle.WrapMode == DataGridViewTriState.True && (dataGridViewCellStyle.Alignment & anyTop) == 0);
+            _repositionOnValueChange = (dataGridViewCellStyle.WrapMode == DataGridViewTriState.True && (dataGridViewCellStyle.Alignment & AnyTop) == 0);
         }
 
         public virtual bool EditingControlWantsInputKey(Keys keyData, bool dataGridViewWantsInputKey)
@@ -137,7 +143,7 @@ namespace System.Windows.Forms
                     break;
 
                 case Keys.Left:
-                    // If the end of the selection is at the begining of the string
+                    // If the end of the selection is at the beginning of the string
                     // or if the entire text is selected and we did not start editing
                     // send this character to the dataGridView, else process the key event
                     if ((RightToLeft == RightToLeft.No && !(SelectionLength == 0 && SelectionStart == 0)) ||
@@ -176,7 +182,7 @@ namespace System.Windows.Forms
 
                 case Keys.Prior:
                 case Keys.Next:
-                    if (valueChanged)
+                    if (_valueChanged)
                     {
                         return true;
                     }
@@ -221,21 +227,20 @@ namespace System.Windows.Forms
 
         private void NotifyDataGridViewOfValueChange()
         {
-            valueChanged = true;
-            dataGridView.NotifyCurrentCellDirty(true);
+            _valueChanged = true;
+            _dataGridView?.NotifyCurrentCellDirty(true);
         }
 
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
-
             AccessibilityObject.RaiseAutomationEvent(UiaCore.UIA.AutomationFocusChangedEventId);
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             // Forwarding to grid control. Can't prevent the TextBox from handling the mouse wheel as expected.
-            dataGridView.OnMouseWheelInternal(e);
+            _dataGridView?.OnMouseWheelInternal(e);
         }
 
         protected override void OnTextChanged(EventArgs e)
@@ -250,7 +255,7 @@ namespace System.Windows.Forms
             switch ((Keys)(int)m.WParam)
             {
                 case Keys.Enter:
-                    if (m.Msg == WindowMessages.WM_CHAR &&
+                    if (m.Msg == (int)User32.WM.CHAR &&
                         !(ModifierKeys == Keys.Shift && Multiline && AcceptsReturn))
                     {
                         // Ignore the Enter key and don't add it to the textbox content. This happens when failing validation brings
@@ -261,7 +266,7 @@ namespace System.Windows.Forms
                     break;
 
                 case Keys.LineFeed:
-                    if (m.Msg == WindowMessages.WM_CHAR &&
+                    if (m.Msg == (int)User32.WM.CHAR &&
                         ModifierKeys == Keys.Control && Multiline && AcceptsReturn)
                     {
                         // Ignore linefeed character when user hits Ctrl-Enter to commit the cell.
@@ -270,24 +275,23 @@ namespace System.Windows.Forms
                     break;
 
                 case Keys.A:
-                    if (m.Msg == WindowMessages.WM_KEYDOWN && ModifierKeys == Keys.Control)
+                    if (m.Msg == (int)User32.WM.KEYDOWN && ModifierKeys == Keys.Control)
                     {
                         SelectAll();
                         return true;
                     }
                     break;
-
             }
             return base.ProcessKeyEventArgs(ref m);
         }
 
         private static HorizontalAlignment TranslateAlignment(DataGridViewContentAlignment align)
         {
-            if ((align & anyRight) != 0)
+            if ((align & AnyRight) != 0)
             {
                 return HorizontalAlignment.Right;
             }
-            else if ((align & anyCenter) != 0)
+            else if ((align & AnyCenter) != 0)
             {
                 return HorizontalAlignment.Center;
             }
@@ -300,113 +304,10 @@ namespace System.Windows.Forms
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-
-            dataGridView?.SetAccessibleObjectParent(this.AccessibilityObject);
-        }
-    }
-
-    /// <summary>
-    ///  Defines the DataGridView TextBox EditingControl accessible object.
-    /// </summary>
-    internal class DataGridViewTextBoxEditingControlAccessibleObject : Control.ControlAccessibleObject
-    {
-        private readonly DataGridViewTextBoxEditingControl ownerControl;
-
-        /// <summary>
-        ///  The parent is changed when the editing control is attached to another editing cell.
-        /// </summary>
-        private AccessibleObject _parentAccessibleObject = null;
-
-        public DataGridViewTextBoxEditingControlAccessibleObject(DataGridViewTextBoxEditingControl ownerControl) : base(ownerControl)
-        {
-            this.ownerControl = ownerControl;
-        }
-
-        public override AccessibleObject Parent
-        {
-            get
+            if (IsHandleCreated)
             {
-                return _parentAccessibleObject;
+                _dataGridView?.SetAccessibleObjectParent(this.AccessibilityObject);
             }
-        }
-
-        public override string Name
-        {
-            get
-            {
-                string name = Owner.AccessibleName;
-                if (name != null)
-                {
-                    return name;
-                }
-                else
-                {
-                    return SR.DataGridView_AccEditingControlAccName;
-                }
-            }
-
-            set
-            {
-                base.Name = value;
-            }
-        }
-
-        internal override UiaCore.IRawElementProviderFragment FragmentNavigate(UiaCore.NavigateDirection direction)
-        {
-            switch (direction)
-            {
-                case UiaCore.NavigateDirection.Parent:
-                    if (Owner is IDataGridViewEditingControl owner && owner.EditingControlDataGridView.EditingControl == owner)
-                    {
-                        return _parentAccessibleObject;
-                    }
-
-                    return null;
-            }
-
-            return base.FragmentNavigate(direction);
-        }
-
-        internal override UiaCore.IRawElementProviderFragmentRoot FragmentRoot
-        {
-            get
-            {
-                return (Owner as IDataGridViewEditingControl)?.EditingControlDataGridView?.AccessibilityObject;
-            }
-        }
-
-        internal override object GetPropertyValue(UiaCore.UIA propertyID)
-        {
-            switch (propertyID)
-            {
-                case UiaCore.UIA.ControlTypePropertyId:
-                    return UiaCore.UIA.EditControlTypeId;
-                case UiaCore.UIA.NamePropertyId:
-                    return Name;
-                case UiaCore.UIA.IsValuePatternAvailablePropertyId:
-                    return true;
-            }
-
-            return base.GetPropertyValue(propertyID);
-        }
-
-        internal override bool IsPatternSupported(UiaCore.UIA patternId)
-        {
-            if (patternId == UiaCore.UIA.ValuePatternId)
-            {
-                return true;
-            }
-
-            return base.IsPatternSupported(patternId);
-        }
-
-        /// <summary>
-        ///  Sets the parent accessible object for the node which can be added or removed to/from hierachy nodes.
-        /// </summary>
-        /// <param name="parent">The parent accessible object.</param>
-        internal override void SetParent(AccessibleObject parent)
-        {
-            _parentAccessibleObject = parent;
         }
     }
 }

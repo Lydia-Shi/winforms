@@ -7,12 +7,12 @@ using Xunit;
 
 namespace System.Windows.Forms.Tests.AccessibleObjects
 {
-    public class CheckedListBoxAccessibleObjectTests
+    public class CheckedListBoxAccessibleObjectTests : IClassFixture<ThreadExceptionFixture>
     {
-        [StaFact]
+        [WinFormsFact]
         public void CheckedListBoxAccessibleObject_CheckBounds()
         {
-            CheckedListBox checkedListBox = new CheckedListBox();
+            using CheckedListBox checkedListBox = new CheckedListBox();
             checkedListBox.Size = new Size(120, 100);
             checkedListBox.Items.Add("a");
             checkedListBox.Items.Add("b");

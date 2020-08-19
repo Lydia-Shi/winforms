@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -30,7 +32,7 @@ namespace System.Windows.Forms
         protected int BackwardsWalkingIndex { get; set; }
 
         /// <summary>
-        // This is the index we use to walk the items and make  decisions if there is enough room.
+        ///  This is the index we use to walk the items and make  decisions if there is enough room.
         /// </summary>
         protected int ForwardsWalkingIndex { get; set; }
 
@@ -345,7 +347,6 @@ namespace System.Windows.Forms
                         lastRight = x - itemMargin.Left;
                         alignedRightItems = (alignedRightItems == Rectangle.Empty) ? new Rectangle(x, y, itemSize.Width, itemSize.Height)
                                                 : Rectangle.Union(alignedRightItems, new Rectangle(x, y, itemSize.Width, itemSize.Height));
-
                     }
                     else
                     {
@@ -359,7 +360,6 @@ namespace System.Windows.Forms
                         lastLeft = x + itemSize.Width + itemMargin.Right;
                         alignedLeftItems = (alignedLeftItems == Rectangle.Empty) ? new Rectangle(x, y, itemSize.Width, itemSize.Height)
                                                 : Rectangle.Union(alignedLeftItems, new Rectangle(x, y, itemSize.Width, itemSize.Height));
-
                     }
 
                     item.ParentInternal = ToolStrip;
@@ -396,7 +396,7 @@ namespace System.Windows.Forms
 #if DEBUG
                 if (DebugLayoutTraceSwitch.TraceVerbose)
                 {
-                    Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Item {0} Placement {1} Bounds {2} Parent {3}", item.ToString(), item.Placement.ToString(), item.Bounds.ToString(), (item.ParentInternal == null) ? "null" : item.ParentInternal.ToString()));
+                    Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Item {0} Placement {1} Bounds {2} Parent {3}", item.ToString(), item.Placement.ToString(), item.Bounds.ToString(), (item.ParentInternal is null) ? "null" : item.ParentInternal.ToString()));
                 }
 #endif
             }
@@ -471,7 +471,6 @@ namespace System.Windows.Forms
 
                     // since we havent parented the item yet - the auto size wont have reset the size yet.
                     itemSize = item.AutoSize ? item.GetPreferredSize(Size.Empty) : item.Size;
-
                 }
 
                 // if it turns out we dont need the overflow (because there are no Overflow.Always items and the height of everything
@@ -549,7 +548,7 @@ namespace System.Windows.Forms
 #if DEBUG
                 if (DebugLayoutTraceSwitch.TraceVerbose)
                 {
-                    Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Item {0} Placement {1} Bounds {2} Parent {3}", item.ToString(), item.Placement.ToString(), item.Bounds.ToString(), (item.ParentInternal == null) ? "null" : item.ParentInternal.ToString()));
+                    Debug.WriteLine(string.Format(CultureInfo.CurrentCulture, "Item {0} Placement {1} Bounds {2} Parent {3}", item.ToString(), item.Placement.ToString(), item.Bounds.ToString(), (item.ParentInternal is null) ? "null" : item.ParentInternal.ToString()));
                 }
 #endif
             }
@@ -582,7 +581,6 @@ namespace System.Windows.Forms
                         itemLocation = noMansLand;
                         item.SetPlacement(ToolStripItemPlacement.None);
                     }
-
                 }
                 else
                 {

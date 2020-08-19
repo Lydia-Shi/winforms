@@ -7,7 +7,8 @@ using Xunit;
 
 namespace System.Resources.Tests
 {
-    public class ResXFileRefTests
+    // NB: doesn't require thread affinity
+    public class ResXFileRefTests : IClassFixture<ThreadExceptionFixture>
     {
         [Fact]
         public void ResXFileRef_Constructor()

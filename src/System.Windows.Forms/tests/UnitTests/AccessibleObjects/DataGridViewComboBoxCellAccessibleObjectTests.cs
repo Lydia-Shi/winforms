@@ -7,13 +7,13 @@ using static Interop;
 
 namespace System.Windows.Forms.Tests.AccessibleObjects
 {
-    public class DataGridViewComboBoxCellAccessibleObjectTests
+    public class DataGridViewComboBoxCellAccessibleObjectTests : IClassFixture<ThreadExceptionFixture>
     {
-        [Theory]
+        [WinFormsTheory]
         [InlineData((int)UiaCore.UIA.IsExpandCollapsePatternAvailablePropertyId, true)]
         public void GetPropertyValue_Returns_Correct_Value(int propertyID, object expectedPropertyValue)
         {
-            DataGridView dataGridView = new DataGridView();
+            using var dataGridView = new DataGridView();
             DataGridViewComboBoxColumn column = new DataGridViewComboBoxColumn();
             dataGridView.Columns.Add(column);
             dataGridView.Rows.Add();

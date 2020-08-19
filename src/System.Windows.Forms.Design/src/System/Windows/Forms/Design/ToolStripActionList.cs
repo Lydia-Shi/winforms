@@ -5,18 +5,17 @@
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace System.Windows.Forms.Design
 {
     internal class ToolStripActionList : DesignerActionList
     {
         private readonly ToolStrip _toolStrip;
-        private bool _autoShow = false;
+        private bool _autoShow;
         private readonly ToolStripDesigner _designer;
 
-        private readonly ChangeToolStripParentVerb _changeParentVerb = null;
-        private readonly StandardMenuStripVerb _standardItemsVerb = null;
+        private readonly ChangeToolStripParentVerb _changeParentVerb;
+        private readonly StandardMenuStripVerb _standardItemsVerb;
 
         public ToolStripActionList(ToolStripDesigner designer) : base(designer.Component)
         {
@@ -39,7 +38,7 @@ namespace System.Windows.Forms.Design
             {
                 // Make sure the component is not being inherited -- we can't delete these!
                 InheritanceAttribute ia = (InheritanceAttribute)TypeDescriptor.GetAttributes(_toolStrip)[typeof(InheritanceAttribute)];
-                if (ia == null || ia.InheritanceLevel == InheritanceLevel.NotInherited)
+                if (ia is null || ia.InheritanceLevel == InheritanceLevel.NotInherited)
                 {
                     return true;
                 }
@@ -53,7 +52,7 @@ namespace System.Windows.Forms.Design
             {
                 // Make sure the component is not being inherited -- we can't delete these!
                 InheritanceAttribute ia = (InheritanceAttribute)TypeDescriptor.GetAttributes(_toolStrip)[typeof(InheritanceAttribute)];
-                if (ia == null || ia.InheritanceLevel == InheritanceLevel.InheritedReadOnly)
+                if (ia is null || ia.InheritanceLevel == InheritanceLevel.InheritedReadOnly)
                 {
                     return true;
                 }
@@ -101,36 +100,36 @@ namespace System.Windows.Forms.Design
 
         public DockStyle Dock
         {
-            get => (DockStyle)GetProperty("Dock");
+            get => (DockStyle)GetProperty(nameof(Dock));
             set
             {
                 if (value != Dock)
                 {
-                    ChangeProperty("Dock", (object)value);
+                    ChangeProperty(nameof(Dock), (object)value);
                 }
             }
         }
 
         public ToolStripRenderMode RenderMode
         {
-            get => (ToolStripRenderMode)GetProperty("RenderMode");
+            get => (ToolStripRenderMode)GetProperty(nameof(RenderMode));
             set
             {
                 if (value != RenderMode)
                 {
-                    ChangeProperty("RenderMode", (object)value);
+                    ChangeProperty(nameof(RenderMode), (object)value);
                 }
             }
         }
 
         public ToolStripGripStyle GripStyle
         {
-            get => (ToolStripGripStyle)GetProperty("GripStyle");
+            get => (ToolStripGripStyle)GetProperty(nameof(GripStyle));
             set
             {
                 if (value != GripStyle)
                 {
-                    ChangeProperty("GripStyle", (object)value);
+                    ChangeProperty(nameof(GripStyle), (object)value);
                 }
             }
         }

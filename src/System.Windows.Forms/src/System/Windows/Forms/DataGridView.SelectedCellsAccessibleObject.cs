@@ -2,17 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 namespace System.Windows.Forms
 {
     public partial class DataGridView
     {
         private class DataGridViewSelectedCellsAccessibleObject : AccessibleObject
         {
-            readonly DataGridView owner;
+            private readonly DataGridView _owner;
 
             public DataGridViewSelectedCellsAccessibleObject(DataGridView owner)
             {
-                this.owner = owner;
+                _owner = owner;
             }
 
             public override string Name
@@ -27,7 +29,7 @@ namespace System.Windows.Forms
             {
                 get
                 {
-                    return owner.AccessibilityObject;
+                    return _owner.AccessibilityObject;
                 }
             }
 
@@ -57,9 +59,9 @@ namespace System.Windows.Forms
 
             public override AccessibleObject GetChild(int index)
             {
-                if (index >= 0 && index < owner.GetCellCount(DataGridViewElementStates.Selected))
+                if (index >= 0 && index < _owner.GetCellCount(DataGridViewElementStates.Selected))
                 {
-                    return owner.SelectedCell(index).AccessibilityObject;
+                    return _owner.SelectedCell(index).AccessibilityObject;
                 }
                 else
                 {
@@ -69,7 +71,7 @@ namespace System.Windows.Forms
 
             public override int GetChildCount()
             {
-                return owner.GetCellCount(DataGridViewElementStates.Selected);
+                return _owner.GetCellCount(DataGridViewElementStates.Selected);
             }
 
             public override AccessibleObject GetSelected()
@@ -79,9 +81,9 @@ namespace System.Windows.Forms
 
             public override AccessibleObject GetFocused()
             {
-                if (owner.CurrentCell != null && owner.CurrentCell.Selected)
+                if (_owner.CurrentCell != null && _owner.CurrentCell.Selected)
                 {
-                    return owner.CurrentCell.AccessibilityObject;
+                    return _owner.CurrentCell.AccessibilityObject;
                 }
                 else
                 {
@@ -94,18 +96,18 @@ namespace System.Windows.Forms
                 switch (navigationDirection)
                 {
                     case AccessibleNavigation.FirstChild:
-                        if (owner.GetCellCount(DataGridViewElementStates.Selected) > 0)
+                        if (_owner.GetCellCount(DataGridViewElementStates.Selected) > 0)
                         {
-                            return owner.SelectedCell(0).AccessibilityObject;
+                            return _owner.SelectedCell(0).AccessibilityObject;
                         }
                         else
                         {
                             return null;
                         }
                     case AccessibleNavigation.LastChild:
-                        if (owner.GetCellCount(DataGridViewElementStates.Selected) > 0)
+                        if (_owner.GetCellCount(DataGridViewElementStates.Selected) > 0)
                         {
-                            return owner.SelectedCell(owner.GetCellCount(DataGridViewElementStates.Selected) - 1).AccessibilityObject;
+                            return _owner.SelectedCell(_owner.GetCellCount(DataGridViewElementStates.Selected) - 1).AccessibilityObject;
                         }
                         else
                         {

@@ -2,24 +2,23 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#nullable disable
+
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Design;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.VisualStyles;
 using static Interop;
+using static Interop.User32;
 
 namespace System.Windows.Forms
 {
     /// <summary>
     ///  Represents a Windows text box control.
     /// </summary>
-    [
-      ClassInterface(ClassInterfaceType.AutoDispatch),
-      ComVisible(true),
-      Designer("System.Windows.Forms.Design.TextBoxDesigner, " + AssemblyRef.SystemDesign),
-      SRDescription(nameof(SR.DescriptionTextBox))
-    ]
+    [Designer("System.Windows.Forms.Design.TextBoxDesigner, " + AssemblyRef.SystemDesign)]
+    [SRDescription(nameof(SR.DescriptionTextBox))]
     public class TextBox : TextBoxBase
     {
         private static readonly object EVENT_TEXTALIGNCHANGED = new object();
@@ -29,13 +28,13 @@ namespace System.Windows.Forms
         ///  presses.  While this is typically desired by multiline edits, this
         ///  can interfere with normal key processing in a dialog.
         /// </summary>
-        private bool acceptsReturn = false;
+        private bool acceptsReturn;
 
         /// <summary>
         ///  Indicates what the current special password character is.  This is
         ///  displayed instead of any other text the user might enter.
         /// </summary>
-        private char passwordChar = (char)0;
+        private char passwordChar;
 
         private bool useSystemPasswordChar;
 
@@ -60,7 +59,7 @@ namespace System.Windows.Forms
         ///  never been set and we get focus, we focus all the text in the control
         ///  so we mimic the Windows dialog manager.
         /// </summary>
-        private bool selectionSet = false;
+        private bool selectionSet;
 
         /// <summary>
         ///  This stores the value for the autocomplete mode which can be either
@@ -78,8 +77,8 @@ namespace System.Windows.Forms
         ///  This stores the custom StringCollection required for the autoCompleteSource when its set to CustomSource.
         /// </summary>
         private AutoCompleteStringCollection autoCompleteCustomSource;
-        private bool fromHandleCreate = false;
-        private StringSource stringSource = null;
+        private bool fromHandleCreate;
+        private StringSource stringSource;
         private string placeholderText = string.Empty;
 
         public TextBox()
@@ -87,23 +86,19 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets or sets a value indicating whether pressing ENTER
-        ///  in a multiline <see cref='TextBox'/>
+        ///  Gets or sets a value indicating whether pressing ENTER in a multiline <see cref='TextBox'/>
         ///  control creates a new line of text in the control or activates the default button
         ///  for the form.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.TextBoxAcceptsReturnDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.TextBoxAcceptsReturnDescr))]
         public bool AcceptsReturn
         {
             get
             {
                 return acceptsReturn;
             }
-
             set
             {
                 acceptsReturn = value;
@@ -115,11 +110,10 @@ namespace System.Windows.Forms
         ///  None, AutoSuggest, AutoAppend or AutoSuggestAppend.
         ///  This property in conjunction with AutoCompleteSource enables the AutoComplete feature for TextBox.
         /// </summary>
-        [
-        DefaultValue(AutoCompleteMode.None),
-        SRDescription(nameof(SR.TextBoxAutoCompleteModeDescr)),
-        Browsable(true), EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [DefaultValue(AutoCompleteMode.None)]
+        [SRDescription(nameof(SR.TextBoxAutoCompleteModeDescr))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutoCompleteMode AutoCompleteMode
         {
             get
@@ -143,16 +137,14 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  This is the AutoCompleteSource which can be one of the
-        ///  values from AutoCompleteSource enumeration.
+        ///  This is the AutoCompleteSource which can be one of the values from AutoCompleteSource enumeration.
         ///  This property in conjunction with AutoCompleteMode enables the AutoComplete feature for TextBox.
         /// </summary>
-        [
-        DefaultValue(AutoCompleteSource.None),
-        SRDescription(nameof(SR.TextBoxAutoCompleteSourceDescr)),
-        TypeConverter(typeof(TextBoxAutoCompleteSourceConverter)),
-        Browsable(true), EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [DefaultValue(AutoCompleteSource.None)]
+        [SRDescription(nameof(SR.TextBoxAutoCompleteSourceDescr))]
+        [TypeConverter(typeof(TextBoxAutoCompleteSourceConverter))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutoCompleteSource AutoCompleteSource
         {
             get
@@ -186,18 +178,17 @@ namespace System.Windows.Forms
         ///  This is the AutoCompleteCustomSource which is custom StringCollection used when the
         ///  AutoCompleteSource is CustomSource.
         /// </summary>
-        [
-        DesignerSerializationVisibility(DesignerSerializationVisibility.Content),
-        Localizable(true),
-        SRDescription(nameof(SR.TextBoxAutoCompleteCustomSourceDescr)),
-        Editor("System.Windows.Forms.Design.ListControlStringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor)),
-        Browsable(true), EditorBrowsable(EditorBrowsableState.Always)
-        ]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.TextBoxAutoCompleteCustomSourceDescr))]
+        [Editor("System.Windows.Forms.Design.ListControlStringCollectionEditor, " + AssemblyRef.SystemDesign, typeof(UITypeEditor))]
+        [Browsable(true)]
+        [EditorBrowsable(EditorBrowsableState.Always)]
         public AutoCompleteStringCollection AutoCompleteCustomSource
         {
             get
             {
-                if (autoCompleteCustomSource == null)
+                if (autoCompleteCustomSource is null)
                 {
                     autoCompleteCustomSource = new AutoCompleteStringCollection();
                     autoCompleteCustomSource.CollectionChanged += new CollectionChangeEventHandler(OnAutoCompleteCustomSourceChanged);
@@ -221,7 +212,6 @@ namespace System.Windows.Forms
                     }
                     SetAutoComplete(false);
                 }
-
             }
         }
 
@@ -229,11 +219,9 @@ namespace System.Windows.Forms
         ///  Gets or sets whether the TextBox control
         ///  modifies the case of characters as they are typed.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(CharacterCasing.Normal),
-        SRDescription(nameof(SR.TextBoxCharacterCasingDescr))
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(CharacterCasing.Normal)]
+        [SRDescription(nameof(SR.TextBoxCharacterCasingDescr))]
         public CharacterCasing CharacterCasing
         {
             get
@@ -244,8 +232,6 @@ namespace System.Windows.Forms
             {
                 if (characterCasing != value)
                 {
-                    //verify that 'value' is a valid enum type...
-                    //valid values are 0x0 to 0x2
                     if (!ClientUtils.IsEnumValid(value, (int)value, (int)CharacterCasing.Normal, (int)CharacterCasing.Lower))
                     {
                         throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(CharacterCasing));
@@ -259,13 +245,9 @@ namespace System.Windows.Forms
 
         public override bool Multiline
         {
-            get
-            {
-                return base.Multiline;
-            }
+            get => base.Multiline;
             set
             {
-
                 if (Multiline != value)
                 {
                     base.Multiline = value;
@@ -280,13 +262,8 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Determines if the control is in password protect mode.
         /// </summary>
-        internal override bool PasswordProtect
-        {
-            get
-            {
-                return PasswordChar != '\0';
-            }
-        }
+        private protected override bool PasswordProtect
+            => PasswordChar != '\0';
 
         /// <summary>
         ///  Returns the parameters needed to create the handle. Inheriting classes
@@ -302,27 +279,29 @@ namespace System.Windows.Forms
                 switch (characterCasing)
                 {
                     case CharacterCasing.Lower:
-                        cp.Style |= NativeMethods.ES_LOWERCASE;
+                        cp.Style |= (int)ES.LOWERCASE;
                         break;
                     case CharacterCasing.Upper:
-                        cp.Style |= NativeMethods.ES_UPPERCASE;
+                        cp.Style |= (int)ES.UPPERCASE;
                         break;
                 }
 
                 // Translate for Rtl if necessary
-                //
                 HorizontalAlignment align = RtlTranslateHorizontal(textAlign);
-                cp.ExStyle &= ~(int)User32.WS_EX.RIGHT;   // WS_EX_RIGHT overrides the ES_XXXX alignment styles
+
+                // WS_EX_RIGHT overrides the ES_XXXX alignment styles
+                cp.ExStyle &= ~(int)WS_EX.RIGHT;
+
                 switch (align)
                 {
                     case HorizontalAlignment.Left:
-                        cp.Style |= NativeMethods.ES_LEFT;
+                        cp.Style |= (int)ES.LEFT;
                         break;
                     case HorizontalAlignment.Center:
-                        cp.Style |= NativeMethods.ES_CENTER;
+                        cp.Style |= (int)ES.CENTER;
                         break;
                     case HorizontalAlignment.Right:
-                        cp.Style |= NativeMethods.ES_RIGHT;
+                        cp.Style |= (int)ES.RIGHT;
                         break;
                 }
 
@@ -333,17 +312,17 @@ namespace System.Windows.Forms
                         && textAlign == HorizontalAlignment.Left
                         && !WordWrap)
                     {
-                        cp.Style |= (int)User32.WS.HSCROLL;
+                        cp.Style |= (int)WS.HSCROLL;
                     }
                     if ((scrollBars & ScrollBars.Vertical) == ScrollBars.Vertical)
                     {
-                        cp.Style |= (int)User32.WS.VSCROLL;
+                        cp.Style |= (int)WS.VSCROLL;
                     }
                 }
 
                 if (useSystemPasswordChar)
                 {
-                    cp.Style |= NativeMethods.ES_PASSWORD;
+                    cp.Style |= (int)ES.PASSWORD;
                 }
 
                 return cp;
@@ -354,13 +333,11 @@ namespace System.Windows.Forms
         ///  Gets or sets the character used to mask characters in a single-line text box
         ///  control used to enter passwords.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue((char)0),
-        Localizable(true),
-        SRDescription(nameof(SR.TextBoxPasswordCharDescr)),
-        RefreshProperties(RefreshProperties.Repaint)
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue((char)0)]
+        [Localizable(true)]
+        [SRDescription(nameof(SR.TextBoxPasswordCharDescr))]
+        [RefreshProperties(RefreshProperties.Repaint)]
         public char PasswordChar
         {
             get
@@ -369,7 +346,8 @@ namespace System.Windows.Forms
                 {
                     CreateHandle();
                 }
-                return (char)SendMessage(EditMessages.EM_GETPASSWORDCHAR, 0, 0);
+
+                return (char)SendMessageW(this, (WM)EM.GETPASSWORDCHAR);
             }
             set
             {
@@ -381,7 +359,7 @@ namespace System.Windows.Forms
                         if (PasswordChar != value)
                         {
                             // Set the password mode.
-                            SendMessage(EditMessages.EM_SETPASSWORDCHAR, value, 0);
+                            SendMessageW(this, (WM)EM.SETPASSWORDCHAR, (IntPtr)value);
 
                             // Disable IME if setting the control to password mode.
                             VerifyImeRestrictedModeChanged();
@@ -399,12 +377,10 @@ namespace System.Windows.Forms
         ///  appear in a multiline <see cref='TextBox'/>
         ///  control.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatAppearance)),
-        Localizable(true),
-        DefaultValue(ScrollBars.None),
-        SRDescription(nameof(SR.TextBoxScrollBarsDescr))
-        ]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [Localizable(true)]
+        [DefaultValue(ScrollBars.None)]
+        [SRDescription(nameof(SR.TextBoxScrollBarsDescr))]
         public ScrollBars ScrollBars
         {
             get
@@ -415,7 +391,6 @@ namespace System.Windows.Forms
             {
                 if (scrollBars != value)
                 {
-                    //valid values are 0x0 to 0x3
                     if (!ClientUtils.IsEnumValid(value, (int)value, (int)ScrollBars.None, (int)ScrollBars.Both))
                     {
                         throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(ScrollBars));
@@ -449,15 +424,11 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets or sets
-        ///  the current text in the text box.
+        ///  Gets or sets the current text in the text box.
         /// </summary>
         public override string Text
         {
-            get
-            {
-                return base.Text;
-            }
+            get => base.Text;
             set
             {
                 base.Text = value;
@@ -466,17 +437,13 @@ namespace System.Windows.Forms
         }
 
         /// <summary>
-        ///  Gets or sets how text is
-        ///  aligned in a <see cref='TextBox'/>
-        ///  control.
+        ///  Gets or sets how text is aligned in a <see cref='TextBox'/> control.
         ///  Note: This code is duplicated in MaskedTextBox for simplicity.
         /// </summary>
-        [
-        Localizable(true),
-        SRCategory(nameof(SR.CatAppearance)),
-        DefaultValue(HorizontalAlignment.Left),
-        SRDescription(nameof(SR.TextBoxTextAlignDescr))
-        ]
+        [Localizable(true)]
+        [SRCategory(nameof(SR.CatAppearance))]
+        [DefaultValue(HorizontalAlignment.Left)]
+        [SRDescription(nameof(SR.TextBoxTextAlignDescr))]
         public HorizontalAlignment TextAlign
         {
             get
@@ -487,9 +454,6 @@ namespace System.Windows.Forms
             {
                 if (textAlign != value)
                 {
-                    //verify that 'value' is a valid enum type...
-
-                    //valid values are 0x0 to 0x2
                     if (!ClientUtils.IsEnumValid(value, (int)value, (int)HorizontalAlignment.Left, (int)HorizontalAlignment.Center))
                     {
                         throw new InvalidEnumArgumentException(nameof(value), (int)value, typeof(HorizontalAlignment));
@@ -509,12 +473,10 @@ namespace System.Windows.Forms
         ///  is set to true, the default system password character is used,
         ///  any character set into PasswordChar is ignored.
         /// </summary>
-        [
-        SRCategory(nameof(SR.CatBehavior)),
-        DefaultValue(false),
-        SRDescription(nameof(SR.TextBoxUseSystemPasswordCharDescr)),
-        RefreshProperties(RefreshProperties.Repaint)
-        ]
+        [SRCategory(nameof(SR.CatBehavior))]
+        [DefaultValue(false)]
+        [SRDescription(nameof(SR.TextBoxUseSystemPasswordCharDescr))]
+        [RefreshProperties(RefreshProperties.Repaint)]
         public bool UseSystemPasswordChar
         {
             get
@@ -538,11 +500,11 @@ namespace System.Windows.Forms
             }
         }
 
-        [SRCategory(nameof(SR.CatPropertyChanged)), SRDescription(nameof(SR.RadioButtonOnTextAlignChangedDescr))]
+        [SRCategory(nameof(SR.CatPropertyChanged))]
+        [SRDescription(nameof(SR.RadioButtonOnTextAlignChangedDescr))]
         public event EventHandler TextAlignChanged
         {
             add => Events.AddHandler(EVENT_TEXTALIGNCHANGED, value);
-
             remove => Events.RemoveHandler(EVENT_TEXTALIGNCHANGED, value);
         }
 
@@ -553,7 +515,7 @@ namespace System.Windows.Forms
                 // Reset this just in case, because the SHAutoComplete stuff
                 // will subclass this guys wndproc (and nativewindow can't know about it).
                 // so this will undo it, but on a dispose we'll be Destroying the window anyay.
-                //
+
                 ResetAutoComplete(true);
                 if (autoCompleteCustomSource != null)
                 {
@@ -595,14 +557,15 @@ namespace System.Windows.Forms
         protected unsafe override void OnBackColorChanged(EventArgs e)
         {
             base.OnBackColorChanged(e);
+
             // Force repainting of the entire window frame
             if (Application.RenderWithVisualStyles && IsHandleCreated && BorderStyle == BorderStyle.Fixed3D)
             {
-                User32.RedrawWindow(
+                RedrawWindow(
                     new HandleRef(this, Handle),
                     null,
                     IntPtr.Zero,
-                    User32.RDW.INVALIDATE | User32.RDW.FRAME);
+                    RDW.INVALIDATE | RDW.FRAME);
             }
         }
 
@@ -611,7 +574,7 @@ namespace System.Windows.Forms
             base.OnFontChanged(e);
             if (AutoCompleteMode != AutoCompleteMode.None)
             {
-                //we always will recreate the handle when autocomplete mode is on
+                // Always recreate the handle when autocomplete mode is on
                 RecreateHandle();
             }
         }
@@ -643,13 +606,18 @@ namespace System.Windows.Forms
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            if (!IsHandleCreated)
+            {
+                return;
+            }
+
             base.SetSelectionOnHandle();
 
             if (passwordChar != 0)
             {
                 if (!useSystemPasswordChar)
                 {
-                    SendMessage(EditMessages.EM_SETPASSWORDCHAR, passwordChar, 0);
+                    SendMessageW(this, (WM)EM.SETPASSWORDCHAR, (IntPtr)passwordChar);
                 }
             }
 
@@ -721,7 +689,7 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Performs the actual select without doing arg checking.
         /// </summary>
-        internal override void SelectInternal(int start, int length, int textLen)
+        private protected override void SelectInternal(int start, int length, int textLen)
         {
             // If user set selection into text box, mark it so we don't
             // clobber it when we get focus.
@@ -742,9 +710,9 @@ namespace System.Windows.Forms
         /// <summary>
         ///  Sets the AutoComplete mode in TextBox.
         /// </summary>
-        internal void SetAutoComplete(bool reset)
+        private void SetAutoComplete(bool reset)
         {
-            //Autocomplete Not Enabled for Password enabled and MultiLine Textboxes.
+            // Autocomplete Not Enabled for Password enabled and MultiLine Textboxes.
             if (Multiline || passwordChar != 0 || useSystemPasswordChar || AutoCompleteSource == AutoCompleteSource.None)
             {
                 return;
@@ -772,7 +740,7 @@ namespace System.Windows.Forms
                         }
                         else
                         {
-                            if (stringSource == null)
+                            if (stringSource is null)
                             {
                                 stringSource = new StringSource(GetStringsForAutoComplete());
                                 if (!stringSource.Bind(new HandleRef(this, Handle), (Shell32.AUTOCOMPLETEOPTIONS)AutoCompleteMode))
@@ -786,7 +754,6 @@ namespace System.Windows.Forms
                             }
                         }
                     }
-
                 }
                 else
                 {
@@ -836,18 +803,15 @@ namespace System.Windows.Forms
         private void WmPrint(ref Message m)
         {
             base.WndProc(ref m);
-            if ((NativeMethods.PRF_NONCLIENT & (int)m.LParam) != 0 && Application.RenderWithVisualStyles && BorderStyle == BorderStyle.Fixed3D)
+            if (((PRF)m.LParam & PRF.NONCLIENT) != 0 && Application.RenderWithVisualStyles
+                && BorderStyle == BorderStyle.Fixed3D)
             {
-                using (Graphics g = Graphics.FromHdc(m.WParam))
-                {
-                    Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
-                    using (Pen pen = new Pen(VisualStyleInformation.TextControlBorder))
-                    {
-                        g.DrawRectangle(pen, rect);
-                    }
-                    rect.Inflate(-1, -1);
-                    g.DrawRectangle(SystemPens.Window, rect);
-                }
+                using Graphics g = Graphics.FromHdc(m.WParam);
+                Rectangle rect = new Rectangle(0, 0, Size.Width - 1, Size.Height - 1);
+                using var pen = VisualStyleInformation.TextControlBorder.GetCachedPenScope();
+                g.DrawRectangle(pen, rect);
+                rect.Inflate(-1, -1);
+                g.DrawRectangle(SystemPens.Window, rect);
             }
         }
 
@@ -855,11 +819,9 @@ namespace System.Windows.Forms
         ///  Gets or sets the text that is displayed when the control has no text and does not have the focus.
         /// </summary>
         /// <value>The text that is displayed when the control has no text and does not have the focus.</value>
-        [
-        Localizable(true),
-        DefaultValue(""),
-        SRDescription(nameof(SR.TextBoxPlaceholderTextDescr))
-        ]
+        [Localizable(true)]
+        [DefaultValue("")]
+        [SRDescription(nameof(SR.TextBoxPlaceholderTextDescr))]
         public virtual string PlaceholderText
         {
             get
@@ -868,7 +830,7 @@ namespace System.Windows.Forms
             }
             set
             {
-                if (value == null)
+                if (value is null)
                 {
                     value = string.Empty;
                 }
@@ -883,8 +845,6 @@ namespace System.Windows.Forms
                 }
             }
         }
-
-        //-------------------------------------------------------------------------------------------------
 
         /// <summary>
         ///  Draws the <see cref="PlaceholderText"/> in the client area of the <see cref="TextBox"/> using the default font and color.
@@ -944,10 +904,10 @@ namespace System.Windows.Forms
         /// </summary>
         protected override void WndProc(ref Message m)
         {
-            switch (m.Msg)
+            switch ((User32.WM)m.Msg)
             {
                 // Work around a very obscure Windows issue.
-                case WindowMessages.WM_LBUTTONDOWN:
+                case User32.WM.LBUTTONDOWN:
                     MouseButtons realState = MouseButtons;
                     bool wasValidationCancelled = ValidationCancelled;
                     Focus();
@@ -957,12 +917,7 @@ namespace System.Windows.Forms
                         base.WndProc(ref m);
                     }
                     break;
-                //for readability ... so that we know whats happening ...
-                // case WM_LBUTTONUP is included here eventhough it just calls the base.
-                case WindowMessages.WM_LBUTTONUP:
-                    base.WndProc(ref m);
-                    break;
-                case WindowMessages.WM_PRINT:
+                case User32.WM.PRINT:
                     WmPrint(ref m);
                     break;
                 default:
@@ -980,25 +935,10 @@ namespace System.Windows.Forms
         }
 
         private bool ShouldRenderPlaceHolderText(in Message m) =>
-                    !string.IsNullOrEmpty(PlaceholderText) &&
-                    (m.Msg == WindowMessages.WM_PAINT || m.Msg == WindowMessages.WM_KILLFOCUS) &&
-                    !GetStyle(ControlStyles.UserPaint) &&
-                    !Focused &&
-                    TextLength == 0;
-
-        internal TestAccessor GetTestAccessor() => new TestAccessor(this);
-
-        internal readonly struct TestAccessor
-        {
-            private readonly TextBox _textBox;
-
-            public TestAccessor(TextBox textBox)
-            {
-                _textBox = textBox;
-            }
-
-            public bool ShouldRenderPlaceHolderText(in Message m) => _textBox.ShouldRenderPlaceHolderText(m);
-        }
-
+            !string.IsNullOrEmpty(PlaceholderText) &&
+            (m.Msg == (int)User32.WM.PAINT || m.Msg == (int)User32.WM.KILLFOCUS) &&
+            !GetStyle(ControlStyles.UserPaint) &&
+            !Focused &&
+            TextLength == 0;
     }
 }
